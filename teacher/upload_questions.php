@@ -1,8 +1,12 @@
-php
 <?php
 session_start();
+require_once '../config/config.php';
+require_once '../config/db.php';
 require_once '../includes/functions.php';
 validateRole(['teacher']);
+
+// Ensure $db is available globally
+global $db;
 
 $page_title = 'Upload Questions';
 $error = '';
@@ -217,84 +221,70 @@ include '../includes/header.php';
 <script>
 let questionIndex = 0;
 
-$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', function() {
     // Check filters and show/hide questions container
     function checkFilters() {
-        const classSubject = $('#class_subject').val();
-        const session = $('#session').val();
-        const term = $('#term').val();
-        const testType = $('#test_type').val();
+        const classSubject = document.getElementById('class_subject').value;
+        const session = document.getElementById('session').value;
+        const term = document.getElementById('term').value;
+        const testType = document.getElementById('test_type').value;
+
+        const questionsContainer = document.getElementById('questions-container');
+        const filterMessage = document.getElementById('filter-message');
+        const questionItems = document.querySelectorAll('.question-item');
 
         if (classSubject && session && term && testType) {
-            $('#questions-container').show();
-            $('#filter-message').hide();
-            if ($('.question-item').length === 0) {
+            questionsContainer.style.display = 'block';
+            filterMessage.style.display = 'none';
+            if (questionItems.length === 0) {
                 addQuestion();
             }
         } else {
-            $('#questions-container').hide();
-            $('#filter-message').show();
+            questionsContainer.style.display = 'none';
+            filterMessage.style.display = 'block';
         }
     }
 
     // Split class_subject selection
-    $('#class_subject').change(function() {
-        const value = $(this).val();
+    document.getElementById('class_subject').addEventListener('change', function() {
+        const value = this.value;
         if (value) {
             const [classId, subjectId] = value.split('_');
-            $('input[name="class_id"]').remove();
-            $('input[name="subject_id"]').remove();
-            $('<input>').attr({
-                type: 'hidden',
-                name: 'class_id',
-                value: classId
-            }).appendTo('#upload-form');
-            $('<input>').attr({
-                type: 'hidden',
-                name: 'subject_id',
-                value: subjectId
-            }).appendTo('#upload-form');
+            
+            // Remove existing hidden inputs
+            const existingClassInput = document.querySelector('input[name="class_id"]');
+            const existingSubjectInput = document.querySelector('input[name="subject_id"]');
+            if (existingClassInput) existingClassInput.remove();
+            if (existingSubjectInput) existingSubjectInput.remove();
+            
+            // Create new hidden inputs
+            const classInput = document.createElement('input');
+            classInput.type = 'hidden';
+            classInput.name = 'class_id';
+            classInput.value = classId;
+            
+            const subjectInput = document.createElement('input');
+            subjectInput.type = 'hidden';
+            subjectInput.name = 'subject_id';
+            subjectInput.value = subjectId;
+            
+            const form = document.getElementById('upload-form');
+            form.appendChild(classInput);
+            form.appendChild(subjectInput);
         }
         checkFilters();
     });
 
     // Monitor filter changes
-    $('#session, #term, #test_type').change(checkFilters);
+    document.getElementById('session').addEventListener('change', checkFilters);
+    document.getElementById('term').addEventListener('change', checkFilters);
+    document.getElementById('test_type').addEventListener('change', checkFilters);
 
     // Initial check
     checkFilters();
 
     // Add question button
-    $('#add-question').click(addQuestion);
-
-    // Show question input section when all required filters are filled
-    function checkAllFiltersSelected() {
-        // Get the values of the filter selects
-        const classSubject = $('#class_subject').val();
-        const session = $('#session').val();
-        const term = $('#term').val();
-        const testType = $('#test_type').val();
-
-        // Check if all filters have a value selected
-        if (classSubject && session && term && testType) {
-            // If all filters are selected, show the questions container and hide the filter message
-            $('#questions-container').show();
-            $('#filter-message').hide();
-             if ($('.question-item').length === 0) {
-                addQuestion();
-            }
-        } else {
-            // If not all filters are selected, hide the questions container and show the filter message
-            $('#questions-container').hide();
-            $('#filter-message').show();
-        }
-    }
-
-    // Attach change events to all filter selects
-    $('#class_subject, #session, #term, #test_type').on('change', checkAllFiltersSelected);
-
-    // Initial check
-    checkAllFiltersSelected();
+    document.getElementById('add-question').addEventListener('click', addQuestion);
 });
 
 function addQuestion() {
@@ -361,11 +351,14 @@ function addQuestion() {
         </div>
     `;
 
-    $('#questions-container').append(questionHtml);
+    const questionsContainer = document.getElementById('questions-container');
+    questionsContainer.insertAdjacentHTML('beforeend', questionHtml);
 
     // Remove question event
-    $(`.question-item[data-index="${questionIndex}"] .remove-question`).click(function() {
-        $(this).closest('.question-item').remove();
+    const newQuestion = document.querySelector(`.question-item[data-index="${questionIndex}"]`);
+    const removeButton = newQuestion.querySelector('.remove-question');
+    removeButton.addEventListener('click', function() {
+        newQuestion.remove();
         updateQuestionNumbers();
     });
 
@@ -373,8 +366,12 @@ function addQuestion() {
 }
 
 function updateQuestionNumbers() {
-    $('.question-item').each(function(index) {
-        $(this).find('.card-header h6').text(`Question ${index + 1}`);
+    const questionItems = document.querySelectorAll('.question-item');
+    questionItems.forEach((item, index) => {
+        const header = item.querySelector('.card-header h6');
+        if (header) {
+            header.textContent = `Question ${index + 1}`;
+        }
     });
 }
 </script>
