@@ -1,802 +1,483 @@
 /**
- * CBT Portal - Main JavaScript File
- * Handles common functionality across the application
+ * CBT Portal - Enhanced Main JavaScript
+ * Modern, feature-rich client-side functionality
  */
 
-// Global variables
-let toastContainer;
+// Global configuration
+window.CBTPortal = {
+    config: {
+        animationDuration: 300,
+        toastDuration: 5000,
+        ajaxTimeout: 30000
+    },
 
-// Initialize application when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    initializeApp();
-});
+    // Utility functions
+    utils: {
+        formatTime: function(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
 
-/**
- * Initialize the application
- */
-function initializeApp() {
-    initializeToasts();
-    initializeFormValidation();
-    initializeTooltips();
-    initializeConfirmDialogs();
-    initializeImagePreviews();
-    initializeTableSorting();
-    initializeSearchFilters();
-    handleNetworkStatus();
-}
-
-/**
- * Initialize toast notifications
- */
-function initializeToasts() {
-    // Create toast container if it doesn't exist
-    if (!document.getElementById('toast-container')) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toast-container';
-        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-        toastContainer.style.zIndex = '9999';
-        document.body.appendChild(toastContainer);
-    } else {
-        toastContainer = document.getElementById('toast-container');
-    }
-}
-
-/**
- * Show toast notification
- * @param {string} message - The message to display
- * @param {string} type - The type of toast (success, error, warning, info)
- * @param {number} duration - Duration in milliseconds (default: 5000)
- */
-function showToast(message, type = 'info', duration = 5000) {
-    const toastId = 'toast-' + Date.now();
-    const iconClass = {
-        success: 'fas fa-check-circle',
-        error: 'fas fa-exclamation-circle',
-        warning: 'fas fa-exclamation-triangle',
-        info: 'fas fa-info-circle'
-    };
-
-    const bgClass = {
-        success: 'bg-success',
-        error: 'bg-danger',
-        warning: 'bg-warning',
-        info: 'bg-primary'
-    };
-
-    const toastHTML = `
-        <div class="toast align-items-center text-white ${bgClass[type]} border-0" role="alert" id="${toastId}">
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="${iconClass[type]} me-2"></i>
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    `;
-
-    toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-
-    const toastElement = document.getElementById(toastId);
-    const toast = new bootstrap.Toast(toastElement, { delay: duration });
-    toast.show();
-
-    // Remove toast element after it's hidden
-    toastElement.addEventListener('hidden.bs.toast', function() {
-        toastElement.remove();
-    });
-}
-
-/**
- * Initialize form validation
- */
-// CBT Portal - Enhanced Main JavaScript
-
-// Toast notification system
-function showToast(message, type = 'info') {
-    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
-    const toast = document.createElement('div');
-    toast.className = `alert alert-${type} alert-dismissible fade show`;
-    toast.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-
-    toast.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
-    `;
-
-    toastContainer.appendChild(toast);
-
-    setTimeout(() => {
-        if (toast.parentElement) {
-            toast.remove();
-        }
-    }, 5000);
-}
-
-function createToastContainer() {
-    const container = document.createElement('div');
-    container.id = 'toastContainer';
-    container.style.cssText = 'position: fixed; top: 0; right: 0; z-index: 9999; padding: 20px;';
-    document.body.appendChild(container);
-    return container;
-}
-
-// Form validation with jQuery
-function initializeFormValidation() {
-    $('.needs-validation').on('submit', function(event) {
-        if (this.checkValidity() === false) {
-            event.preventDefault();
-            event.stopPropagation();
-            showToast('Please fill in all required fields correctly', 'danger');
-
-            // Focus first invalid field
-            $(this).find(':invalid').first().focus();
-        }
-        $(this).addClass('was-validated');
-    });
-
-    // Password strength validation
-    $('input[type="password"]').on('input', function() {
-        validatePasswordStrength({ target: this });
-    });
-
-    // Email validation
-    $('input[type="email"]').on('blur', function() {
-        validateEmail({ target: this });
-    });
-}
-
-function validatePasswordStrength(event) {
-    const password = event.target.value;
-    const strengthIndicator = event.target.parentElement.querySelector('.password-strength');
-
-    if (!strengthIndicator) return;
-
-    let strength = 0;
-    let feedback = '';
-
-    if (password.length >= 8) strength++;
-    if (/[a-z]/.test(password)) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/[0-9]/.test(password)) strength++;
-    if (/[^A-Za-z0-9]/.test(password)) strength++;
-
-    switch (strength) {
-        case 0:
-        case 1:
-            feedback = '<span class="text-danger">Weak</span>';
-            break;
-        case 2:
-        case 3:
-            feedback = '<span class="text-warning">Medium</span>';
-            break;
-        case 4:
-        case 5:
-            feedback = '<span class="text-success">Strong</span>';
-            break;
-    }
-
-    strengthIndicator.innerHTML = feedback;
-}
-
-function validateEmail(event) {
-    const email = event.target.value;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (email && !emailRegex.test(email)) {
-        event.target.setCustomValidity('Please enter a valid email address');
-        showToast('Please enter a valid email address', 'warning');
-    } else {
-        event.target.setCustomValidity('');
-    }
-}
-
-// Utility functions
-function formatTime(seconds) {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    if (hours > 0) {
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    } else {
-        return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-}
-
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-function throttle(func, limit) {
-    let inThrottle;
-    return function() {
-        const args = arguments;
-        const context = this;
-        if (!inThrottle) {
-            func.apply(context, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-}
-
-// Initialize everything when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    initializeFormValidation();
-
-    // Add loading states to buttons - optimized to prevent multiple submissions
-    const submitButtons = document.querySelectorAll('button[type="submit"]');
-    submitButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            // Prevent multiple clicks
-            if (this.disabled) {
-                e.preventDefault();
-                return false;
+            if (hours > 0) {
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            } else {
+                return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
             }
-            
-            if (this.form && this.form.checkValidity()) {
-                const originalText = this.innerHTML;
-                this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
-                this.disabled = true;
-                
-                // Re-enable button after 10 seconds as fallback
-                setTimeout(() => {
-                    if (this.disabled) {
-                        this.innerHTML = originalText;
-                        this.disabled = false;
-                    }
-                }, 10000);
-            }
-        });
-    });
+        },
 
-    // Auto-hide alerts after 5 seconds
-    const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            if (alert && alert.parentElement) {
-                alert.style.transition = 'opacity 0.3s';
-                alert.style.opacity = '0';
-                setTimeout(() => {
-                    if (alert.parentElement) {
-                        alert.remove();
-                    }
-                }, 300);
-            }
-        }, 5000);
-    });
-});
-
-// Copy function for codes
-function copyAllCodes() {
-    const codes = [];
-    document.querySelectorAll('code.fs-5').forEach(codeEl => {
-        codes.push(codeEl.textContent);
-    });
-
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(codes.join('\n')).then(() => {
-            showToast('All codes copied to clipboard!', 'success');
-        }).catch(() => {
-            showToast('Failed to copy codes to clipboard', 'danger');
-        });
-    } else {
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = codes.join('\n');
-        document.body.appendChild(textArea);
-        textArea.select();
-        try {
-            document.execCommand('copy');
-            showToast('All codes copied to clipboard!', 'success');
-        } catch (err) {
-            showToast('Failed to copy codes to clipboard', 'danger');
-        }
-        document.body.removeChild(textArea);
-    }
-}
-function validatePasswordStrength(event) {
-    const password = event.target.value;
-    const strengthIndicator = event.target.parentNode.querySelector('.password-strength');
-
-    if (!strengthIndicator) return;
-
-    let strength = 0;
-    let feedback = [];
-
-    if (password.length >= 8) strength++;
-    else feedback.push('At least 8 characters');
-
-    if (/[a-z]/.test(password)) strength++;
-    else feedback.push('Lowercase letter');
-
-    if (/[A-Z]/.test(password)) strength++;
-    else feedback.push('Uppercase letter');
-
-    if (/[0-9]/.test(password)) strength++;
-    else feedback.push('Number');
-
-    if (/[^a-zA-Z0-9]/.test(password)) strength++;
-    else feedback.push('Special character');
-
-    const strengthText = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
-    const strengthColor = ['danger', 'warning', 'info', 'success', 'success'];
-
-    strengthIndicator.innerHTML = `
-        <div class="progress mt-1" style="height: 4px;">
-            <div class="progress-bar bg-${strengthColor[strength]}" style="width: ${(strength / 5) * 100}%"></div>
-        </div>
-        <small class="text-${strengthColor[strength]}">${strengthText[strength] || 'Very Weak'}</small>
-    `;
-}
-
-/**
- * Validate email format
- * @param {Event} event 
- */
-function validateEmail(event) {
-    const email = event.target.value;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (email && !emailRegex.test(email)) {
-        event.target.setCustomValidity('Please enter a valid email address');
-        event.target.classList.add('is-invalid');
-    } else {
-        event.target.setCustomValidity('');
-        event.target.classList.remove('is-invalid');
-    }
-}
-
-/**
- * Initialize tooltips
- */
-function initializeTooltips() {
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-}
-
-/**
- * Initialize confirmation dialogs
- */
-function initializeConfirmDialogs() {
-    const confirmButtons = document.querySelectorAll('[data-confirm]');
-
-    confirmButtons.forEach(button => {
-        button.addEventListener('click', function(event) {
-            const message = this.getAttribute('data-confirm');
-            if (!confirm(message)) {
-                event.preventDefault();
-                return false;
-            }
-        });
-    });
-}
-
-/**
- * Initialize image previews
- */
-function initializeImagePreviews() {
-    const imageInputs = document.querySelectorAll('input[type="file"][accept*="image"]');
-
-    imageInputs.forEach(input => {
-        input.addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // Validate file size (5MB limit)
-            if (file.size > 5 * 1024 * 1024) {
-                showToast('Image file size must be less than 5MB', 'error');
-                event.target.value = '';
-                return;
-            }
-
-            // Validate file type
-            if (!file.type.startsWith('image/')) {
-                showToast('Please select a valid image file', 'error');
-                event.target.value = '';
-                return;
-            }
-
-            // Create preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                let preview = input.parentNode.querySelector('.image-preview');
-                if (!preview) {
-                    preview = document.createElement('div');
-                    preview.className = 'image-preview mt-2';
-                    input.parentNode.appendChild(preview);
-                }
-
-                preview.innerHTML = `
-                    <img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
-                    <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeImagePreview(this)">
-                        <i class="fas fa-times"></i>
-                    </button>
-                `;
+        debounce: function(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
             };
-            reader.readAsDataURL(file);
-        });
-    });
-}
+        },
 
-/**
- * Remove image preview
- * @param {HTMLElement} button 
- */
-function removeImagePreview(button) {
-    const preview = button.closest('.image-preview');
-    const input = preview.parentNode.querySelector('input[type="file"]');
+        throttle: function(func, limit) {
+            let inThrottle;
+            return function() {
+                const args = arguments;
+                const context = this;
+                if (!inThrottle) {
+                    func.apply(context, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        },
 
-    input.value = '';
-    preview.remove();
-}
+        showNotification: function(message, type = 'info', duration = 5000) {
+            const alertClass = type === 'error' ? 'danger' : type;
+            const icon = {
+                'success': 'fas fa-check-circle',
+                'danger': 'fas fa-exclamation-triangle',
+                'warning': 'fas fa-exclamation-circle',
+                'info': 'fas fa-info-circle'
+            }[alertClass] || 'fas fa-info-circle';
 
-/**
- * Initialize table sorting
- */
-function initializeTableSorting() {
-    const sortableTables = document.querySelectorAll('.table-sortable');
+            const alertHtml = `
+                <div class="alert alert-${alertClass} alert-dismissible fade show" role="alert" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: var(--shadow-xl);">
+                    <i class="${icon} me-2"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
 
-    sortableTables.forEach(table => {
-        const headers = table.querySelectorAll('th[data-sort]');
+            $('body').append(alertHtml);
 
-        headers.forEach(header => {
-            header.style.cursor = 'pointer';
-            header.innerHTML += ' <i class="fas fa-sort text-muted"></i>';
+            // Auto-dismiss after duration
+            setTimeout(() => {
+                $('.alert').last().fadeOut(300, function() {
+                    $(this).remove();
+                });
+            }, duration);
+        },
 
-            header.addEventListener('click', function() {
-                sortTable(table, this.getAttribute('data-sort'), this);
-            });
-        });
-    });
-}
+        validateForm: function(formSelector) {
+            const form = $(formSelector);
+            let isValid = true;
 
-/**
- * Sort table by column
- * @param {HTMLElement} table 
- * @param {string} column 
- * @param {HTMLElement} header 
- */
-function sortTable(table, column, header) {
-    const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    const columnIndex = Array.from(header.parentNode.children).indexOf(header);
+            // Remove previous validation classes
+            form.find('.is-invalid').removeClass('is-invalid');
+            form.find('.invalid-feedback').remove();
 
-    const isAscending = !header.classList.contains('sort-asc');
+            // Validate required fields
+            form.find('[required]').each(function() {
+                const field = $(this);
+                const value = field.val().trim();
 
-    // Remove sort classes from all headers
-    table.querySelectorAll('th').forEach(th => {
-        th.classList.remove('sort-asc', 'sort-desc');
-        const icon = th.querySelector('i');
-        if (icon) {
-            icon.className = 'fas fa-sort text-muted';
-        }
-    });
-
-    // Add sort class to current header
-    header.classList.add(isAscending ? 'sort-asc' : 'sort-desc');
-    const icon = header.querySelector('i');
-    if (icon) {
-        icon.className = `fas fa-sort-${isAscending ? 'up' : 'down'} text-primary`;
-    }
-
-    // Sort rows
-    rows.sort((a, b) => {
-        const aValue = a.cells[columnIndex].textContent.trim();
-        const bValue = b.cells[columnIndex].textContent.trim();
-
-        // Try to parse as numbers
-        const aNum = parseFloat(aValue);
-        const bNum = parseFloat(bValue);
-
-        if (!isNaN(aNum) && !isNaN(bNum)) {
-            return isAscending ? aNum - bNum : bNum - aNum;
-        }
-
-        // String comparison
-        return isAscending ? 
-            aValue.localeCompare(bValue) : 
-            bValue.localeCompare(aValue);
-    });
-
-    // Reappend sorted rows
-    rows.forEach(row => tbody.appendChild(row));
-}
-
-/**
- * Initialize search filters
- */
-function initializeSearchFilters() {
-    const searchInputs = document.querySelectorAll('[data-search-target]');
-
-    searchInputs.forEach(input => {
-        const targetSelector = input.getAttribute('data-search-target');
-        const targets = document.querySelectorAll(targetSelector);
-
-        input.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-
-            targets.forEach(target => {
-                const text = target.textContent.toLowerCase();
-                const matches = text.includes(searchTerm);
-
-                target.style.display = matches ? '' : 'none';
-
-                // Add highlight
-                if (matches && searchTerm) {
-                    highlightText(target, searchTerm);
-                } else {
-                    removeHighlight(target);
+                if (!value) {
+                    isValid = false;
+                    field.addClass('is-invalid');
+                    field.after('<div class="invalid-feedback">This field is required.</div>');
                 }
             });
-        });
-    });
-}
 
-/**
- * Highlight search text
- * @param {HTMLElement} element 
- * @param {string} searchTerm 
- */
-function highlightText(element, searchTerm) {
-    // Simple highlighting - in production, use a more robust solution
-    const originalText = element.getAttribute('data-original-text') || element.textContent;
+            // Validate email fields
+            form.find('input[type="email"]').each(function() {
+                const field = $(this);
+                const value = field.val().trim();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!element.getAttribute('data-original-text')) {
-        element.setAttribute('data-original-text', originalText);
-    }
+                if (value && !emailRegex.test(value)) {
+                    isValid = false;
+                    field.addClass('is-invalid');
+                    field.after('<div class="invalid-feedback">Please enter a valid email address.</div>');
+                }
+            });
 
-    const regex = new RegExp(`(${searchTerm})`, 'gi');
-    const highlightedText = originalText.replace(regex, '<mark>$1</mark>');
+            return isValid;
+        },
 
-    element.innerHTML = highlightedText;
-}
+        formatFileSize: function(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        },
 
-/**
- * Remove highlight from text
- * @param {HTMLElement} element 
- */
-function removeHighlight(element) {
-    const originalText = element.getAttribute('data-original-text');
-    if (originalText) {
-        element.textContent = originalText;
-    }
-}
+        copyToClipboard: function(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    this.showNotification('Text copied to clipboard!', 'success', 2000);
+                }).catch(() => {
+                    this.fallbackCopyToClipboard(text);
+                });
+            } else {
+                this.fallbackCopyToClipboard(text);
+            }
+        },
 
-/**
- * Handle network status
- */
-function handleNetworkStatus() {
-    function updateNetworkStatus() {
-        if (!navigator.onLine) {
-            showToast('You are currently offline. Some features may not work properly.', 'warning', 10000);
+        fallbackCopyToClipboard: function(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                document.execCommand('copy');
+                this.showNotification('Text copied to clipboard!', 'success', 2000);
+            } catch (err) {
+                this.showNotification('Failed to copy text', 'error', 3000);
+            }
+
+            document.body.removeChild(textArea);
+        }
+    },
+
+    // Loading management
+    loading: {
+        show: function(message = 'Loading...') {
+            const loadingOverlay = $('#loadingOverlay');
+            if (loadingOverlay.length) {
+                loadingOverlay.find('strong').text(message);
+                loadingOverlay.addClass('show');
+            }
+        },
+
+        hide: function() {
+            const loadingOverlay = $('#loadingOverlay');
+            if (loadingOverlay.length) {
+                loadingOverlay.removeClass('show');
+            }
+        }
+    },
+
+    // AJAX utilities
+    ajax: {
+        request: function(options) {
+            const defaults = {
+                timeout: CBTPortal.config.ajaxTimeout,
+                beforeSend: function() {
+                    CBTPortal.loading.show();
+                },
+                complete: function() {
+                    CBTPortal.loading.hide();
+                },
+                error: function(xhr, status, error) {
+                    let message = 'An error occurred. Please try again.';
+
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    } else if (status === 'timeout') {
+                        message = 'Request timeout. Please check your connection.';
+                    } else if (status === 'abort') {
+                        return; // Don't show error for aborted requests
+                    }
+
+                    CBTPortal.utils.showNotification(message, 'error');
+                }
+            };
+
+            return $.ajax($.extend({}, defaults, options));
         }
     }
+};
 
-    window.addEventListener('online', function() {
-        showToast('You are back online!', 'success');
-    });
+// Enhanced jQuery document ready
+$(document).ready(function() {
+    'use strict';
 
-    window.addEventListener('offline', updateNetworkStatus);
+    // Initialize loading overlay
+    CBTPortal.loading.hide();
 
-    // Check initial status
-    updateNetworkStatus();
-}
-
-/**
- * Format time duration
- * @param {number} seconds 
- * @returns {string}
- */
-function formatTime(seconds) {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-
-    if (hours > 0) {
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    } else {
-        return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-}
-
-/**
- * Debounce function to limit API calls
- * @param {Function} func 
- * @param {number} wait 
- * @returns {Function}
- */
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-/**
- * Throttle function to limit execution frequency
- * @param {Function} func 
- * @param {number} limit 
- * @returns {Function}
- */
-function throttle(func, limit) {
-    let inThrottle;
-    return function() {
-        const args = arguments;
-        const context = this;
-        if (!inThrottle) {
-            func.apply(context, args);
-            inThrottle = true;
-            setTimeout(() => inThrottle = false, limit);
-        }
-    };
-}
-
-/**
- * Copy text to clipboard
- * @param {string} text 
- * @returns {Promise}
- */
-async function copyToClipboard(text) {
-    try {
-        await navigator.clipboard.writeText(text);
-        showToast('Copied to clipboard!', 'success');
-        return true;
-    } catch (err) {
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-
-        try {
-            document.execCommand('copy');
-            textArea.remove();
-            showToast('Copied to clipboard!', 'success');
-            return true;
-        } catch (err) {
-            textArea.remove();
-            showToast('Failed to copy to clipboard', 'error');
+    // Enhanced form validation
+    $('form[data-validate="true"]').on('submit', function(e) {
+        if (!CBTPortal.utils.validateForm(this)) {
+            e.preventDefault();
             return false;
         }
-    }
-}
+    });
 
-/**
- * Generate random string
- * @param {number} length 
- * @returns {string}
- */
-function generateRandomString(length = 8) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
+    // Auto-dismiss alerts
+    $('.alert:not(.alert-permanent)').each(function() {
+        const alert = $(this);
+        setTimeout(() => {
+            alert.fadeOut(CBTPortal.config.animationDuration, function() {
+                $(this).remove();
+            });
+        }, CBTPortal.config.toastDuration);
+    });
 
-/**
- * Validate file upload
- * @param {File} file 
- * @param {Object} options 
- * @returns {Object}
- */
-function validateFileUpload(file, options = {}) {
-    const defaults = {
-        maxSize: 5 * 1024 * 1024, // 5MB
-        allowedTypes: ['image/jpeg', 'image/png', 'image/gif'],
-        maxWidth: 2000,
-        maxHeight: 2000
-    };
-
-    const config = { ...defaults, ...options };
-    const errors = [];
-
-    // Check file size
-    if (file.size > config.maxSize) {
-        errors.push(`File size must be less than ${config.maxSize / (1024 * 1024)}MB`);
-    }
-
-    // Check file type
-    if (!config.allowedTypes.includes(file.type)) {
-        errors.push(`File type not allowed. Allowed types: ${config.allowedTypes.join(', ')}`);
-    }
-
-    return {
-        valid: errors.length === 0,
-        errors: errors
-    };
-}
-
-/**
- * Auto-save functionality
- * @param {string} key - Storage key
- * @param {Function} getData - Function to get data to save
- * @param {number} interval - Save interval in milliseconds
- * @returns {Function} - Cleanup function
- */
-function setupAutoSave(key, getData, interval = 30000) {
-    const saveData = () => {
-        try {
-            const data = getData();
-            localStorage.setItem(key, JSON.stringify({
-                data: data,
-                timestamp: Date.now()
-            }));
-        } catch (error) {
-            console.error('Auto-save failed:', error);
+    // Enhanced button click effects
+    $('.btn').on('click', function() {
+        const btn = $(this);
+        if (!btn.hasClass('btn-no-effect')) {
+            btn.addClass('clicked');
+            setTimeout(() => btn.removeClass('clicked'), 150);
         }
-    };
+    });
 
-    const intervalId = setInterval(saveData, interval);
+    // Smooth scrolling for anchor links
+    $('a[href^="#"]:not([href="#"])').on('click', function(e) {
+        const target = $(this.getAttribute('href'));
+        if (target.length) {
+            e.preventDefault();
+            $('html, body').animate({
+                scrollTop: target.offset().top - 100
+            }, 500, 'easeInOutQuart');
+        }
+    });
 
-    // Save on page unload
-    const unloadHandler = () => saveData();
-    window.addEventListener('beforeunload', unloadHandler);
+    // Auto-resize textareas
+    $('textarea[data-auto-resize="true"]').each(function() {
+        const textarea = this;
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
 
-    // Return cleanup function
-    return () => {
-        clearInterval(intervalId);
-        window.removeEventListener('beforeunload', unloadHandler);
-    };
-}
+        $(textarea).on('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
 
-/**
- * Load auto-saved data
- * @param {string} key - Storage key
- * @param {number} maxAge - Maximum age in milliseconds
- * @returns {*} - Saved data or null
- */
-function loadAutoSavedData(key, maxAge = 24 * 60 * 60 * 1000) {
-    try {
-        const saved = localStorage.getItem(key);
-        if (!saved) return null;
+    // Enhanced file input handling
+    $('input[type="file"]').on('change', function() {
+        const input = $(this);
+        const files = this.files;
+        const maxSize = input.data('max-size') || 5242880; // 5MB default
+        const allowedTypes = input.data('allowed-types');
 
-        const parsed = JSON.parse(saved);
-        const age = Date.now() - parsed.timestamp;
+        if (files.length > 0) {
+            const file = files[0];
+            let isValid = true;
+            let errorMessage = '';
 
-        if (age > maxAge) {
-            localStorage.removeItem(key);
-            return null;
+            // Check file size
+            if (file.size > maxSize) {
+                isValid = false;
+                errorMessage = `File size must be less than ${CBTPortal.utils.formatFileSize(maxSize)}`;
+            }
+
+            // Check file type
+            if (allowedTypes) {
+                const allowedTypesArray = allowedTypes.split(',').map(type => type.trim());
+                const fileExtension = file.name.split('.').pop().toLowerCase();
+
+                if (!allowedTypesArray.includes(fileExtension)) {
+                    isValid = false;
+                    errorMessage = `Only ${allowedTypes} files are allowed`;
+                }
+            }
+
+            if (!isValid) {
+                input.val('');
+                CBTPortal.utils.showNotification(errorMessage, 'error');
+                return;
+            }
+
+            // Show file info
+            const fileInfo = `Selected: ${file.name} (${CBTPortal.utils.formatFileSize(file.size)})`;
+            const infoElement = input.next('.file-info');
+
+            if (infoElement.length) {
+                infoElement.text(fileInfo);
+            } else {
+                input.after(`<small class="file-info text-muted d-block mt-1">${fileInfo}</small>`);
+            }
+        }
+    });
+
+    // Copy to clipboard functionality
+    $('[data-clipboard]').on('click', function() {
+        const text = $(this).data('clipboard');
+        CBTPortal.utils.copyToClipboard(text);
+    });
+
+    // Confirmation dialogs
+    $('[data-confirm]').on('click', function(e) {
+        const message = $(this).data('confirm') || 'Are you sure?';
+        if (!confirm(message)) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Auto-save functionality for forms
+    $('form[data-auto-save="true"]').each(function() {
+        const form = $(this);
+        const autoSaveKey = form.data('auto-save-key') || 'form_auto_save';
+
+        // Load saved data
+        const savedData = localStorage.getItem(autoSaveKey);
+        if (savedData) {
+            try {
+                const data = JSON.parse(savedData);
+                Object.keys(data).forEach(key => {
+                    const field = form.find(`[name="${key}"]`);
+                    if (field.length && field.attr('type') !== 'password') {
+                        field.val(data[key]);
+                    }
+                });
+            } catch (e) {
+                console.warn('Failed to load auto-saved data:', e);
+            }
         }
 
-        return parsed.data;
-    } catch (error) {
-        console.error('Failed to load auto-saved data:', error);
-        return null;
-    }
-}
+        // Save data on change (debounced)
+        const saveData = CBTPortal.utils.debounce(() => {
+            const formData = {};
+            form.find('input, textarea, select').each(function() {
+                const field = $(this);
+                const name = field.attr('name');
+                const type = field.attr('type');
 
-// Export functions for use in other files
-window.CBTPortal = {
-    showToast,
-    formatTime,
-    debounce,
-    throttle,
-    copyToClipboard,
-    generateRandomString,
-    validateFileUpload,
-    setupAutoSave,
-    loadAutoSavedData
-};
+                if (name && type !== 'password' && type !== 'file') {
+                    formData[name] = field.val();
+                }
+            });
+
+            localStorage.setItem(autoSaveKey, JSON.stringify(formData));
+        }, 1000);
+
+        form.on('input change', 'input, textarea, select', saveData);
+
+        // Clear saved data on successful submit
+        form.on('submit', function() {
+            localStorage.removeItem(autoSaveKey);
+        });
+    });
+
+    // Enhanced table functionality
+    $('.table-sortable th[data-sort]').on('click', function() {
+        const th = $(this);
+        const table = th.closest('table');
+        const column = th.data('sort');
+        const order = th.hasClass('sort-asc') ? 'desc' : 'asc';
+
+        // Remove sort classes from other headers
+        table.find('th').removeClass('sort-asc sort-desc');
+        th.addClass('sort-' + order);
+
+        // Sort table rows
+        const tbody = table.find('tbody');
+        const rows = tbody.find('tr').toArray();
+
+        rows.sort((a, b) => {
+            const aVal = $(a).find(`td:eq(${th.index()})`).text().trim();
+            const bVal = $(b).find(`td:eq(${th.index()})`).text().trim();
+
+            let result;
+            if (!isNaN(aVal) && !isNaN(bVal)) {
+                result = parseFloat(aVal) - parseFloat(bVal);
+            } else {
+                result = aVal.localeCompare(bVal);
+            }
+
+            return order === 'asc' ? result : -result;
+        });
+
+        tbody.empty().append(rows);
+    });
+
+    // Search functionality
+    $('[data-search-target]').on('input', CBTPortal.utils.debounce(function() {
+        const searchTerm = $(this).val().toLowerCase();
+        const targetSelector = $(this).data('search-target');
+        const target = $(targetSelector);
+
+        if (target.is('table')) {
+            target.find('tbody tr').each(function() {
+                const row = $(this);
+                const text = row.text().toLowerCase();
+                row.toggle(text.includes(searchTerm));
+            });
+        } else {
+            target.children().each(function() {
+                const item = $(this);
+                const text = item.text().toLowerCase();
+                item.toggle(text.includes(searchTerm));
+            });
+        }
+    }, 300));
+
+    // Initialize tooltips and popovers
+    $('[data-bs-toggle="tooltip"]').tooltip();
+    $('[data-bs-toggle="popover"]').popover();
+
+    // Page transition effects
+    $('a:not([href^="#"]):not([href^="javascript:"]):not([data-bs-toggle]):not([target="_blank"])').on('click', function() {
+        if (this.hostname === window.location.hostname) {
+            CBTPortal.loading.show('Loading page...');
+        }
+    });
+
+    // Form submission loading
+    $('form').on('submit', function() {
+        const submitBtn = $(this).find('button[type="submit"], input[type="submit"]');
+        submitBtn.prop('disabled', true);
+
+        const originalText = submitBtn.html();
+        submitBtn.html('<i class="fas fa-spinner fa-spin me-2"></i>Processing...');
+
+        // Re-enable after 30 seconds as fallback
+        setTimeout(() => {
+            submitBtn.prop('disabled', false).html(originalText);
+        }, 30000);
+
+        CBTPortal.loading.show('Processing...');
+    });
+
+    // Error handling for images
+    $('img').on('error', function() {
+        const img = $(this);
+        if (!img.hasClass('error-handled')) {
+            img.addClass('error-handled');
+            img.attr('src', 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZGRkIi8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCxzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmaWxsPSIjOTk5IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBkeT0iLjNlbSI+SW1hZ2UgTm90IEZvdW5kPC90ZXh0Pjwvc3ZnPg==');
+            img.attr('alt', 'Image not found');
+        }
+    });
+
+    console.log('✅ CBT Portal JavaScript initialized successfully');
+});
+
+// Global error handling
+window.addEventListener('error', function(e) {
+    console.error('Global error:', e.error);
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        // Only show user-friendly errors in production
+        CBTPortal.utils.showNotification('An unexpected error occurred. Please refresh the page and try again.', 'error');
+    }
+});
+
+// Handle unhandled promise rejections
+window.addEventListener('unhandledrejection', function(e) {
+    console.error('Unhandled promise rejection:', e.reason);
+    if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+        CBTPortal.utils.showNotification('An unexpected error occurred. Please refresh the page and try again.', 'error');
+    }
+});
+
+// Expose utility functions globally for backward compatibility
+window.formatTime = CBTPortal.utils.formatTime;
+window.debounce = CBTPortal.utils.debounce;
+window.showNotification = CBTPortal.utils.showNotification;
