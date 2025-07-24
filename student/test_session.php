@@ -18,7 +18,13 @@ $query = "SELECT tc.*, c.name as class_name, s.name as subject_name
 $test = $db->fetch($query, [$testCode]);
 
 if (!$test) {
-    header('Location: take_test.php?error=Invalid test code');
+    header('Location: take_test.php?error=Invalid or inactive test code');
+    exit();
+}
+
+// Check if test code is disabled
+if ($test['disabled']) {
+    header('Location: take_test.php?error=This test code has been disabled');
     exit();
 }
 
@@ -105,13 +111,13 @@ include '../includes/header.php';
             </div>
         </div>
     </div>
-    
+
     <!-- Questions -->
     <div class="col-md-8">
         <form id="test-form">
             <input type="hidden" name="test_code_id" value="<?php echo $test['id']; ?>">
             <input type="hidden" name="session_id" value="<?php echo $sessionId; ?>">
-            
+
             <?php foreach ($shuffledQuestions as $index => $q): ?>
                 <div class="card mb-4 question-card" id="question-<?php echo $index; ?>" 
                      style="<?php echo $index > 0 ? 'display: none;' : ''; ?>">
@@ -130,9 +136,9 @@ include '../includes/header.php';
                                      alt="Question Image">
                             </div>
                         <?php endif; ?>
-                        
+
                         <p class="fs-6 mb-4"><?php echo nl2br(htmlspecialchars($q['question_text'])); ?></p>
-                        
+
                         <div class="row">
                             <?php 
                             $optionLabels = ['A', 'B', 'C', 'D'];
@@ -157,7 +163,7 @@ include '../includes/header.php';
                     </div>
                 </div>
             <?php endforeach; ?>
-            
+
             <!-- Navigation -->
             <div class="card">
                 <div class="card-body">
@@ -176,7 +182,7 @@ include '../includes/header.php';
             </div>
         </form>
     </div>
-    
+
     <!-- Question Navigator -->
     <div class="col-md-4">
         <div class="card sticky-top" style="top: 20px;">
@@ -195,15 +201,15 @@ include '../includes/header.php';
                         </div>
                     <?php endforeach; ?>
                 </div>
-                
+
                 <hr>
-                
+
                 <div class="d-grid">
                     <button type="button" id="finish-btn" class="btn btn-warning">
                         <i class="fas fa-flag-checkered me-2"></i>Finish Test
                     </button>
                 </div>
-                
+
                 <div class="mt-3">
                     <small class="text-muted">
                         <i class="fas fa-save me-1"></i>
@@ -258,19 +264,19 @@ $(document).ready(function() {
 function initializeTest() {
     updateNavigationButtons();
     updateQuestionNavigator();
-    
+
     // Navigation button events
     $('#prev-btn').click(() => navigateQuestion(-1));
     $('#next-btn').click(() => navigateQuestion(1));
     $('#submit-btn, #finish-btn').click(showSubmitModal);
     $('#confirm-submit').click(submitTest);
-    
+
     // Question navigator events
     $('.nav-btn').click(function() {
         const questionIndex = parseInt($(this).data('question'));
         showQuestion(questionIndex);
     });
-    
+
     // Answer change events
     $('input[type="radio"]').change(function() {
         const questionId = $(this).attr('name').replace('answer_', '');
@@ -282,19 +288,19 @@ function initializeTest() {
 
 function startTimer() {
     const endTime = testSession.startTime + testSession.duration;
-    
+
     function updateTimer() {
         const now = Math.floor(Date.now() / 1000);
         const remaining = endTime - now;
-        
+
         if (remaining <= 0) {
             // Time's up - auto submit
             autoSubmitTest();
             return;
         }
-        
+
         $('#time-display').text(formatTime(remaining));
-        
+
         // Warning colors
         if (remaining <= 300) { // 5 minutes
             $('#timer').removeClass('text-warning').addClass('text-danger');
@@ -302,7 +308,7 @@ function startTimer() {
             $('#timer').removeClass('text-danger').addClass('text-warning');
         }
     }
-    
+
     updateTimer();
     setInterval(updateTimer, 1000);
 }
@@ -313,7 +319,7 @@ function startAutoSave() {
 
 function saveAnswers() {
     if (Object.keys(answers).length === 0) return;
-    
+
     $.ajax({
         url: '../ajax/save_answer.php',
         method: 'POST',
@@ -347,7 +353,7 @@ function showQuestion(index) {
 
 function updateNavigationButtons() {
     $('#prev-btn').prop('disabled', currentQuestion === 0);
-    
+
     if (currentQuestion === testSession.totalQuestions - 1) {
         $('#next-btn').hide();
         $('#submit-btn').show();
@@ -361,16 +367,16 @@ function updateQuestionNavigator() {
     $('.nav-btn').each(function() {
         const questionIndex = parseInt($(this).data('question'));
         const $btn = $(this);
-        
+
         $btn.removeClass('btn-primary btn-success btn-outline-primary');
-        
+
         if (questionIndex === currentQuestion) {
             $btn.addClass('btn-primary');
         } else {
             // Check if question is answered
             const questionCard = $(`#question-${questionIndex}`);
             const answered = questionCard.find('input[type="radio"]:checked').length > 0;
-            
+
             if (answered) {
                 $btn.addClass('btn-success');
             } else {
@@ -383,7 +389,7 @@ function updateQuestionNavigator() {
 function showSubmitModal() {
     const answered = Object.keys(answers).length;
     const total = testSession.totalQuestions;
-    
+
     $('#submit-summary').html(`
         <div class="alert alert-info">
             <strong>Summary:</strong><br>
@@ -391,13 +397,13 @@ function showSubmitModal() {
             Unanswered: ${total - answered} questions
         </div>
     `);
-    
+
     new bootstrap.Modal(document.getElementById('submitModal')).show();
 }
 
 function submitTest() {
     clearInterval(autoSaveInterval);
-    
+
     $.ajax({
         url: '../ajax/submit_test.php',
         method: 'POST',
@@ -428,7 +434,7 @@ function formatTime(seconds) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hours > 0) {
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     } else {

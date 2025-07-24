@@ -22,6 +22,12 @@ if (!$test) {
     exit();
 }
 
+// Check if test code is disabled
+if ($test['disabled']) {
+    header('Location: take_test.php?error=This test code has been disabled');
+    exit();
+}
+
 // Check if student has already taken this test
 $query = "SELECT id FROM test_results WHERE student_id = ? AND test_code_id = ?";
 $existingResult = $db->fetch($query, [$_SESSION['user_id'], $test['id']]);
@@ -29,6 +35,26 @@ $existingResult = $db->fetch($query, [$_SESSION['user_id'], $test['id']]);
 if ($existingResult) {
     header('Location: take_test.php?error=You have already taken this test');
     exit();
+}
+
+// Disable the test code permanently once accessed for preview
+try {
+    $db->getConnection()->beginTransaction();
+    
+    $disableQuery = "UPDATE test_codes SET disabled = true, disabled_at = CURRENT_TIMESTAMP WHERE id = ?";
+    $db->execute($disableQuery, [$test['id']]);
+    
+    // Log the test code disabling
+    require_once '../includes/functions.php';
+    logActivity($_SESSION['user_id'], 'Test Code Accessed', 
+               "Test code {$test['code']} disabled after access by student {$_SESSION['username']}");
+    
+    $db->getConnection()->commit();
+    
+} catch (Exception $e) {
+    $db->getConnection()->rollback();
+    error_log("Failed to disable test code: " . $e->getMessage());
+    // Continue anyway - don't block the student
 }
 
 // Count available questions

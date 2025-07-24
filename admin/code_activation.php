@@ -14,34 +14,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $action = $_POST['action'] ?? '';
         $codeIds = $_POST['code_ids'] ?? [];
-        
+
         if ($action === 'toggle' && !empty($codeIds)) {
             try {
                 $db->getConnection()->beginTransaction();
-                
+
                 $toggledCount = 0;
                 foreach ($codeIds as $codeId) {
                     // Get current status
                     $codeQuery = "SELECT id, code, active, subject_name, class_name FROM test_codes WHERE id = ?";
                     $code = $db->fetch($codeQuery, [$codeId]);
-                    
+
                     if ($code) {
                         $newStatus = !$code['active'];
                         $updateQuery = "UPDATE test_codes SET active = ? WHERE id = ?";
                         $db->execute($updateQuery, [$newStatus, $codeId]);
-                        
+
                         // Log activity
                         $statusText = $newStatus ? 'activated' : 'deactivated';
                         logActivity($_SESSION['user_id'], 'Test Code ' . ucfirst($statusText), 
                                    "Code {$code['code']} for {$code['class_name']} - {$code['subject_name']}");
-                        
+
                         $toggledCount++;
                     }
                 }
-                
+
                 $db->getConnection()->commit();
                 $success = "Successfully updated {$toggledCount} test codes.";
-                
+
             } catch (Exception $e) {
                 $db->getConnection()->rollback();
                 error_log("Code activation error: " . $e->getMessage());
@@ -81,7 +81,7 @@ $query = "SELECT tc.*, u.full_name as created_by_name,
           WHERE " . implode(' AND ', $whereConditions) . "
           GROUP BY tc.id, tc.code, tc.class_id, tc.subject_id, tc.class_name, tc.subject_name, 
                    tc.test_type, tc.num_questions, tc.score_per_question, tc.duration, 
-                   tc.active, tc.created_by, tc.created_at, u.full_name
+                   tc.active, tc.disabled, tc.created_by, tc.created_at, u.full_name
           ORDER BY tc.created_at DESC";
 
 $codes = $db->fetchAll($query, $params);
@@ -155,7 +155,7 @@ include '../includes/header.php';
                 </div>
             </div>
         </div>
-        
+
         <!-- Filter and Bulk Actions -->
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
@@ -174,7 +174,7 @@ include '../includes/header.php';
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    
+
                     <div class="col-md-3">
                         <label for="subject_id" class="form-label">Subject</label>
                         <select class="form-select" id="subject_id" name="subject_id">
@@ -186,7 +186,7 @@ include '../includes/header.php';
                             <?php endforeach; ?>
                         </select>
                     </div>
-                    
+
                     <div class="col-md-3">
                         <label for="status" class="form-label">Status</label>
                         <select class="form-select" id="status" name="status">
@@ -195,7 +195,7 @@ include '../includes/header.php';
                             <option value="inactive" <?php echo $status === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
                         </select>
                     </div>
-                    
+
                     <div class="col-md-3 d-flex align-items-end">
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-search me-2"></i>Filter
@@ -205,14 +205,14 @@ include '../includes/header.php';
                         </a>
                     </div>
                 </form>
-                
+
                 <hr>
-                
+
                 <!-- Bulk Actions -->
                 <form method="POST" id="bulkForm">
                     <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
                     <input type="hidden" name="action" value="toggle">
-                    
+
                     <div class="d-flex justify-content-between align-items-center">
                         <div>
                             <button type="button" class="btn btn-success btn-sm" onclick="selectAll()">
@@ -232,7 +232,7 @@ include '../includes/header.php';
                 </form>
             </div>
         </div>
-        
+
         <!-- Test Codes List -->
         <div class="card">
             <div class="card-header bg-info text-white">
@@ -247,14 +247,14 @@ include '../includes/header.php';
                         <?php echo htmlspecialchars($error); ?>
                     </div>
                 <?php endif; ?>
-                
+
                 <?php if ($success): ?>
                     <div class="alert alert-success" role="alert">
                         <i class="fas fa-check-circle me-2"></i>
                         <?php echo htmlspecialchars($success); ?>
                     </div>
                 <?php endif; ?>
-                
+
                 <?php if (empty($codes)): ?>
                     <div class="text-center text-muted py-5">
                         <i class="fas fa-code fa-3x mb-3"></i>
@@ -275,11 +275,12 @@ include '../includes/header.php';
                                     <th>Code</th>
                                     <th>Class</th>
                                     <th>Subject</th>
-                                    <th>Type</th>
+                                    <th>Test Type</th>
                                     <th>Questions</th>
                                     <th>Duration</th>
                                     <th>Students</th>
                                     <th>Status</th>
+                                    <th>Disabled</th>
                                     <th>Created</th>
                                     <th>Action</th>
                                 </tr>
@@ -332,6 +333,13 @@ include '../includes/header.php';
                                                 <span class="badge bg-secondary">
                                                     <i class="fas fa-toggle-off me-1"></i>Inactive
                                                 </span>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td>
+                                            <?php if ($code['disabled']): ?>
+                                                <span class="badge bg-danger">Disabled</span>
+                                            <?php else: ?>
+                                                <span class="badge bg-success">Available</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
@@ -409,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.code-checkbox').forEach(cb => {
         cb.addEventListener('change', updateSelectedCount);
     });
-    
+
     // Bulk form submission
     document.getElementById('bulkForm').addEventListener('submit', function(e) {
         const selected = document.querySelectorAll('.code-checkbox:checked').length;
@@ -418,12 +426,12 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Please select at least one test code.');
             return;
         }
-        
-        if (!confirm(`Are you sure you want to toggle the status of ${selected} test codes?`)) {
+
+        if (!confirm(`Are yousure you want to toggle the status of ${selected} test codes?`)) {
             e.preventDefault();
         }
     });
-    
+
     updateSelectedCount();
 });
 </script>
