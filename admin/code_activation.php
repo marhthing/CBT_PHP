@@ -79,7 +79,9 @@ $query = "SELECT tc.*, u.full_name as created_by_name,
           LEFT JOIN users u ON tc.created_by = u.id
           LEFT JOIN test_results tr ON tc.id = tr.test_code_id
           WHERE " . implode(' AND ', $whereConditions) . "
-          GROUP BY tc.id
+          GROUP BY tc.id, tc.code, tc.class_id, tc.subject_id, tc.class_name, tc.subject_name, 
+                   tc.test_type, tc.num_questions, tc.score_per_question, tc.duration, 
+                   tc.active, tc.created_by, tc.created_at, u.full_name
           ORDER BY tc.created_at DESC";
 
 $codes = $db->fetchAll($query, $params);

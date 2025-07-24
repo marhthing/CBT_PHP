@@ -1,5 +1,4 @@
-
-    </div>
+</div>
 
     <!-- Enhanced Footer -->
     <footer class="glass-effect text-center py-4 mt-5" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-top: 1px solid rgba(255, 255, 255, 0.2);">
@@ -20,12 +19,18 @@
         </div>
     </footer>
 
-    <!-- JavaScript Dependencies - Proper loading order -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Custom JavaScript -->
+    <!-- JavaScript Dependencies -->
+    <script>
+        // jQuery fallback
+        if (typeof jQuery === 'undefined') {
+            document.write('<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"><\/script>');
+        }
+    </script>
     <script src="../assets/js/main.js"></script>
-    
+
+    <!-- Custom JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <?php if (isset($include_timer) && $include_timer): ?>
         <script src="../assets/js/timer.js"></script>
     <?php endif; ?>

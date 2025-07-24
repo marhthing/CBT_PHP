@@ -17,28 +17,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $term = $_POST['term'] ?? '';
         $testType = $_POST['test_type'] ?? '';
         $questions = $_POST['questions'] ?? [];
-        
+
         if (empty($classId) || empty($subjectId) || empty($session) || empty($term) || empty($testType)) {
             $error = 'Please select all required fields.';
         } elseif (empty($questions)) {
             $error = 'Please add at least one question.';
         } else {
             $db->getConnection()->beginTransaction();
-            
+
             try {
                 $uploadedCount = 0;
-                
+
                 foreach ($questions as $q) {
                     if (empty($q['question_text']) || empty($q['option_a']) || empty($q['option_b']) || 
                         empty($q['option_c']) || empty($q['option_d']) || empty($q['correct_option'])) {
                         continue;
                     }
-                    
+
                     // Handle image upload
                     $imageName = null;
                     if (isset($_FILES['question_images']['name'][$q['index']]) && 
                         $_FILES['question_images']['name'][$q['index']]) {
-                        
+
                         $imageFile = [
                             'name' => $_FILES['question_images']['name'][$q['index']],
                             'type' => $_FILES['question_images']['type'][$q['index']],
@@ -46,39 +46,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             'error' => $_FILES['question_images']['error'][$q['index']],
                             'size' => $_FILES['question_images']['size'][$q['index']]
                         ];
-                        
+
                         $imageName = uploadImage($imageFile);
                     }
-                    
+
                     // Insert question
                     $query = "INSERT INTO questions (class_id, subject_id, session, term, test_type, 
                               question_text, option_a, option_b, option_c, option_d, correct_option, 
                               image, created_by, created_at) 
                               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-                    
+
                     $db->execute($query, [
                         $classId, $subjectId, $session, $term, $testType,
                         $q['question_text'], $q['option_a'], $q['option_b'], 
                         $q['option_c'], $q['option_d'], $q['correct_option'],
                         $imageName, $_SESSION['user_id']
                     ]);
-                    
+
                     $uploadedCount++;
                 }
-                
+
                 if ($uploadedCount > 0) {
                     $db->getConnection()->commit();
-                    
+
                     // Log activity
                     logActivity($_SESSION['user_id'], 'Questions Uploaded (Admin)', 
                                "Uploaded {$uploadedCount} questions for {$session} {$term}");
-                    
+
                     $success = "Successfully uploaded {$uploadedCount} questions.";
                 } else {
                     $db->getConnection()->rollback();
                     $error = 'No valid questions were found to upload.';
                 }
-                
+
             } catch (Exception $e) {
                 $db->getConnection()->rollback();
                 error_log("Question upload error: " . $e->getMessage());
@@ -107,17 +107,17 @@ include '../includes/header.php';
                         <?php echo htmlspecialchars($error); ?>
                     </div>
                 <?php endif; ?>
-                
+
                 <?php if ($success): ?>
                     <div class="alert alert-success" role="alert">
                         <i class="fas fa-check-circle me-2"></i>
                         <?php echo htmlspecialchars($success); ?>
                     </div>
                 <?php endif; ?>
-                
+
                 <form method="POST" enctype="multipart/form-data" id="upload-form">
                     <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
-                    
+
                     <!-- Test Details -->
                     <div class="row mb-4">
                         <div class="col-md-6">
@@ -143,7 +143,7 @@ include '../includes/header.php';
                             </select>
                         </div>
                     </div>
-                    
+
                     <div class="row mb-4">
                         <div class="col-md-4">
                             <label for="session" class="form-label">Academic Session *</label>
@@ -173,9 +173,9 @@ include '../includes/header.php';
                             </select>
                         </div>
                     </div>
-                    
+
                     <hr>
-                    
+
                     <!-- Questions Container -->
                     <div id="questions-container">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -185,7 +185,7 @@ include '../includes/header.php';
                             </button>
                         </div>
                     </div>
-                    
+
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <button type="button" class="btn btn-outline-secondary me-md-2" onclick="location.reload()">
                             <i class="fas fa-redo me-2"></i>Reset
@@ -198,7 +198,7 @@ include '../includes/header.php';
             </div>
         </div>
     </div>
-    
+
     <div class="col-md-4">
         <div class="card">
             <div class="card-header bg-info text-white">
@@ -214,7 +214,7 @@ include '../includes/header.php';
                         <li>Override teacher permissions</li>
                     </ul>
                 </div>
-                
+
                 <ul class="list-unstyled mb-0">
                     <li class="mb-2">
                         <i class="fas fa-check text-success me-2"></i>
@@ -247,7 +247,7 @@ include '../includes/header.php';
                 </ul>
             </div>
         </div>
-        
+
         <div class="card mt-3">
             <div class="card-header bg-warning text-dark">
                 <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Best Practices</h6>
@@ -270,7 +270,7 @@ let questionIndex = 0;
 $(document).ready(function() {
     // Add first question by default
     addQuestion();
-    
+
     // Add question button
     $('#add-question').click(addQuestion);
 });
@@ -288,13 +288,13 @@ function addQuestion() {
             </div>
             <div class="card-body">
                 <input type="hidden" name="questions[${questionIndex}][index]" value="${questionIndex}">
-                
+
                 <div class="mb-3">
                     <label class="form-label">Question Text *</label>
                     <textarea class="form-control" name="questions[${questionIndex}][question_text]" 
                               rows="3" required placeholder="Enter your question here..."></textarea>
                 </div>
-                
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Option A *</label>
@@ -305,7 +305,7 @@ function addQuestion() {
                         <input type="text" class="form-control" name="questions[${questionIndex}][option_b]" required>
                     </div>
                 </div>
-                
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Option C *</label>
@@ -316,7 +316,7 @@ function addQuestion() {
                         <input type="text" class="form-control" name="questions[${questionIndex}][option_d]" required>
                     </div>
                 </div>
-                
+
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Correct Option *</label>
@@ -338,15 +338,15 @@ function addQuestion() {
             </div>
         </div>
     `;
-    
+
     $('#questions-container').append(questionHtml);
-    
+
     // Remove question event
     $(`.question-item[data-index="${questionIndex}"] .remove-question`).click(function() {
         $(this).closest('.question-item').remove();
         updateQuestionNumbers();
     });
-    
+
     questionIndex++;
 }
 
