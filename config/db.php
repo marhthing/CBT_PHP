@@ -1,4 +1,3 @@
-php
 <?php
 class Database {
     private $host;
@@ -91,7 +90,7 @@ class Database {
             }
 
             error_log("Query executed successfully");
-            return $result;
+            return $stmt;
         } catch (PDOException $e) {
             error_log("Database execute error: " . $e->getMessage());
             error_log("Query was: " . $query);
@@ -101,13 +100,33 @@ class Database {
     }
 
     public function fetchAll($query, $params = []) {
-        $stmt = $this->execute($query, $params);
-        return $stmt->fetchAll();
+        try {
+            if (!$this->connection) {
+                $this->connect();
+            }
+
+            $stmt = $this->getConnection()->prepare($query);
+            $stmt->execute($params);
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Database fetchAll error: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function fetch($query, $params = []) {
-        $stmt = $this->execute($query, $params);
-        return $stmt->fetch();
+        try {
+            if (!$this->connection) {
+                $this->connect();
+            }
+
+            $stmt = $this->getConnection()->prepare($query);
+            $stmt->execute($params);
+            return $stmt->fetch();
+        } catch (PDOException $e) {
+            error_log("Database fetch error: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function lastInsertId() {
