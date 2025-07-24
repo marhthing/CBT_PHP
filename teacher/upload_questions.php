@@ -223,48 +223,69 @@ include '../includes/header.php';
 let questionIndex = 0;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Check filters and show/hide questions container
-    function checkFilters() {
-        try {
-            const classSubjectElement = document.getElementById('class_subject');
-            const sessionElement = document.getElementById('session');
-            const termElement = document.getElementById('term');
-            const testTypeElement = document.getElementById('test_type');
-            
-            if (!classSubjectElement || !sessionElement || !termElement || !testTypeElement) {
-                console.warn('Filter elements not found');
-                return;
-            }
-
-            const classSubject = classSubjectElement.value;
-            const session = sessionElement.value;
-            const term = termElement.value;
-            const testType = testTypeElement.value;
-
-            const questionsContainer = document.getElementById('questions-container');
-            const filterMessage = document.getElementById('filter-message');
-            
-            if (!questionsContainer || !filterMessage) {
-                console.warn('Container elements not found');
-                return;
-            }
-            
-            const questionItems = document.querySelectorAll('.question-item');
-
-            if (classSubject && session && term && testType) {
-                questionsContainer.style.display = 'block';
-                filterMessage.style.display = 'none';
-                if (questionItems.length === 0) {
-                    addQuestion();
+    // Wait a bit for the page to fully load before initializing
+    setTimeout(function() {
+        console.log('Initializing teacher upload questions...');
+        
+        // Check filters and show/hide questions container
+        function checkFilters() {
+            try {
+                console.log('Checking filters...');
+                
+                const classSubjectElement = document.getElementById('class_subject');
+                const sessionElement = document.getElementById('session');
+                const termElement = document.getElementById('term');
+                const testTypeElement = document.getElementById('test_type');
+                
+                if (!classSubjectElement || !sessionElement || !termElement || !testTypeElement) {
+                    console.warn('Filter elements not found', {
+                        classSubject: !!classSubjectElement,
+                        session: !!sessionElement,
+                        term: !!termElement,
+                        testType: !!testTypeElement
+                    });
+                    return;
                 }
-            } else {
-                questionsContainer.style.display = 'none';
-                filterMessage.style.display = 'block';
+
+                const classSubject = classSubjectElement.value;
+                const session = sessionElement.value;
+                const term = termElement.value;
+                const testType = testTypeElement.value;
+
+                console.log('Filter values:', { classSubject, session, term, testType });
+
+                const questionsContainer = document.getElementById('questions-container');
+                const filterMessage = document.getElementById('filter-message');
+                
+                if (!questionsContainer || !filterMessage) {
+                    console.warn('Container elements not found', {
+                        questionsContainer: !!questionsContainer,
+                        filterMessage: !!filterMessage
+                    });
+                    return;
+                }
+                
+                const questionItems = document.querySelectorAll('.question-item');
+
+                if (classSubject && session && term && testType) {
+                    console.log('All filters filled, showing questions container');
+                    questionsContainer.style.display = 'block';
+                    filterMessage.style.display = 'none';
+                    if (questionItems.length === 0) {
+                        addQuestion();
+                    }
+                } else {
+                    console.log('Filters incomplete, hiding questions container');
+                    questionsContainer.style.display = 'none';
+                    filterMessage.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error in checkFilters:', error);
             }
-        } catch (error) {
-            console.error('Error in checkFilters:', error);
         }
-    }
+        
+        // Make checkFilters available globally for debugging
+        window.checkFilters = checkFilters;
 
     // Split class_subject selection
     const classSubjectElement = document.getElementById('class_subject');
@@ -313,11 +334,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial check
     checkFilters();
 
-    // Add question button
-    const addQuestionButton = document.getElementById('add-question');
-    if (addQuestionButton) {
-        addQuestionButton.addEventListener('click', addQuestion);
-    }
+        // Add question button
+        const addQuestionButton = document.getElementById('add-question');
+        if (addQuestionButton) {
+            addQuestionButton.addEventListener('click', addQuestion);
+        }
+        
+        console.log('Teacher upload questions initialized successfully');
+    }, 100); // Delay initialization slightly
 });
 
 function addQuestion() {
