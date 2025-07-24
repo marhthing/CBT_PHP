@@ -4,9 +4,10 @@ session_start();
 require_once '../config/db.php';
 require_once '../includes/functions.php';
 
-validateRole(['teacher']);
-
+// Initialize database first
 $db = new Database();
+
+validateRole(['teacher']);
 
 $page_title = 'Edit Question';
 $error = '';

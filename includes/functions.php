@@ -94,13 +94,16 @@ function validateCSRFToken($token) {
 
 // Activity logging
 function logActivity($userId, $action, $details = '') {
-    global $db;
-    
-    $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
-    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-    
-    $query = "INSERT INTO activity_logs (user_id, action, details, ip_address, user_agent, timestamp) VALUES (?, ?, ?, ?, ?, NOW())";
-    $db->execute($query, [$userId, $action, $details, $ipAddress, $userAgent]);
+    try {
+        $db = new Database();
+        $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        
+        $query = "INSERT INTO activity_logs (user_id, action, details, ip_address, user_agent, timestamp) VALUES (?, ?, ?, ?, ?, NOW())";
+        $db->execute($query, [$userId, $action, $details, $ipAddress, $userAgent]);
+    } catch (Exception $e) {
+        error_log("Failed to log activity: " . $e->getMessage());
+    }
 }
 
 // Time formatting
@@ -118,17 +121,17 @@ function formatTime($seconds) {
 
 // Get classes and subjects
 function getClasses() {
-    global $db;
+    $db = new Database();
     return $db->fetchAll("SELECT * FROM classes ORDER BY name");
 }
 
 function getSubjects() {
-    global $db;
+    $db = new Database();
     return $db->fetchAll("SELECT * FROM subjects ORDER BY name");
 }
 
 function getTeacherAssignments($teacherId) {
-    global $db;
+    $db = new Database();
     $query = "SELECT ta.*, c.name as class_name, s.name as subject_name 
               FROM teacher_assignments ta 
               JOIN classes c ON ta.class_id = c.id 
@@ -159,9 +162,8 @@ function getTestTypes() {
 
 // School settings functions
 function getSchoolSetting($key, $default = '') {
-    global $db;
-    
     try {
+        $db = new Database();
         $query = "SELECT setting_value FROM settings WHERE setting_key = ?";
         $result = $db->fetch($query, [$key]);
         return $result ? $result['setting_value'] : $default;

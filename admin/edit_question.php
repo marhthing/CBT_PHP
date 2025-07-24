@@ -30,8 +30,9 @@ if (!$question) {
     exit();
 }
 
-$classes = getClasses();
-$subjects = getSubjects();
+// Get classes and subjects
+$classes = $db->fetchAll("SELECT * FROM classes ORDER BY name");
+$subjects = $db->fetchAll("SELECT * FROM subjects ORDER BY name");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
