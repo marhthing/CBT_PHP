@@ -194,6 +194,7 @@ include '../includes/header.php';
                                     <i class="fas fa-plus me-1"></i>Add Question
                                 </button>
                             </div>
+                            <div id="questions-list"></div>
                         </div>
 
                         <div id="filter-message" class="alert alert-info">
@@ -383,13 +384,13 @@ function addQuestion() {
         </div>
     `;
 
-    const questionsContainer = document.getElementById('questions-container');
-    if (!questionsContainer) {
-        console.error('Questions container not found');
+    const questionsList = document.getElementById('questions-list');
+    if (!questionsList) {
+        console.error('Questions list not found');
         return;
     }
     
-    questionsContainer.insertAdjacentHTML('beforeend', questionHtml);
+    questionsList.insertAdjacentHTML('beforeend', questionHtml);
 
     // Remove question event
     const newQuestion = document.querySelector(`.question-item[data-index="${questionIndex}"]`);
