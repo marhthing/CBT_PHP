@@ -1,0 +1,162 @@
+I want to build a full Computer-Based Test (CBT) portal for a secondary school using PHP and AJAX. The system must support three user roles: Student, Teacher, and Admin. Let me explain the full system clearly so you understand how it works.
+
+
+---
+
+👨‍🎓 STUDENT
+
+The student has three pages:
+
+1. Dashboard: Shows their name, class, and matric number.
+
+
+2. Take Test: Student enters a test code. If valid, fetch and show a Test Preview page with:
+
+Test Type (CA or Exam), Subject, Class, Session, Term, Duration, and Total Questions.
+
+A Start button begins the test.
+
+
+
+3. During Test:
+
+Timer countdown uses the duration from the test code.
+
+Questions are randomly selected from the available question pool for that test.
+
+Options are shuffled per question, and questions are shuffled per student.
+
+Answers are autosaved via AJAX every few seconds.
+
+Student can only take the test once (retake not allowed).
+
+
+
+4. Result Page: After submitting, show score, time taken, and optionally a breakdown.
+
+
+
+
+
+---
+
+👩‍🏫 TEACHER
+
+Pages:
+
+1. Dashboard: Shows stats like number of uploaded questions, and active test codes linked to their subjects.
+
+
+2. Upload Questions:
+
+Teacher must select Class, Subject, Term, Session, and Test Type before uploading.
+
+Each question includes:
+
+Objective question text
+
+4 Options (A–D)
+
+Correct Option
+
+Optional Image
+
+
+Teacher can only upload questions for classes and subjects they are assigned to.
+
+
+
+3. Manage Questions:
+
+List all their uploaded questions.
+
+Can edit or delete them.
+
+
+
+
+
+
+---
+
+🧑‍💼 ADMIN
+
+Pages:
+
+1. Dashboard: Shows stats like total questions, students, teachers, and recent results.
+
+
+2. Teacher Assignment:
+
+Assign each teacher to one or more classes and subjects.
+
+Teachers are restricted to uploading only within these assignments.
+
+
+
+3. Generate Test Codes:
+
+Admin selects Class, Subject, Term, Session, Test Type, Number of Questions, Score per Question, and Duration (in minutes).
+
+Generates a set of test codes which are initially inactive.
+
+These codes will later be activated in the Code Management page.
+
+
+
+4. Upload Questions:
+
+Similar to teacher upload, but Admin can upload to any class/subject.
+
+Must filter by class, subject, etc. before uploading.
+
+
+
+5. Manage All Questions:
+
+View, edit, and delete any question uploaded by teachers or admins.
+
+
+
+6. Code Activation Page:
+
+View all generated codes.
+
+Activate or deactivate test codes individually or in batches.
+
+
+
+
+
+
+---
+
+✅ Features
+
+Objective questions only (no theory).
+
+Image support in questions.
+
+Autosave answers every few seconds during the test.
+
+Retake restriction: student can take each test only once.
+
+Randomization:
+
+Questions are randomly selected from a larger pool (e.g., 50 total, only 20 used per student).
+
+Question order and options are shuffled per student.
+
+
+Activity Logs: Admin sees logs for:
+
+Uploading, editing, deleting questions
+
+Generating, activating, and deactivating codes
+
+
+
+
+---
+
+Please build this full system in PHP with AJAX, following these rules and behavior closely.
