@@ -224,67 +224,99 @@ let questionIndex = 0;
 document.addEventListener('DOMContentLoaded', function() {
     // Check filters and show/hide questions container
     function checkFilters() {
-        const classSubject = document.getElementById('class_subject').value;
-        const session = document.getElementById('session').value;
-        const term = document.getElementById('term').value;
-        const testType = document.getElementById('test_type').value;
-
-        const questionsContainer = document.getElementById('questions-container');
-        const filterMessage = document.getElementById('filter-message');
-        const questionItems = document.querySelectorAll('.question-item');
-
-        if (classSubject && session && term && testType) {
-            questionsContainer.style.display = 'block';
-            filterMessage.style.display = 'none';
-            if (questionItems.length === 0) {
-                addQuestion();
+        try {
+            const classSubjectElement = document.getElementById('class_subject');
+            const sessionElement = document.getElementById('session');
+            const termElement = document.getElementById('term');
+            const testTypeElement = document.getElementById('test_type');
+            
+            if (!classSubjectElement || !sessionElement || !termElement || !testTypeElement) {
+                console.warn('Filter elements not found');
+                return;
             }
-        } else {
-            questionsContainer.style.display = 'none';
-            filterMessage.style.display = 'block';
+
+            const classSubject = classSubjectElement.value;
+            const session = sessionElement.value;
+            const term = termElement.value;
+            const testType = testTypeElement.value;
+
+            const questionsContainer = document.getElementById('questions-container');
+            const filterMessage = document.getElementById('filter-message');
+            
+            if (!questionsContainer || !filterMessage) {
+                console.warn('Container elements not found');
+                return;
+            }
+            
+            const questionItems = document.querySelectorAll('.question-item');
+
+            if (classSubject && session && term && testType) {
+                questionsContainer.style.display = 'block';
+                filterMessage.style.display = 'none';
+                if (questionItems.length === 0) {
+                    addQuestion();
+                }
+            } else {
+                questionsContainer.style.display = 'none';
+                filterMessage.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error in checkFilters:', error);
         }
     }
 
     // Split class_subject selection
-    document.getElementById('class_subject').addEventListener('change', function() {
-        const value = this.value;
-        if (value) {
-            const [classId, subjectId] = value.split('_');
-            
-            // Remove existing hidden inputs
-            const existingClassInput = document.querySelector('input[name="class_id"]');
-            const existingSubjectInput = document.querySelector('input[name="subject_id"]');
-            if (existingClassInput) existingClassInput.remove();
-            if (existingSubjectInput) existingSubjectInput.remove();
-            
-            // Create new hidden inputs
-            const classInput = document.createElement('input');
-            classInput.type = 'hidden';
-            classInput.name = 'class_id';
-            classInput.value = classId;
-            
-            const subjectInput = document.createElement('input');
-            subjectInput.type = 'hidden';
-            subjectInput.name = 'subject_id';
-            subjectInput.value = subjectId;
-            
-            const form = document.getElementById('upload-form');
-            form.appendChild(classInput);
-            form.appendChild(subjectInput);
-        }
-        checkFilters();
-    });
+    const classSubjectElement = document.getElementById('class_subject');
+    if (classSubjectElement) {
+        classSubjectElement.addEventListener('change', function() {
+            const value = this.value;
+            if (value) {
+                const [classId, subjectId] = value.split('_');
+                
+                // Remove existing hidden inputs
+                const existingClassInput = document.querySelector('input[name="class_id"]');
+                const existingSubjectInput = document.querySelector('input[name="subject_id"]');
+                if (existingClassInput) existingClassInput.remove();
+                if (existingSubjectInput) existingSubjectInput.remove();
+                
+                // Create new hidden inputs
+                const classInput = document.createElement('input');
+                classInput.type = 'hidden';
+                classInput.name = 'class_id';
+                classInput.value = classId;
+                
+                const subjectInput = document.createElement('input');
+                subjectInput.type = 'hidden';
+                subjectInput.name = 'subject_id';
+                subjectInput.value = subjectId;
+                
+                const form = document.getElementById('upload-form');
+                if (form) {
+                    form.appendChild(classInput);
+                    form.appendChild(subjectInput);
+                }
+            }
+            checkFilters();
+        });
+    }
 
     // Monitor filter changes
-    document.getElementById('session').addEventListener('change', checkFilters);
-    document.getElementById('term').addEventListener('change', checkFilters);
-    document.getElementById('test_type').addEventListener('change', checkFilters);
+    const sessionElement = document.getElementById('session');
+    const termElement = document.getElementById('term');
+    const testTypeElement = document.getElementById('test_type');
+    
+    if (sessionElement) sessionElement.addEventListener('change', checkFilters);
+    if (termElement) termElement.addEventListener('change', checkFilters);
+    if (testTypeElement) testTypeElement.addEventListener('change', checkFilters);
 
     // Initial check
     checkFilters();
 
     // Add question button
-    document.getElementById('add-question').addEventListener('click', addQuestion);
+    const addQuestionButton = document.getElementById('add-question');
+    if (addQuestionButton) {
+        addQuestionButton.addEventListener('click', addQuestion);
+    }
 });
 
 function addQuestion() {
@@ -352,15 +384,24 @@ function addQuestion() {
     `;
 
     const questionsContainer = document.getElementById('questions-container');
+    if (!questionsContainer) {
+        console.error('Questions container not found');
+        return;
+    }
+    
     questionsContainer.insertAdjacentHTML('beforeend', questionHtml);
 
     // Remove question event
     const newQuestion = document.querySelector(`.question-item[data-index="${questionIndex}"]`);
-    const removeButton = newQuestion.querySelector('.remove-question');
-    removeButton.addEventListener('click', function() {
-        newQuestion.remove();
-        updateQuestionNumbers();
-    });
+    if (newQuestion) {
+        const removeButton = newQuestion.querySelector('.remove-question');
+        if (removeButton) {
+            removeButton.addEventListener('click', function() {
+                newQuestion.remove();
+                updateQuestionNumbers();
+            });
+        }
+    }
 
     questionIndex++;
 }
