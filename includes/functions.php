@@ -1,5 +1,5 @@
 <?php
-require_once 'config/db.php';
+require_once dirname(__DIR__) . '/config/db.php';
 
 // Security functions
 function sanitizeInput($input) {
@@ -79,8 +79,11 @@ function shuffleOptions($question) {
 function logActivity($userId, $action, $details = '') {
     global $db;
     
-    $query = "INSERT INTO activity_logs (user_id, action, details, timestamp) VALUES (?, ?, ?, NOW())";
-    $db->execute($query, [$userId, $action, $details]);
+    $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
+    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+    
+    $query = "INSERT INTO activity_logs (user_id, action, details, ip_address, user_agent, timestamp) VALUES (?, ?, ?, ?, ?, NOW())";
+    $db->execute($query, [$userId, $action, $details, $ipAddress, $userAgent]);
 }
 
 // Time formatting

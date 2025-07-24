@@ -11,17 +11,16 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $username = trim($_POST['username'] ?? '');
 $password = $_POST['password'] ?? '';
-$role = $_POST['role'] ?? '';
 
-if (empty($username) || empty($password) || empty($role)) {
+if (empty($username) || empty($password)) {
     header('Location: ../index.php?error=All fields are required');
     exit();
 }
 
 try {
-    // Check user credentials based on role
-    $query = "SELECT * FROM users WHERE username = ? AND role = ? AND active = true";
-    $user = $db->fetch($query, [$username, $role]);
+    // Check user credentials (role will be determined from database)
+    $query = "SELECT * FROM users WHERE username = ? AND active = true";
+    $user = $db->fetch($query, [$username]);
     
     if ($user && password_verify($password, $user['password'])) {
         // Set session variables
@@ -31,13 +30,16 @@ try {
         $_SESSION['full_name'] = $user['full_name'];
         
         // Additional session data based on role
-        if ($role === 'student') {
+        if ($user['role'] === 'student') {
             $_SESSION['matric_number'] = $user['matric_number'];
             $_SESSION['class_id'] = $user['class_id'];
         }
         
+        // Log successful login
+        logActivity($user['id'], 'User Login', 'User logged in successfully');
+        
         // Redirect to appropriate dashboard
-        switch ($role) {
+        switch ($user['role']) {
             case 'student':
                 header('Location: ../student/dashboard.php');
                 break;

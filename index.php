@@ -63,18 +63,7 @@ if (isset($_SESSION['user_id'])) {
                                 </div>
                             </div>
                             
-                            <div class="mb-3">
-                                <label for="role" class="form-label">Login as</label>
-                                <select class="form-select" id="role" name="role" required>
-                                    <option value="">Select Role</option>
-                                    <option value="student">Student</option>
-                                    <option value="teacher">Teacher</option>
-                                    <option value="admin">Administrator</option>
-                                </select>
-                                <div class="invalid-feedback">
-                                    Please select a role.
-                                </div>
-                            </div>
+
                             
                             <button type="submit" class="btn btn-primary w-100">Login</button>
                         </form>
