@@ -177,13 +177,18 @@ include '../includes/header.php';
                     <hr>
 
                     <!-- Questions Container -->
-                    <div id="questions-container">
+                    <div id="questions-container" style="display: none;">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h6><i class="fas fa-question-circle me-2"></i>Questions</h6>
                             <button type="button" id="add-question" class="btn btn-success btn-sm">
                                 <i class="fas fa-plus me-1"></i>Add Question
                             </button>
                         </div>
+                    </div>
+
+                    <div id="filter-message" class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Please fill in all required fields above before adding questions.
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -268,8 +273,31 @@ include '../includes/header.php';
 let questionIndex = 0;
 
 $(document).ready(function() {
-    // Add first question by default
-    addQuestion();
+    // Check filters and show/hide questions container
+    function checkFilters() {
+        const classId = $('#class_id').val();
+        const subjectId = $('#subject_id').val();
+        const session = $('#session').val();
+        const term = $('#term').val();
+        const testType = $('#test_type').val();
+        
+        if (classId && subjectId && session && term && testType) {
+            $('#questions-container').show();
+            $('#filter-message').hide();
+            if ($('.question-item').length === 0) {
+                addQuestion();
+            }
+        } else {
+            $('#questions-container').hide();
+            $('#filter-message').show();
+        }
+    }
+    
+    // Monitor filter changes
+    $('#class_id, #subject_id, #session, #term, #test_type').change(checkFilters);
+    
+    // Initial check
+    checkFilters();
 
     // Add question button
     $('#add-question').click(addQuestion);

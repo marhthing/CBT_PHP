@@ -340,11 +340,15 @@ include '../includes/header.php';
                                                         onclick="viewQuestion(<?php echo $question['id']; ?>)">
                                                     <i class="fas fa-eye"></i>
                                                 </button>
+                                                <button type="button" class="btn btn-outline-warning btn-sm"
+                                                        onclick="editQuestion(<?php echo $question['id']; ?>)">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
                                                 <button type="button" class="btn btn-outline-danger btn-sm"
                                                         onclick="deleteQuestion(<?php echo $question['id']; ?>)">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
-                                            </div>
+                                            </div></old_str>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -393,6 +397,10 @@ function viewQuestion(questionId) {
             alert('Failed to load question details');
         }
     });
+}
+
+function editQuestion(questionId) {
+    window.location.href = 'edit_question.php?id=' + questionId;
 }
 
 function deleteQuestion(questionId) {

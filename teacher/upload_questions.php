@@ -182,7 +182,7 @@ include '../includes/header.php';
                         <hr>
                         
                         <!-- Questions Container -->
-                        <div id="questions-container">
+                        <div id="questions-container" style="display: none;">
                             <div class="d-flex justify-content-between align-items-center mb-3">
                                 <h6><i class="fas fa-question-circle me-2"></i>Questions</h6>
                                 <button type="button" id="add-question" class="btn btn-success btn-sm">
@@ -190,6 +190,11 @@ include '../includes/header.php';
                                 </button>
                             </div>
                         </div>
+
+                        <div id="filter-message" class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Please fill in all required fields above before adding questions.
+                        </div></old_str>
                         
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <button type="button" class="btn btn-outline-secondary me-md-2" onclick="location.reload()">
@@ -264,11 +269,32 @@ include '../includes/header.php';
 let questionIndex = 0;
 
 $(document).ready(function() {
+    // Check filters and show/hide questions container
+    function checkFilters() {
+        const classSubject = $('#class_subject').val();
+        const session = $('#session').val();
+        const term = $('#term').val();
+        const testType = $('#test_type').val();
+        
+        if (classSubject && session && term && testType) {
+            $('#questions-container').show();
+            $('#filter-message').hide();
+            if ($('.question-item').length === 0) {
+                addQuestion();
+            }
+        } else {
+            $('#questions-container').hide();
+            $('#filter-message').show();
+        }
+    }
+    
     // Split class_subject selection
     $('#class_subject').change(function() {
         const value = $(this).val();
         if (value) {
             const [classId, subjectId] = value.split('_');
+            $('input[name="class_id"]').remove();
+            $('input[name="subject_id"]').remove();
             $('<input>').attr({
                 type: 'hidden',
                 name: 'class_id',
@@ -280,14 +306,18 @@ $(document).ready(function() {
                 value: subjectId
             }).appendTo('#upload-form');
         }
+        checkFilters();
     });
     
-    // Add first question by default
-    addQuestion();
+    // Monitor filter changes
+    $('#session, #term, #test_type').change(checkFilters);
+    
+    // Initial check
+    checkFilters();
     
     // Add question button
     $('#add-question').click(addQuestion);
-});
+});</old_str>
 
 function addQuestion() {
     const questionHtml = `

@@ -307,8 +307,7 @@ function viewQuestion(questionId) {
 }
 
 function editQuestion(questionId) {
-    // Redirect to edit page (you can implement this)
-    alert('Edit functionality will be implemented');
+    window.location.href = 'edit_question.php?id=' + questionId;
 }
 
 function deleteQuestion(questionId) {
