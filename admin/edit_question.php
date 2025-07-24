@@ -60,6 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'All fields are required.';
         } else {
             try {
+                error_log("Starting admin question update for ID: " . $questionId);
+                
                 // Handle image upload if provided
                 $imageName = $question['image']; // Keep existing image by default
                 if (isset($_FILES['question_image']) && $_FILES['question_image']['error'] === UPLOAD_ERR_OK) {
@@ -81,25 +83,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 edited_by = ?, edited_at = NOW()
                                 WHERE id = ?";
 
-                $db->execute($updateQuery, [
+                $params = [
                     $classId, $subjectId, $session, $term, $testType,
                     $questionText, $optionA, $optionB, $optionC, 
                     $optionD, $correctOption, $imageName,
                     $_SESSION['user_id'], $questionId
-                ]);
+                ];
+                
+                error_log("Executing update query with params: " . print_r($params, true));
+                
+                $result = $db->execute($updateQuery, $params);
+                
+                if ($result) {
+                    error_log("Question updated successfully");
+                    
+                    // Log activity
+                    logActivity($_SESSION['user_id'], 'Question Edited (Admin)', 
+                               "Edited question ID: {$questionId} originally created by {$question['creator_name']}");
 
-                // Log activity
-                logActivity($_SESSION['user_id'], 'Question Edited (Admin)', 
-                           "Edited question ID: {$questionId} originally created by {$question['creator_name']}");
+                    $success = 'Question updated successfully.';
 
-                $success = 'Question updated successfully.';
-
-                // Refresh question data
-                $question = $db->fetch($query, [$questionId]);
+                    // Refresh question data
+                    $question = $db->fetch($query, [$questionId]);
+                } else {
+                    error_log("Database execute returned false");
+                    $error = 'Failed to update question. Database operation failed.';
+                }
 
             } catch (Exception $e) {
                 error_log("Question edit error: " . $e->getMessage());
-                $error = 'Failed to update question. Please try again.';
+                error_log("Stack trace: " . $e->getTraceAsString());
+                $error = 'Failed to update question: ' . $e->getMessage();
             }
         }
     }
