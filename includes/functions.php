@@ -156,4 +156,26 @@ function getTestTypes() {
         'Exam' => 'Examination'
     ];
 }
+
+// School settings functions
+function getSchoolSetting($key, $default = '') {
+    global $db;
+    
+    try {
+        $query = "SELECT setting_value FROM settings WHERE setting_key = ?";
+        $result = $db->fetch($query, [$key]);
+        return $result ? $result['setting_value'] : $default;
+    } catch (Exception $e) {
+        error_log("Failed to get school setting: " . $e->getMessage());
+        return $default;
+    }
+}
+
+function getSchoolName() {
+    return getSchoolSetting('school_name', 'CBT Portal');
+}
+
+function getSchoolAbbreviation() {
+    return getSchoolSetting('school_abbreviation', 'CBT');
+}
 ?>

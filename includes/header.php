@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?>CBT Portal</title>
+    <title><?php echo isset($pageTitle) ? $pageTitle . ' - ' : ''; ?><?php echo getSchoolAbbreviation(); ?> Portal</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -27,14 +27,6 @@
     <?php endif; ?>
 </head>
 <body>
-<!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="<?php echo BASE_URL; ?>/assets/css/style.css" rel="stylesheet">
-</head>
-<body></body>
 
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
@@ -54,7 +46,7 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="<?php echo BASE_URL; ?>">
                 <i class="fas fa-graduation-cap"></i>
-                CBT Portal
+                <?php echo getSchoolAbbreviation(); ?> Portal
             </a>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 

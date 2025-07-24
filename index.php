@@ -2,6 +2,7 @@
 session_start();
 require_once 'config/config.php';
 require_once 'config/db.php';
+require_once 'includes/functions.php';
 
 // Redirect to dashboard if already logged in
 if (isset($_SESSION['user_id'])) {
@@ -25,7 +26,7 @@ if (isset($_SESSION['user_id'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CBT Portal - Login</title>
+    <title><?php echo getSchoolAbbreviation(); ?> Portal - Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -36,8 +37,9 @@ if (isset($_SESSION['user_id'])) {
                 <div class="card shadow">
                     <div class="card-body p-5">
                         <div class="text-center mb-4">
-                            <h2 class="fw-bold text-primary">CBT Portal</h2>
-                            <p class="text-muted">Computer-Based Test System</p>
+                            <h2 class="fw-bold text-primary"><?php echo getSchoolAbbreviation(); ?> Portal</h2>
+                            <p class="text-muted"><?php echo getSchoolName(); ?></p>
+                            <small class="text-muted">Computer-Based Test System</small>
                         </div>
                         
                         <?php if (isset($_GET['error'])): ?>
