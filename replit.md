@@ -8,6 +8,22 @@ This is a comprehensive Computer-Based Test (CBT) portal designed for secondary 
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### Migration to Replit Environment (July 24, 2025)
+- ✓ Successfully migrated CBT Portal from Replit Agent to Replit environment
+- ✓ Created and configured PostgreSQL database with complete schema
+- ✓ Initialized all tables with sample data and proper relationships
+- ✓ Fixed password hashing issue with proper PHP password_hash() implementation
+- ✓ Verified PHP 8.3.23 server running on port 5000
+- ✓ Confirmed JavaScript initialization and asset loading working correctly
+- ✓ All user authentication now working with secure bcrypt password hashes
+
+### Authentication Credentials
+- Admin: username: `admin`, password: `admin123`
+- Teachers: username: `teacher1`/`teacher2`, password: `teacher123`
+- Students: username: `student1`/`student2`/`student3`, password: `student123`
+
 ## System Architecture
 
 ### Frontend Architecture
