@@ -1,0 +1,121 @@
+# Security configuration for uploads directory
+# Prevents execution of scripts and limits access to image files only
+
+# Deny all access by default
+Order Deny,Allow
+Deny from all
+
+# Allow access to image files only
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|svg)$">
+    Order Allow,Deny
+    Allow from all
+    
+    # Security headers for images
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+</FilesMatch>
+
+# Prevent execution of PHP and other server-side scripts
+<FilesMatch "\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|sh|cgi)$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Prevent access to .htaccess and other sensitive files
+<FilesMatch "^\.">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>
+
+# Disable server signature
+ServerSignature Off
+
+# Disable directory browsing
+Options -Indexes
+
+# Disable MultiViews
+Options -MultiViews
+
+# Set maximum file size (5MB)
+LimitRequestBody 5242880
+
+# Cache control for images
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|svg)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+    Header append Cache-Control "public"
+</FilesMatch>
+
+# MIME type security
+<IfModule mod_mime.c>
+    # Force download for potentially dangerous files
+    <FilesMatch "\.(exe|bat|cmd|com|pif|scr|vbs|js|jar|zip|rar)$">
+        ForceType application/octet-stream
+        Header set Content-Disposition attachment
+    </FilesMatch>
+    
+    # Set proper MIME types for images
+    AddType image/jpeg .jpg .jpeg
+    AddType image/png .png
+    AddType image/gif .gif
+    AddType image/webp .webp
+    AddType image/svg+xml .svg
+</IfModule>
+
+# Additional security measures
+<IfModule mod_headers.c>
+    # Remove server information
+    Header unset Server
+    Header unset X-Powered-By
+    
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options nosniff
+    
+    # XSS Protection
+    Header always set X-XSS-Protection "1; mode=block"
+    
+    # Clickjacking protection
+    Header always set X-Frame-Options SAMEORIGIN
+    
+    # Content Security Policy for images
+    Header always set Content-Security-Policy "default-src 'none'; img-src 'self'"
+</IfModule>
+
+# Rewrite rules to prevent direct access to sensitive files
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Block access to backup files
+    RewriteRule \.(bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist)$ - [F,L]
+    
+    # Block access to version control files
+    RewriteRule \.(git|svn|bzr|hg) - [F,L]
+    
+    # Block access to composer files
+    RewriteRule ^(composer\.(json|lock|phar)|vendor/) - [F,L]
+    
+    # Block access to node modules
+    RewriteRule ^node_modules/ - [F,L]
+</IfModule>
+
+# Error pages
+ErrorDocument 403 "Access Forbidden"
+ErrorDocument 404 "File Not Found"
+ErrorDocument 500 "Internal Server Error"
+
+# Logging (if enabled)
+<IfModule mod_log_config.c>
+    LogFormat "%h %l %u %t \"%r\" %>s %O \"%{Referer}i\" \"%{User-Agent}i\"" combined
+    CustomLog logs/uploads_access.log combined
+</IfModule>
+
+# Additional protection against common attacks
+<IfModule mod_evasive.c>
+    DOSHashTableSize    2048
+    DOSPageCount        20
+    DOSSiteCount        100
+    DOSPageInterval     1
+    DOSSiteInterval     1
+    DOSBlockingPeriod   86400
+</IfModule>
