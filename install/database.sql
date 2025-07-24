@@ -265,20 +265,20 @@ INSERT INTO subjects (name, code, description, category) VALUES
 -- Insert default admin user
 -- Password: 'admin123' (hashed using PHP's password_hash)
 INSERT INTO users (username, email, password, full_name, role, active) VALUES
-('admin', 'admin@cbtportal.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'System Administrator', 'admin', true);
+('admin', 'admin@cbtportal.com', '$2y$10$CMwjfENyj9D5vFsDeAT0Je49/gOEIHmT5c1YxdaIatf45h/SU7.gW', 'System Administrator', 'admin', true);
 
 -- Insert sample teacher
 -- Password: 'teacher123' (hashed using PHP's password_hash)
 INSERT INTO users (username, email, password, full_name, role, active) VALUES
-('teacher1', 'teacher1@cbtportal.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'John Doe', 'teacher', true),
-('teacher2', 'teacher2@cbtportal.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Jane Smith', 'teacher', true);
+('teacher1', 'teacher1@cbtportal.com', '$2y$10$9h4iYZU1SBqELO7JXvxE8OZhN5rbpneN4p4hAfkxEWlWgUrdgmQ.G', 'John Doe', 'teacher', true),
+('teacher2', 'teacher2@cbtportal.com', '$2y$10$9h4iYZU1SBqELO7JXvxE8OZhN5rbpneN4p4hAfkxEWlWgUrdgmQ.G', 'Jane Smith', 'teacher', true);
 
 -- Insert sample students
 -- Password: 'student123' (hashed using PHP's password_hash)
 INSERT INTO users (username, email, password, full_name, role, matric_number, class_id, active) VALUES
-('student1', 'student1@cbtportal.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Alice Johnson', 'student', 'CBT001', 4, true),
-('student2', 'student2@cbtportal.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Bob Wilson', 'student', 'CBT002', 4, true),
-('student3', 'student3@cbtportal.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Carol Davis', 'student', 'CBT003', 5, true);
+('student1', 'student1@cbtportal.com', '$2y$10$IH.RRqGtjwEVQMqeuGqXSObJgj0FX7aX0P.m46Z4wfTWZEI0zkcDq', 'Alice Johnson', 'student', 'CBT001', 4, true),
+('student2', 'student2@cbtportal.com', '$2y$10$IH.RRqGtjwEVQMqeuGqXSObJgj0FX7aX0P.m46Z4wfTWZEI0zkcDq', 'Bob Wilson', 'student', 'CBT002', 4, true),
+('student3', 'student3@cbtportal.com', '$2y$10$IH.RRqGtjwEVQMqeuGqXSObJgj0FX7aX0P.m46Z4wfTWZEI0zkcDq', 'Carol Davis', 'student', 'CBT003', 5, true);
 
 -- Insert sample teacher assignments
 INSERT INTO teacher_assignments (teacher_id, class_id, subject_id) VALUES
