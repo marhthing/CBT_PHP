@@ -313,69 +313,97 @@ include '../includes/header.php';
 </div>
 
 <script>
-// Check available questions
-$('#checkQuestions').click(function() {
-    const classId = $('#class_id').val();
-    const subjectId = $('#subject_id').val();
-    const session = $('#session').val();
-    const term = $('#term').val();
-    const testType = $('#test_type').val();
-    
-    if (!classId || !subjectId || !session || !term || !testType) {
-        alert('Please select all required fields first.');
-        return;
-    }
-    
-    $.ajax({
-        url: '../ajax/check_questions.php',
-        method: 'GET',
-        data: {
-            class_id: classId,
-            subject_id: subjectId,
-            session: session,
-            term: term,
-            test_type: testType
-        },
-        success: function(response) {
-            $('#questionAvailabilityBody').html(response);
-            $('#questionAvailability').show();
-        },
-        error: function() {
-            alert('Failed to check question availability');
+$(document).ready(function() {
+    // Check available questions
+    $('#checkQuestions').click(function() {
+        const classId = $('#class_id').val();
+        const subjectId = $('#subject_id').val();
+        const session = $('#session').val();
+        const term = $('#term').val();
+        const testType = $('#test_type').val();
+        
+        if (!classId || !subjectId || !session || !term || !testType) {
+            showToast('Please select all required fields first.', 'warning');
+            return;
         }
+        
+        // Show loading
+        $('#questionAvailabilityBody').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Loading...</span></div></div>');
+        $('#questionAvailability').show();
+        
+        $.ajax({
+            url: '../ajax/check_questions.php',
+            method: 'GET',
+            data: {
+                class_id: classId,
+                subject_id: subjectId,
+                session: session,
+                term: term,
+                test_type: testType
+            },
+            success: function(response) {
+                $('#questionAvailabilityBody').html(response);
+            },
+            error: function() {
+                $('#questionAvailabilityBody').html('<div class="alert alert-danger">Failed to check question availability</div>');
+            }
+        });
+    });
+    
+    // Form validation
+    $('form.needs-validation').on('submit', function(event) {
+        if (this.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+            showToast('Please fill in all required fields correctly', 'danger');
+        } else {
+            // Show loading state
+            const submitBtn = $(this).find('button[type="submit"]');
+            const originalText = submitBtn.html();
+            submitBtn.html('<span class="spinner-border spinner-border-sm me-2"></span>Generating...').prop('disabled', true);
+            
+            // Re-enable button after 10 seconds (failsafe)
+            setTimeout(function() {
+                submitBtn.html(originalText).prop('disabled', false);
+            }, 10000);
+        }
+        $(this).addClass('was-validated');
     });
 });
 
-// Copy all codes to clipboard
-function copyAllCodes() {
+// Copy all codes function (defined globally)
+window.copyAllCodes = function() {
     const codes = [];
     $('code.fs-5').each(function() {
         codes.push($(this).text());
     });
     
-    navigator.clipboard.writeText(codes.join('\n')).then(function() {
-        alert('All codes copied to clipboard!');
-    }).catch(function() {
-        alert('Failed to copy codes to clipboard');
-    });
-}
-
-// Form validation
-(function() {
-    'use strict';
-    window.addEventListener('load', function() {
-        var forms = document.getElementsByClassName('needs-validation');
-        var validation = Array.prototype.filter.call(forms, function(form) {
-            form.addEventListener('submit', function(event) {
-                if (form.checkValidity() === false) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-                form.classList.add('was-validated');
-            }, false);
+    if (codes.length === 0) {
+        showToast('No codes found to copy', 'warning');
+        return;
+    }
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(codes.join('\n')).then(function() {
+            showToast('All codes copied to clipboard!', 'success');
+        }).catch(function() {
+            showToast('Failed to copy codes to clipboard', 'danger');
         });
-    }, false);
-})();
+    } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = codes.join('\n');
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast('All codes copied to clipboard!', 'success');
+        } catch (err) {
+            showToast('Failed to copy codes to clipboard', 'danger');
+        }
+        document.body.removeChild(textArea);
+    }
+};
 </script>
 
 <?php include '../includes/footer.php'; ?>

@@ -90,8 +90,39 @@ function showToast(message, type = 'info', duration = 5000) {
 /**
  * Initialize form validation
  */
+// CBT Portal - Enhanced Main JavaScript
+
+// Toast notification system
+function showToast(message, type = 'info') {
+    const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+    const toast = document.createElement('div');
+    toast.className = `alert alert-${type} alert-dismissible fade show`;
+    toast.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    
+    toast.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.remove();
+        }
+    }, 5000);
+}
+
+function createToastContainer() {
+    const container = document.createElement('div');
+    container.id = 'toastContainer';
+    container.style.cssText = 'position: fixed; top: 0; right: 0; z-index: 9999; padding: 20px;';
+    document.body.appendChild(container);
+    return container;
+}
+
+// Form validation
 function initializeFormValidation() {
-    // Bootstrap validation
     const forms = document.querySelectorAll('.needs-validation');
     
     Array.from(forms).forEach(form => {
@@ -100,18 +131,16 @@ function initializeFormValidation() {
                 event.preventDefault();
                 event.stopPropagation();
                 
-                // Focus on first invalid field
                 const firstInvalid = form.querySelector(':invalid');
                 if (firstInvalid) {
                     firstInvalid.focus();
-                    showToast('Please fill in all required fields correctly', 'error');
+                    showToast('Please fill in all required fields correctly', 'danger');
                 }
             }
             form.classList.add('was-validated');
         });
     });
     
-    // Real-time validation for specific fields
     const passwordFields = document.querySelectorAll('input[type="password"]');
     passwordFields.forEach(field => {
         field.addEventListener('input', validatePasswordStrength);
@@ -123,10 +152,144 @@ function initializeFormValidation() {
     });
 }
 
-/**
- * Validate password strength
- * @param {Event} event 
- */
+function validatePasswordStrength(event) {
+    const password = event.target.value;
+    const strengthIndicator = event.target.parentElement.querySelector('.password-strength');
+    
+    if (!strengthIndicator) return;
+    
+    let strength = 0;
+    let feedback = '';
+    
+    if (password.length >= 8) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    
+    switch (strength) {
+        case 0:
+        case 1:
+            feedback = '<span class="text-danger">Weak</span>';
+            break;
+        case 2:
+        case 3:
+            feedback = '<span class="text-warning">Medium</span>';
+            break;
+        case 4:
+        case 5:
+            feedback = '<span class="text-success">Strong</span>';
+            break;
+    }
+    
+    strengthIndicator.innerHTML = feedback;
+}
+
+function validateEmail(event) {
+    const email = event.target.value;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (email && !emailRegex.test(email)) {
+        event.target.setCustomValidity('Please enter a valid email address');
+        showToast('Please enter a valid email address', 'warning');
+    } else {
+        event.target.setCustomValidity('');
+    }
+}
+
+// Utility functions
+function formatTime(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    if (hours > 0) {
+        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    } else {
+        return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+}
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFormValidation();
+    
+    // Add loading states to buttons
+    const submitButtons = document.querySelectorAll('button[type="submit"]');
+    submitButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            if (this.form && this.form.checkValidity()) {
+                this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+                this.disabled = true;
+            }
+        });
+    });
+    
+    // Auto-hide alerts after 5 seconds
+    const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            if (alert.parentElement) {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            }
+        }, 5000);
+    });
+});
+
+// Copy function for codes
+function copyAllCodes() {
+    const codes = [];
+    document.querySelectorAll('code.fs-5').forEach(codeEl => {
+        codes.push(codeEl.textContent);
+    });
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(codes.join('\n')).then(() => {
+            showToast('All codes copied to clipboard!', 'success');
+        }).catch(() => {
+            showToast('Failed to copy codes to clipboard', 'danger');
+        });
+    } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = codes.join('\n');
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast('All codes copied to clipboard!', 'success');
+        } catch (err) {
+            showToast('Failed to copy codes to clipboard', 'danger');
+        }
+        document.body.removeChild(textArea);
+    }
+}
 function validatePasswordStrength(event) {
     const password = event.target.value;
     const strengthIndicator = event.target.parentNode.querySelector('.password-strength');
