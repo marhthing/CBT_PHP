@@ -268,6 +268,12 @@ include '../includes/header.php';
                         <p>Create teacher assignments using the form on the left.</p>
                     </div>
                 <?php else: ?>
+                    <!-- Bulk Actions Notice -->
+                    <div class="alert alert-info alert-dismissible fade show mb-3" id="bulkActionsNotice">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Tip:</strong> Select multiple assignments using checkboxes to delete them in bulk.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
                             <thead>
@@ -400,6 +406,8 @@ function toggleSelectAll() {
     const selectAll = document.getElementById('selectAll');
     const checkboxes = document.querySelectorAll('.assignment-checkbox');
     
+    if (!selectAll) return;
+    
     checkboxes.forEach(checkbox => {
         checkbox.checked = selectAll.checked;
     });
@@ -413,13 +421,18 @@ function updateBulkActions() {
     const selectAll = document.getElementById('selectAll');
     const allCheckboxes = document.querySelectorAll('.assignment-checkbox');
     
+    // Check if elements exist
+    if (!bulkActions) return;
+    
     if (checkboxes.length > 0) {
         bulkActions.style.display = 'flex';
         bulkActions.classList.add('show');
         
         // Update delete button text with count
         const deleteBtn = bulkActions.querySelector('.btn-danger');
-        deleteBtn.innerHTML = `<i class="fas fa-trash me-1"></i>Delete Selected (${checkboxes.length})`;
+        if (deleteBtn) {
+            deleteBtn.innerHTML = `<i class="fas fa-trash me-1"></i>Delete Selected (${checkboxes.length})`;
+        }
     } else {
         bulkActions.classList.remove('show');
         setTimeout(() => {
@@ -430,8 +443,10 @@ function updateBulkActions() {
     }
     
     // Update select all checkbox state
-    selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
-    selectAll.indeterminate = checkboxes.length > 0 && checkboxes.length < allCheckboxes.length;
+    if (selectAll) {
+        selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+        selectAll.indeterminate = checkboxes.length > 0 && checkboxes.length < allCheckboxes.length;
+    }
 }
 
 function clearSelection() {
@@ -441,8 +456,11 @@ function clearSelection() {
     checkboxes.forEach(checkbox => {
         checkbox.checked = false;
     });
-    selectAll.checked = false;
-    selectAll.indeterminate = false;
+    
+    if (selectAll) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+    }
     
     updateBulkActions();
 }
@@ -490,7 +508,13 @@ function bulkDeleteAssignments() {
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    updateBulkActions();
+    // Only initialize if elements exist
+    const selectAll = document.getElementById('selectAll');
+    const bulkActions = document.getElementById('bulkActions');
+    
+    if (selectAll && bulkActions) {
+        updateBulkActions();
+    }
 });
 </script>
 
