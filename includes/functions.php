@@ -8,14 +8,31 @@ function sanitizeInput($input) {
 }
 
 function validateRole($allowedRoles) {
-    if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowedRoles)) {
+    // Debug logging
+    error_log("Validating role. Session role: " . ($_SESSION['role'] ?? 'not set'));
+    error_log("Allowed roles: " . implode(', ', $allowedRoles));
+    
+    if (!isset($_SESSION['role'])) {
+        error_log("No role in session");
         if (!headers_sent()) {
-            header('Location: ../index.php?error=Access denied');
+            header('Location: ../index.php?error=Access denied - No role');
         } else {
-            echo '<script>window.location.href = "../index.php?error=Access denied";</script>';
+            echo '<script>window.location.href = "../index.php?error=Access denied - No role";</script>';
         }
         exit();
     }
+    
+    if (!in_array($_SESSION['role'], $allowedRoles)) {
+        error_log("Role '" . $_SESSION['role'] . "' not in allowed roles");
+        if (!headers_sent()) {
+            header('Location: ../index.php?error=Access denied - Invalid role');
+        } else {
+            echo '<script>window.location.href = "../index.php?error=Access denied - Invalid role";</script>';
+        }
+        exit();
+    }
+    
+    error_log("Role validation passed for: " . $_SESSION['role']);
 }
 
 // File upload functions

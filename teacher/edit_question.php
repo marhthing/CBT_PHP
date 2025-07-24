@@ -4,8 +4,9 @@ session_start();
 require_once '../config/db.php';
 require_once '../includes/functions.php';
 
-// Initialize database first
+// Initialize database connection first
 $db = new Database();
+$db->connect();
 
 validateRole(['teacher']);
 

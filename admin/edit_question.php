@@ -35,8 +35,12 @@ $classes = $db->fetchAll("SELECT * FROM classes ORDER BY name");
 $subjects = $db->fetchAll("SELECT * FROM subjects ORDER BY name");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    error_log("Admin edit question POST received for question ID: " . $questionId);
+    error_log("POST data: " . print_r($_POST, true));
+    
     if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
         $error = 'Invalid request. Please try again.';
+        error_log("CSRF token validation failed");
     } else {
         $classId = $_POST['class_id'] ?? '';
         $subjectId = $_POST['subject_id'] ?? '';
