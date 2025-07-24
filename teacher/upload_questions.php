@@ -257,12 +257,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 const questionsContainer = document.getElementById('questions-container');
                 const filterMessage = document.getElementById('filter-message');
                 
-                if (!questionsContainer || !filterMessage) {
-                    console.warn('Container elements not found', {
-                        questionsContainer: !!questionsContainer,
-                        filterMessage: !!filterMessage
-                    });
+                console.log('DOM elements check:', {
+                    questionsContainer: !!questionsContainer,
+                    filterMessage: !!filterMessage,
+                    questionsContainerDisplay: questionsContainer ? questionsContainer.style.display : 'not found',
+                    filterMessageDisplay: filterMessage ? filterMessage.style.display : 'not found'
+                });
+                
+                if (!questionsContainer) {
+                    console.warn('Questions container not found');
                     return;
+                }
+                
+                // If filter message is not found, create it or continue without it
+                if (!filterMessage) {
+                    console.warn('Filter message not found, continuing without it');
                 }
                 
                 const questionItems = document.querySelectorAll('.question-item');
@@ -270,14 +279,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (classSubject && session && term && testType) {
                     console.log('All filters filled, showing questions container');
                     questionsContainer.style.display = 'block';
-                    filterMessage.style.display = 'none';
+                    if (filterMessage) {
+                        filterMessage.style.display = 'none';
+                    }
                     if (questionItems.length === 0) {
                         addQuestion();
                     }
                 } else {
                     console.log('Filters incomplete, hiding questions container');
                     questionsContainer.style.display = 'none';
-                    filterMessage.style.display = 'block';
+                    if (filterMessage) {
+                        filterMessage.style.display = 'block';
+                    }
                 }
             } catch (error) {
                 console.error('Error in checkFilters:', error);
