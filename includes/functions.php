@@ -9,7 +9,11 @@ function sanitizeInput($input) {
 
 function validateRole($allowedRoles) {
     if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowedRoles)) {
-        header('Location: ../index.php?error=Access denied');
+        if (!headers_sent()) {
+            header('Location: ../index.php?error=Access denied');
+        } else {
+            echo '<script>window.location.href = "../index.php?error=Access denied";</script>';
+        }
         exit();
     }
 }

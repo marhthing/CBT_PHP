@@ -6,8 +6,8 @@ define('UPLOAD_PATH', 'uploads/');
 define('MAX_FILE_SIZE', 5 * 1024 * 1024); // 5MB
 define('ALLOWED_IMAGE_TYPES', ['jpg', 'jpeg', 'png', 'gif']);
 
-// Session configuration (only if session not started)
-if (session_status() === PHP_SESSION_NONE) {
+// Session configuration (only if session not started and headers not sent)
+if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
     ini_set('session.cookie_httponly', 1);
     ini_set('session.use_strict_mode', 1);
     ini_set('session.cookie_secure', 0); // Set to 1 in production with HTTPS

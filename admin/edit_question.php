@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 require_once '../includes/functions.php';
@@ -86,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                            "Edited question ID: {$questionId} originally created by {$question['creator_name']}");
 
                 $success = 'Question updated successfully.';
-                
+
                 // Refresh question data
                 $question = $db->fetch($query, [$questionId]);
 
