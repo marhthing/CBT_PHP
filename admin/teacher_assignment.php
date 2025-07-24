@@ -108,9 +108,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Perform bulk delete
                     $placeholders = str_repeat('?,', count($assignmentIds) - 1) . '?';
                     $deleteQuery = "DELETE FROM teacher_assignments WHERE id IN ($placeholders)";
-                    $result = $db->execute($deleteQuery, $assignmentIds);
+                    $stmt = $db->getConnection()->prepare($deleteQuery);
+                    $stmt->execute($assignmentIds);
                     
-                    $deletedCount = $db->getConnection()->rowCount();
+                    $deletedCount = $stmt->rowCount();
                     
                     // Log each deletion
                     foreach ($deletedAssignments as $assignment) {
@@ -249,7 +250,7 @@ include '../includes/header.php';
                     <h5 class="mb-0">
                         <i class="fas fa-list me-2"></i>Current Assignments (<?php echo count($assignments); ?>)
                     </h5>
-                    <div class="d-flex gap-2" id="bulkActions" style="display: none !important;">
+                    <div class="d-flex gap-2" id="bulkActions" style="display: none;">
                         <button type="button" class="btn btn-sm btn-danger" onclick="bulkDeleteAssignments()">
                             <i class="fas fa-trash me-1"></i>Delete Selected
                         </button>
@@ -414,8 +415,18 @@ function updateBulkActions() {
     
     if (checkboxes.length > 0) {
         bulkActions.style.display = 'flex';
+        bulkActions.classList.add('show');
+        
+        // Update delete button text with count
+        const deleteBtn = bulkActions.querySelector('.btn-danger');
+        deleteBtn.innerHTML = `<i class="fas fa-trash me-1"></i>Delete Selected (${checkboxes.length})`;
     } else {
-        bulkActions.style.display = 'none';
+        bulkActions.classList.remove('show');
+        setTimeout(() => {
+            if (!document.querySelectorAll('.assignment-checkbox:checked').length) {
+                bulkActions.style.display = 'none';
+            }
+        }, 300);
     }
     
     // Update select all checkbox state
