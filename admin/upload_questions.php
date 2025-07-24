@@ -95,7 +95,7 @@ include '../includes/header.php';
 ?>
 
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0"><i class="fas fa-upload me-2"></i>Upload Questions (Admin)</h5>
@@ -200,70 +200,6 @@ include '../includes/header.php';
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Admin Upload Guidelines</h6>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-success">
-                    <h6><i class="fas fa-crown me-2"></i>Admin Privileges</h6>
-                    <ul class="mb-0 small">
-                        <li>Upload questions for any class and subject</li>
-                        <li>No assignment restrictions</li>
-                        <li>Bulk upload capabilities</li>
-                        <li>Override teacher permissions</li>
-                    </ul>
-                </div>
-
-                <ul class="list-unstyled mb-0">
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Select any class and subject combination
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Choose correct session and term
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Write clear, objective questions
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Provide exactly 4 options (A-D)
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Mark the correct option clearly
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Images are optional but helpful
-                    </li>
-                    <li class="mb-0">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Maximum file size: 5MB per image
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="card mt-3">
-            <div class="card-header bg-warning text-dark">
-                <h6 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Best Practices</h6>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-warning mb-2">
-                    <small><strong>Quality Control:</strong> Review questions before generating test codes. Ensure accuracy and clarity.</small>
-                </div>
-                <div class="alert alert-info mb-0">
-                    <small><strong>Organization:</strong> Group similar questions by topic and difficulty. Maintain consistency in formatting.</small>
-                </div>
             </div>
         </div>
     </div>

@@ -105,7 +105,7 @@ include '../includes/header.php';
 ?>
 
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-12">
         <div class="card">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0"><i class="fas fa-upload me-2"></i>Upload Questions</h5>
@@ -211,59 +211,7 @@ include '../includes/header.php';
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Upload Guidelines</h6>
-            </div>
-            <div class="card-body">
-                <ul class="list-unstyled mb-0">
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Select class and subject you're assigned to
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Choose correct session and term
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Write clear, objective questions
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Provide exactly 4 options (A-D)
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Mark the correct option clearly
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Images are optional but helpful
-                    </li>
-                    <li class="mb-0">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Maximum file size: 5MB per image
-                    </li>
-                </ul>
-            </div>
-        </div>
 
-        <div class="card mt-3">
-            <div class="card-header bg-warning text-dark">
-                <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Important Notes</h6>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-warning mb-2">
-                    <small>You can only upload questions for classes and subjects assigned to you by the administrator.</small>
-                </div>
-                <div class="alert alert-info mb-0">
-                    <small>Questions are automatically saved with your teacher ID. Students will see randomized versions during tests.</small>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>

@@ -196,15 +196,7 @@ include '../includes/header.php';
                 
                 <hr>
                 
-                <div class="alert alert-info mb-0">
-                    <h6><i class="fas fa-lightbulb me-2"></i>Tips</h6>
-                    <ul class="mb-0 small">
-                        <li>Upload questions for each term and session</li>
-                        <li>Include images to make questions clearer</li>
-                        <li>Review questions before students take tests</li>
-                        <li>You can only upload for assigned subjects</li>
-                    </ul>
-                </div>
+
             </div>
         </div>
         

@@ -128,16 +128,7 @@ include '../includes/header.php';
                     </div>
                 <?php endif; ?>
                 
-                <div class="alert alert-info">
-                    <h6><i class="fas fa-info-circle me-2"></i>Important Instructions:</h6>
-                    <ul class="mb-0 small">
-                        <li>Once you start, the timer will begin counting down</li>
-                        <li>Your answers are automatically saved every few seconds</li>
-                        <li>You cannot pause or restart the test</li>
-                        <li>Submit your test before time runs out</li>
-                        <li>You can only take this test once</li>
-                    </ul>
-                </div>
+
                 
                 <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                     <a href="take_test.php" class="btn btn-outline-secondary me-md-2">

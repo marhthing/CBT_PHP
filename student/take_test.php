@@ -90,15 +90,7 @@ include '../includes/header.php';
                 
                 <hr class="my-4">
                 
-                <div class="alert alert-info mb-0">
-                    <h6><i class="fas fa-lightbulb me-2"></i>Important Notes:</h6>
-                    <ul class="mb-0 small">
-                        <li>Make sure you have a stable internet connection</li>
-                        <li>You can only take each test once</li>
-                        <li>Your answers will be automatically saved</li>
-                        <li>Submit before the time runs out</li>
-                    </ul>
-                </div>
+
             </div>
         </div>
         

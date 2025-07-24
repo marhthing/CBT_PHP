@@ -266,40 +266,7 @@ include '../includes/header.php';
             <?php unset($_SESSION['generated_codes']); ?>
         <?php endif; ?>
 
-        <!-- Guidelines -->
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Generation Guidelines</h6>
-            </div>
-            <div class="card-body">
-                <ul class="list-unstyled mb-0">
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Ensure questions exist for the selected criteria
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Generated codes are inactive by default
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Each code creates a unique test instance
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Questions are randomly selected during test
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Duration should be appropriate for question count
-                    </li>
-                    <li class="mb-0">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Activate codes when ready for students
-                    </li>
-                </ul>
-            </div>
-        </div>
+
 
         <!-- Question Availability -->
         <div class="card mt-3" id="questionAvailability" style="display: none;">

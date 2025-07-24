@@ -103,15 +103,7 @@ include '../includes/header.php';
                     Take a Test
                 </a>
                 
-                <div class="alert alert-info">
-                    <h6><i class="fas fa-info-circle me-2"></i>How to Take a Test</h6>
-                    <ol class="mb-0 small">
-                        <li>Get your test code from your teacher</li>
-                        <li>Click "Take a Test" above</li>
-                        <li>Enter the test code</li>
-                        <li>Review test details and start</li>
-                    </ol>
-                </div>
+
             </div>
         </div>
         
