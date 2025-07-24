@@ -21,23 +21,23 @@ try {
     // Check user credentials (role will be determined from database)
     $query = "SELECT * FROM users WHERE username = ? AND active = true";
     $user = $db->fetch($query, [$username]);
-    
+
     if ($user && password_verify($password, $user['password'])) {
         // Set session variables
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['role'] = $user['role'];
         $_SESSION['full_name'] = $user['full_name'];
-        
+
         // Additional session data based on role
         if ($user['role'] === 'student') {
             $_SESSION['matric_number'] = $user['matric_number'];
             $_SESSION['class_id'] = $user['class_id'];
         }
-        
+
         // Log successful login
         logActivity($user['id'], 'User Login', 'User logged in successfully');
-        
+
         // Redirect to appropriate dashboard
         switch ($user['role']) {
             case 'student':
@@ -61,3 +61,24 @@ try {
     exit();
 }
 ?>
+
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    const button = document.getElementById('loginButton');
+    const originalText = button.innerHTML;
+
+    // Show processing state
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    button.disabled = true;
+
+    // Reset button after 5 seconds if still processing
+    setTimeout(() => {
+        if (button.disabled) {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }, 5000);
+});
+</script>
+
+<?php include '../includes/footer.php'; ?>

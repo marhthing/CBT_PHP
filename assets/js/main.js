@@ -233,13 +233,28 @@ function throttle(func, limit) {
 document.addEventListener('DOMContentLoaded', function() {
     initializeFormValidation();
 
-    // Add loading states to buttons
+    // Add loading states to buttons - optimized to prevent multiple submissions
     const submitButtons = document.querySelectorAll('button[type="submit"]');
     submitButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            // Prevent multiple clicks
+            if (this.disabled) {
+                e.preventDefault();
+                return false;
+            }
+            
             if (this.form && this.form.checkValidity()) {
+                const originalText = this.innerHTML;
                 this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
                 this.disabled = true;
+                
+                // Re-enable button after 10 seconds as fallback
+                setTimeout(() => {
+                    if (this.disabled) {
+                        this.innerHTML = originalText;
+                        this.disabled = false;
+                    }
+                }, 10000);
             }
         });
     });
@@ -248,9 +263,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
     alerts.forEach(alert => {
         setTimeout(() => {
-            if (alert.parentElement) {
+            if (alert && alert.parentElement) {
+                alert.style.transition = 'opacity 0.3s';
                 alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 300);
+                setTimeout(() => {
+                    if (alert.parentElement) {
+                        alert.remove();
+                    }
+                }, 300);
             }
         }, 5000);
     });
