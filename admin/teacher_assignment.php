@@ -80,6 +80,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = 'Failed to delete assignment. Please try again.';
                 }
             }
+        } elseif ($action === 'bulk_delete') {
+            $assignmentIds = $_POST['assignment_ids'] ?? [];
+            
+            if (!empty($assignmentIds) && is_array($assignmentIds)) {
+                try {
+                    $deletedCount = 0;
+                    $deletedAssignments = [];
+                    
+                    // Get assignment details for logging before deletion
+                    foreach ($assignmentIds as $assignmentId) {
+                        if (is_numeric($assignmentId)) {
+                            $query = "SELECT ta.*, u.full_name as teacher_name, c.name as class_name, s.name as subject_name
+                                      FROM teacher_assignments ta
+                                      JOIN users u ON ta.teacher_id = u.id
+                                      JOIN classes c ON ta.class_id = c.id
+                                      JOIN subjects s ON ta.subject_id = s.id
+                                      WHERE ta.id = ?";
+                            $assignment = $db->fetch($query, [$assignmentId]);
+                            
+                            if ($assignment) {
+                                $deletedAssignments[] = $assignment;
+                            }
+                        }
+                    }
+                    
+                    // Perform bulk delete
+                    $placeholders = str_repeat('?,', count($assignmentIds) - 1) . '?';
+                    $deleteQuery = "DELETE FROM teacher_assignments WHERE id IN ($placeholders)";
+                    $result = $db->execute($deleteQuery, $assignmentIds);
+                    
+                    $deletedCount = $db->getConnection()->rowCount();
+                    
+                    // Log each deletion
+                    foreach ($deletedAssignments as $assignment) {
+                        logActivity($_SESSION['user_id'], 'Teacher Assignment Deleted', 
+                                   "Bulk deletion: Removed {$assignment['teacher_name']} from {$assignment['class_name']} - {$assignment['subject_name']}");
+                    }
+                    
+                    $success = "Successfully deleted {$deletedCount} teacher assignment(s).";
+                } catch (Exception $e) {
+                    error_log("Bulk delete assignment error: " . $e->getMessage());
+                    $error = 'Failed to delete assignments. Please try again.';
+                }
+            } else {
+                $error = 'No assignments selected for deletion.';
+            }
         }
     }
 }
@@ -203,6 +249,14 @@ include '../includes/header.php';
                     <h5 class="mb-0">
                         <i class="fas fa-list me-2"></i>Current Assignments (<?php echo count($assignments); ?>)
                     </h5>
+                    <div class="d-flex gap-2" id="bulkActions" style="display: none !important;">
+                        <button type="button" class="btn btn-sm btn-danger" onclick="bulkDeleteAssignments()">
+                            <i class="fas fa-trash me-1"></i>Delete Selected
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearSelection()">
+                            <i class="fas fa-times me-1"></i>Clear
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="card-body">
@@ -217,6 +271,9 @@ include '../includes/header.php';
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
+                                    <th width="40">
+                                        <input type="checkbox" class="form-check-input" id="selectAll" onchange="toggleSelectAll()">
+                                    </th>
                                     <th>Teacher</th>
                                     <th>Class</th>
                                     <th>Subject</th>
@@ -227,6 +284,10 @@ include '../includes/header.php';
                             <tbody>
                                 <?php foreach ($assignments as $assignment): ?>
                                     <tr>
+                                        <td>
+                                            <input type="checkbox" class="form-check-input assignment-checkbox" 
+                                                   value="<?php echo $assignment['id']; ?>" onchange="updateBulkActions()">
+                                        </td>
                                         <td>
                                             <div>
                                                 <strong><?php echo htmlspecialchars($assignment['teacher_name']); ?></strong>
@@ -282,11 +343,38 @@ include '../includes/header.php';
     </div>
 </div>
 
+<!-- Bulk Delete Confirmation Modal -->
+<div class="modal fade" id="bulkDeleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Bulk Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the selected assignments?</p>
+                <div id="bulkDeleteDetails" class="alert alert-warning"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="confirmBulkDelete" class="btn btn-danger">Delete Selected</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Delete Form -->
 <form id="deleteForm" method="POST" style="display: none;">
     <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
     <input type="hidden" name="action" value="delete">
     <input type="hidden" name="assignment_id" id="deleteAssignmentId">
+</form>
+
+<!-- Bulk Delete Form -->
+<form id="bulkDeleteForm" method="POST" style="display: none;">
+    <input type="hidden" name="csrf_token" value="<?php echo generateCSRFToken(); ?>">
+    <input type="hidden" name="action" value="bulk_delete">
+    <div id="bulkDeleteInputs"></div>
 </form>
 
 <script>
@@ -306,6 +394,93 @@ function deleteAssignment(id, teacher, className, subject) {
         $('#deleteForm').submit();
     });
 }
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.assignment-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    
+    updateBulkActions();
+}
+
+function updateBulkActions() {
+    const checkboxes = document.querySelectorAll('.assignment-checkbox:checked');
+    const bulkActions = document.getElementById('bulkActions');
+    const selectAll = document.getElementById('selectAll');
+    const allCheckboxes = document.querySelectorAll('.assignment-checkbox');
+    
+    if (checkboxes.length > 0) {
+        bulkActions.style.display = 'flex';
+    } else {
+        bulkActions.style.display = 'none';
+    }
+    
+    // Update select all checkbox state
+    selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+    selectAll.indeterminate = checkboxes.length > 0 && checkboxes.length < allCheckboxes.length;
+}
+
+function clearSelection() {
+    const checkboxes = document.querySelectorAll('.assignment-checkbox');
+    const selectAll = document.getElementById('selectAll');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+    });
+    selectAll.checked = false;
+    selectAll.indeterminate = false;
+    
+    updateBulkActions();
+}
+
+function bulkDeleteAssignments() {
+    const checkedBoxes = document.querySelectorAll('.assignment-checkbox:checked');
+    
+    if (checkedBoxes.length === 0) {
+        alert('Please select assignments to delete.');
+        return;
+    }
+    
+    // Build details for confirmation
+    let detailsHtml = `<strong>You are about to delete ${checkedBoxes.length} assignment(s):</strong><br><br>`;
+    checkedBoxes.forEach((checkbox, index) => {
+        const row = checkbox.closest('tr');
+        const teacherName = row.cells[1].querySelector('strong').textContent;
+        const className = row.cells[2].querySelector('.badge').textContent;
+        const subjectName = row.cells[3].querySelector('.badge').textContent;
+        
+        detailsHtml += `${index + 1}. ${teacherName} - ${className} - ${subjectName}<br>`;
+    });
+    
+    $('#bulkDeleteDetails').html(detailsHtml);
+    
+    const modal = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
+    modal.show();
+    
+    $('#confirmBulkDelete').off('click').on('click', function() {
+        // Prepare form data
+        const inputs = document.getElementById('bulkDeleteInputs');
+        inputs.innerHTML = '';
+        
+        checkedBoxes.forEach(checkbox => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'assignment_ids[]';
+            input.value = checkbox.value;
+            inputs.appendChild(input);
+        });
+        
+        document.getElementById('bulkDeleteForm').submit();
+    });
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateBulkActions();
+});
 </script>
 
 <?php include '../includes/footer.php'; ?>
