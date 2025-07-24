@@ -13,12 +13,25 @@ if (session_status() === PHP_SESSION_NONE) {
     ini_set('session.cookie_secure', 0); // Set to 1 in production with HTTPS
 }
 
-// Error reporting
+// Error reporting - Disable in production
+// For production, set these to 0 and false respectively
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 1); // Set to 0 in production
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../logs/error.log');
 
-// Timezone
+// Timezone - Set to your local timezone for production
 date_default_timezone_set('Africa/Lagos');
+
+// Set PostgreSQL timezone to match PHP timezone
+function setDatabaseTimezone() {
+    global $db;
+    try {
+        $db->execute("SET timezone = 'Africa/Lagos'");
+    } catch (Exception $e) {
+        error_log("Failed to set database timezone: " . $e->getMessage());
+    }
+}
 
 // CSRF Protection
 function generateCSRFToken() {

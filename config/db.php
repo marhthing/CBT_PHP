@@ -39,6 +39,13 @@ class Database {
                 PDO::ATTR_EMULATE_PREPARES => false,
             ]);
             
+            // Set database timezone to match PHP timezone
+            if ($this->dbType === 'pgsql') {
+                $this->connection->exec("SET timezone = '" . date_default_timezone_get() . "'");
+            } else {
+                $this->connection->exec("SET time_zone = '" . date('P') . "'");
+            }
+            
             return $this->connection;
         } catch (PDOException $e) {
             die("Database connection failed: " . $e->getMessage());
