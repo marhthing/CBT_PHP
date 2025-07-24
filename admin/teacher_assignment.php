@@ -1,7 +1,12 @@
 <?php
 session_start();
+require_once '../config/config.php';
+require_once '../config/db.php';
 require_once '../includes/functions.php';
 validateRole(['admin']);
+
+// Ensure $db is available globally
+global $db;
 
 $page_title = 'Teacher Assignment';
 $error = '';
@@ -386,20 +391,20 @@ include '../includes/header.php';
 
 <script>
 function deleteAssignment(id, teacher, className, subject) {
-    $('#deleteDetails').html(`
+    document.getElementById('deleteDetails').innerHTML = `
         <strong>Teacher:</strong> ${teacher}<br>
         <strong>Class:</strong> ${className}<br>
         <strong>Subject:</strong> ${subject}
-    `);
+    `;
     
-    $('#deleteAssignmentId').val(id);
+    document.getElementById('deleteAssignmentId').value = id;
     
     const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
     modal.show();
     
-    $('#confirmDelete').off('click').on('click', function() {
-        $('#deleteForm').submit();
-    });
+    document.getElementById('confirmDelete').onclick = function() {
+        document.getElementById('deleteForm').submit();
+    };
 }
 
 function toggleSelectAll() {
@@ -484,12 +489,12 @@ function bulkDeleteAssignments() {
         detailsHtml += `${index + 1}. ${teacherName} - ${className} - ${subjectName}<br>`;
     });
     
-    $('#bulkDeleteDetails').html(detailsHtml);
+    document.getElementById('bulkDeleteDetails').innerHTML = detailsHtml;
     
     const modal = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
     modal.show();
     
-    $('#confirmBulkDelete').off('click').on('click', function() {
+    document.getElementById('confirmBulkDelete').onclick = function() {
         // Prepare form data
         const inputs = document.getElementById('bulkDeleteInputs');
         inputs.innerHTML = '';
@@ -502,8 +507,17 @@ function bulkDeleteAssignments() {
             inputs.appendChild(input);
         });
         
-        document.getElementById('bulkDeleteForm').submit();
-    });
+        // Hide modal first
+        const modal = bootstrap.Modal.getInstance(document.getElementById('bulkDeleteModal'));
+        if (modal) {
+            modal.hide();
+        }
+        
+        // Submit form after a brief delay to ensure modal is hidden
+        setTimeout(() => {
+            document.getElementById('bulkDeleteForm').submit();
+        }, 200);
+    };
 }
 
 // Initialize on page load
@@ -511,9 +525,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Only initialize if elements exist
     const selectAll = document.getElementById('selectAll');
     const bulkActions = document.getElementById('bulkActions');
+    const checkboxes = document.querySelectorAll('.assignment-checkbox');
     
     if (selectAll && bulkActions) {
         updateBulkActions();
+        
+        // Add event listeners to individual checkboxes
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateBulkActions);
+        });
+        
+        // Add event listener to select all checkbox
+        selectAll.addEventListener('change', toggleSelectAll);
     }
 });
 </script>
