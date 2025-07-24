@@ -48,7 +48,7 @@ if (isset($_SESSION['user_id'])) {
                             </div>
                         <?php endif; ?>
                         
-                        <form action="auth/login.php" method="POST" class="needs-validation" novalidate>
+                        <form action="auth/login.php" method="POST" class="needs-validation" novalidate id="loginForm">
                             <div class="mb-3">
                                 <label for="username" class="form-label">Username</label>
                                 <input type="text" class="form-control" id="username" name="username" required>
@@ -65,9 +65,9 @@ if (isset($_SESSION['user_id'])) {
                                 </div>
                             </div>
                             
-
-                            
-                            <button type="submit" class="btn btn-primary w-100">Login</button>
+                            <button type="submit" class="btn btn-primary w-100" id="loginButton">
+                                <span id="loginButtonText">Login</span>
+                            </button>
                         </form>
                     </div>
                 </div>

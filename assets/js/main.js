@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeNavigationEffects();
     initializeCardAnimations();
     initializeFormEnhancements();
+    initializeLoginForm();
 });
 
 // Form Validation Enhancement
@@ -28,6 +29,40 @@ function initializeFormValidation() {
             form.classList.add('was-validated');
         });
     });
+}
+
+// Login Form Enhancement
+function initializeLoginForm() {
+    const loginForm = document.getElementById('loginForm');
+    const loginButton = document.getElementById('loginButton');
+    const loginButtonText = document.getElementById('loginButtonText');
+    
+    if (loginForm && loginButton && loginButtonText) {
+        loginForm.addEventListener('submit', function(e) {
+            // Only proceed if form validation passes
+            if (loginForm.checkValidity()) {
+                // Disable button immediately
+                loginButton.disabled = true;
+                
+                // Change button text and add spinner
+                loginButtonText.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Logging in...';
+                
+                // Add processing class for visual feedback
+                loginButton.classList.add('btn-secondary');
+                loginButton.classList.remove('btn-primary');
+                
+                // Reset button after 10 seconds if still processing (fallback)
+                setTimeout(() => {
+                    if (loginButton.disabled) {
+                        loginButton.disabled = false;
+                        loginButtonText.innerHTML = 'Login';
+                        loginButton.classList.add('btn-primary');
+                        loginButton.classList.remove('btn-secondary');
+                    }
+                }, 10000);
+            }
+        });
+    }
 }
 
 // Loading States Management
