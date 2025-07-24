@@ -55,14 +55,14 @@ function showToast(message, type = 'info', duration = 5000) {
         warning: 'fas fa-exclamation-triangle',
         info: 'fas fa-info-circle'
     };
-    
+
     const bgClass = {
         success: 'bg-success',
         error: 'bg-danger',
         warning: 'bg-warning',
         info: 'bg-primary'
     };
-    
+
     const toastHTML = `
         <div class="toast align-items-center text-white ${bgClass[type]} border-0" role="alert" id="${toastId}">
             <div class="d-flex">
@@ -74,13 +74,13 @@ function showToast(message, type = 'info', duration = 5000) {
             </div>
         </div>
     `;
-    
+
     toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-    
+
     const toastElement = document.getElementById(toastId);
     const toast = new bootstrap.Toast(toastElement, { delay: duration });
     toast.show();
-    
+
     // Remove toast element after it's hidden
     toastElement.addEventListener('hidden.bs.toast', function() {
         toastElement.remove();
@@ -98,14 +98,14 @@ function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `alert alert-${type} alert-dismissible fade show`;
     toast.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
-    
+
     toast.innerHTML = `
         ${message}
         <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
     `;
-    
+
     toastContainer.appendChild(toast);
-    
+
     setTimeout(() => {
         if (toast.parentElement) {
             toast.remove();
@@ -121,52 +121,46 @@ function createToastContainer() {
     return container;
 }
 
-// Form validation
+// Form validation with jQuery
 function initializeFormValidation() {
-    const forms = document.querySelectorAll('.needs-validation');
-    
-    Array.from(forms).forEach(form => {
-        form.addEventListener('submit', function(event) {
-            if (!form.checkValidity()) {
-                event.preventDefault();
-                event.stopPropagation();
-                
-                const firstInvalid = form.querySelector(':invalid');
-                if (firstInvalid) {
-                    firstInvalid.focus();
-                    showToast('Please fill in all required fields correctly', 'danger');
-                }
-            }
-            form.classList.add('was-validated');
-        });
+    $('.needs-validation').on('submit', function(event) {
+        if (this.checkValidity() === false) {
+            event.preventDefault();
+            event.stopPropagation();
+            showToast('Please fill in all required fields correctly', 'danger');
+
+            // Focus first invalid field
+            $(this).find(':invalid').first().focus();
+        }
+        $(this).addClass('was-validated');
     });
-    
-    const passwordFields = document.querySelectorAll('input[type="password"]');
-    passwordFields.forEach(field => {
-        field.addEventListener('input', validatePasswordStrength);
+
+    // Password strength validation
+    $('input[type="password"]').on('input', function() {
+        validatePasswordStrength({ target: this });
     });
-    
-    const emailFields = document.querySelectorAll('input[type="email"]');
-    emailFields.forEach(field => {
-        field.addEventListener('blur', validateEmail);
+
+    // Email validation
+    $('input[type="email"]').on('blur', function() {
+        validateEmail({ target: this });
     });
 }
 
 function validatePasswordStrength(event) {
     const password = event.target.value;
     const strengthIndicator = event.target.parentElement.querySelector('.password-strength');
-    
+
     if (!strengthIndicator) return;
-    
+
     let strength = 0;
     let feedback = '';
-    
+
     if (password.length >= 8) strength++;
     if (/[a-z]/.test(password)) strength++;
     if (/[A-Z]/.test(password)) strength++;
     if (/[0-9]/.test(password)) strength++;
     if (/[^A-Za-z0-9]/.test(password)) strength++;
-    
+
     switch (strength) {
         case 0:
         case 1:
@@ -181,14 +175,14 @@ function validatePasswordStrength(event) {
             feedback = '<span class="text-success">Strong</span>';
             break;
     }
-    
+
     strengthIndicator.innerHTML = feedback;
 }
 
 function validateEmail(event) {
     const email = event.target.value;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     if (email && !emailRegex.test(email)) {
         event.target.setCustomValidity('Please enter a valid email address');
         showToast('Please enter a valid email address', 'warning');
@@ -202,7 +196,7 @@ function formatTime(seconds) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hours > 0) {
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     } else {
@@ -238,7 +232,7 @@ function throttle(func, limit) {
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     initializeFormValidation();
-    
+
     // Add loading states to buttons
     const submitButtons = document.querySelectorAll('button[type="submit"]');
     submitButtons.forEach(button => {
@@ -249,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    
+
     // Auto-hide alerts after 5 seconds
     const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
     alerts.forEach(alert => {
@@ -268,7 +262,7 @@ function copyAllCodes() {
     document.querySelectorAll('code.fs-5').forEach(codeEl => {
         codes.push(codeEl.textContent);
     });
-    
+
     if (navigator.clipboard) {
         navigator.clipboard.writeText(codes.join('\n')).then(() => {
             showToast('All codes copied to clipboard!', 'success');
@@ -293,30 +287,30 @@ function copyAllCodes() {
 function validatePasswordStrength(event) {
     const password = event.target.value;
     const strengthIndicator = event.target.parentNode.querySelector('.password-strength');
-    
+
     if (!strengthIndicator) return;
-    
+
     let strength = 0;
     let feedback = [];
-    
+
     if (password.length >= 8) strength++;
     else feedback.push('At least 8 characters');
-    
+
     if (/[a-z]/.test(password)) strength++;
     else feedback.push('Lowercase letter');
-    
+
     if (/[A-Z]/.test(password)) strength++;
     else feedback.push('Uppercase letter');
-    
+
     if (/[0-9]/.test(password)) strength++;
     else feedback.push('Number');
-    
+
     if (/[^a-zA-Z0-9]/.test(password)) strength++;
     else feedback.push('Special character');
-    
+
     const strengthText = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
     const strengthColor = ['danger', 'warning', 'info', 'success', 'success'];
-    
+
     strengthIndicator.innerHTML = `
         <div class="progress mt-1" style="height: 4px;">
             <div class="progress-bar bg-${strengthColor[strength]}" style="width: ${(strength / 5) * 100}%"></div>
@@ -332,7 +326,7 @@ function validatePasswordStrength(event) {
 function validateEmail(event) {
     const email = event.target.value;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     if (email && !emailRegex.test(email)) {
         event.target.setCustomValidity('Please enter a valid email address');
         event.target.classList.add('is-invalid');
@@ -357,7 +351,7 @@ function initializeTooltips() {
  */
 function initializeConfirmDialogs() {
     const confirmButtons = document.querySelectorAll('[data-confirm]');
-    
+
     confirmButtons.forEach(button => {
         button.addEventListener('click', function(event) {
             const message = this.getAttribute('data-confirm');
@@ -374,26 +368,26 @@ function initializeConfirmDialogs() {
  */
 function initializeImagePreviews() {
     const imageInputs = document.querySelectorAll('input[type="file"][accept*="image"]');
-    
+
     imageInputs.forEach(input => {
         input.addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
+
             // Validate file size (5MB limit)
             if (file.size > 5 * 1024 * 1024) {
                 showToast('Image file size must be less than 5MB', 'error');
                 event.target.value = '';
                 return;
             }
-            
+
             // Validate file type
             if (!file.type.startsWith('image/')) {
                 showToast('Please select a valid image file', 'error');
                 event.target.value = '';
                 return;
             }
-            
+
             // Create preview
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -403,7 +397,7 @@ function initializeImagePreviews() {
                     preview.className = 'image-preview mt-2';
                     input.parentNode.appendChild(preview);
                 }
-                
+
                 preview.innerHTML = `
                     <img src="${e.target.result}" class="img-thumbnail" style="max-width: 200px; max-height: 200px;">
                     <button type="button" class="btn btn-sm btn-outline-danger ms-2" onclick="removeImagePreview(this)">
@@ -423,7 +417,7 @@ function initializeImagePreviews() {
 function removeImagePreview(button) {
     const preview = button.closest('.image-preview');
     const input = preview.parentNode.querySelector('input[type="file"]');
-    
+
     input.value = '';
     preview.remove();
 }
@@ -433,14 +427,14 @@ function removeImagePreview(button) {
  */
 function initializeTableSorting() {
     const sortableTables = document.querySelectorAll('.table-sortable');
-    
+
     sortableTables.forEach(table => {
         const headers = table.querySelectorAll('th[data-sort]');
-        
+
         headers.forEach(header => {
             header.style.cursor = 'pointer';
             header.innerHTML += ' <i class="fas fa-sort text-muted"></i>';
-            
+
             header.addEventListener('click', function() {
                 sortTable(table, this.getAttribute('data-sort'), this);
             });
@@ -458,9 +452,9 @@ function sortTable(table, column, header) {
     const tbody = table.querySelector('tbody');
     const rows = Array.from(tbody.querySelectorAll('tr'));
     const columnIndex = Array.from(header.parentNode.children).indexOf(header);
-    
+
     const isAscending = !header.classList.contains('sort-asc');
-    
+
     // Remove sort classes from all headers
     table.querySelectorAll('th').forEach(th => {
         th.classList.remove('sort-asc', 'sort-desc');
@@ -469,33 +463,33 @@ function sortTable(table, column, header) {
             icon.className = 'fas fa-sort text-muted';
         }
     });
-    
+
     // Add sort class to current header
     header.classList.add(isAscending ? 'sort-asc' : 'sort-desc');
     const icon = header.querySelector('i');
     if (icon) {
         icon.className = `fas fa-sort-${isAscending ? 'up' : 'down'} text-primary`;
     }
-    
+
     // Sort rows
     rows.sort((a, b) => {
         const aValue = a.cells[columnIndex].textContent.trim();
         const bValue = b.cells[columnIndex].textContent.trim();
-        
+
         // Try to parse as numbers
         const aNum = parseFloat(aValue);
         const bNum = parseFloat(bValue);
-        
+
         if (!isNaN(aNum) && !isNaN(bNum)) {
             return isAscending ? aNum - bNum : bNum - aNum;
         }
-        
+
         // String comparison
         return isAscending ? 
             aValue.localeCompare(bValue) : 
             bValue.localeCompare(aValue);
     });
-    
+
     // Reappend sorted rows
     rows.forEach(row => tbody.appendChild(row));
 }
@@ -505,20 +499,20 @@ function sortTable(table, column, header) {
  */
 function initializeSearchFilters() {
     const searchInputs = document.querySelectorAll('[data-search-target]');
-    
+
     searchInputs.forEach(input => {
         const targetSelector = input.getAttribute('data-search-target');
         const targets = document.querySelectorAll(targetSelector);
-        
+
         input.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase();
-            
+
             targets.forEach(target => {
                 const text = target.textContent.toLowerCase();
                 const matches = text.includes(searchTerm);
-                
+
                 target.style.display = matches ? '' : 'none';
-                
+
                 // Add highlight
                 if (matches && searchTerm) {
                     highlightText(target, searchTerm);
@@ -538,14 +532,14 @@ function initializeSearchFilters() {
 function highlightText(element, searchTerm) {
     // Simple highlighting - in production, use a more robust solution
     const originalText = element.getAttribute('data-original-text') || element.textContent;
-    
+
     if (!element.getAttribute('data-original-text')) {
         element.setAttribute('data-original-text', originalText);
     }
-    
+
     const regex = new RegExp(`(${searchTerm})`, 'gi');
     const highlightedText = originalText.replace(regex, '<mark>$1</mark>');
-    
+
     element.innerHTML = highlightedText;
 }
 
@@ -569,13 +563,13 @@ function handleNetworkStatus() {
             showToast('You are currently offline. Some features may not work properly.', 'warning', 10000);
         }
     }
-    
+
     window.addEventListener('online', function() {
         showToast('You are back online!', 'success');
     });
-    
+
     window.addEventListener('offline', updateNetworkStatus);
-    
+
     // Check initial status
     updateNetworkStatus();
 }
@@ -589,7 +583,7 @@ function formatTime(seconds) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    
+
     if (hours > 0) {
         return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     } else {
@@ -654,7 +648,7 @@ async function copyToClipboard(text) {
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        
+
         try {
             document.execCommand('copy');
             textArea.remove();
@@ -695,20 +689,20 @@ function validateFileUpload(file, options = {}) {
         maxWidth: 2000,
         maxHeight: 2000
     };
-    
+
     const config = { ...defaults, ...options };
     const errors = [];
-    
+
     // Check file size
     if (file.size > config.maxSize) {
         errors.push(`File size must be less than ${config.maxSize / (1024 * 1024)}MB`);
     }
-    
+
     // Check file type
     if (!config.allowedTypes.includes(file.type)) {
         errors.push(`File type not allowed. Allowed types: ${config.allowedTypes.join(', ')}`);
     }
-    
+
     return {
         valid: errors.length === 0,
         errors: errors
@@ -734,13 +728,13 @@ function setupAutoSave(key, getData, interval = 30000) {
             console.error('Auto-save failed:', error);
         }
     };
-    
+
     const intervalId = setInterval(saveData, interval);
-    
+
     // Save on page unload
     const unloadHandler = () => saveData();
     window.addEventListener('beforeunload', unloadHandler);
-    
+
     // Return cleanup function
     return () => {
         clearInterval(intervalId);
@@ -758,15 +752,15 @@ function loadAutoSavedData(key, maxAge = 24 * 60 * 60 * 1000) {
     try {
         const saved = localStorage.getItem(key);
         if (!saved) return null;
-        
+
         const parsed = JSON.parse(saved);
         const age = Date.now() - parsed.timestamp;
-        
+
         if (age > maxAge) {
             localStorage.removeItem(key);
             return null;
         }
-        
+
         return parsed.data;
     } catch (error) {
         console.error('Failed to load auto-saved data:', error);
