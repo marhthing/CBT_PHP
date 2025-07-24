@@ -391,20 +391,35 @@ include '../includes/header.php';
 
 <script>
 function deleteAssignment(id, teacher, className, subject) {
-    document.getElementById('deleteDetails').innerHTML = `
-        <strong>Teacher:</strong> ${teacher}<br>
-        <strong>Class:</strong> ${className}<br>
-        <strong>Subject:</strong> ${subject}
-    `;
+    const deleteDetails = document.getElementById('deleteDetails');
+    if (deleteDetails) {
+        deleteDetails.innerHTML = `
+            <strong>Teacher:</strong> ${teacher}<br>
+            <strong>Class:</strong> ${className}<br>
+            <strong>Subject:</strong> ${subject}
+        `;
+    }
     
-    document.getElementById('deleteAssignmentId').value = id;
+    const deleteAssignmentId = document.getElementById('deleteAssignmentId');
+    if (deleteAssignmentId) {
+        deleteAssignmentId.value = id;
+    }
     
-    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-    modal.show();
-    
-    document.getElementById('confirmDelete').onclick = function() {
-        document.getElementById('deleteForm').submit();
-    };
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+        const modal = new bootstrap.Modal(deleteModal);
+        modal.show();
+        
+        const confirmButton = document.getElementById('confirmDelete');
+        if (confirmButton) {
+            confirmButton.onclick = function() {
+                const form = document.getElementById('deleteForm');
+                if (form) {
+                    form.submit();
+                }
+            };
+        }
+    }
 }
 
 function toggleSelectAll() {
@@ -441,15 +456,16 @@ function updateBulkActions() {
     } else {
         bulkActions.classList.remove('show');
         setTimeout(() => {
-            if (!document.querySelectorAll('.assignment-checkbox:checked').length) {
+            const stillChecked = document.querySelectorAll('.assignment-checkbox:checked');
+            if (!stillChecked.length && bulkActions) {
                 bulkActions.style.display = 'none';
             }
         }, 300);
     }
     
     // Update select all checkbox state
-    if (selectAll) {
-        selectAll.checked = allCheckboxes.length > 0 && checkboxes.length === allCheckboxes.length;
+    if (selectAll && allCheckboxes.length > 0) {
+        selectAll.checked = checkboxes.length === allCheckboxes.length;
         selectAll.indeterminate = checkboxes.length > 0 && checkboxes.length < allCheckboxes.length;
     }
 }
@@ -482,61 +498,85 @@ function bulkDeleteAssignments() {
     let detailsHtml = `<strong>You are about to delete ${checkedBoxes.length} assignment(s):</strong><br><br>`;
     checkedBoxes.forEach((checkbox, index) => {
         const row = checkbox.closest('tr');
-        const teacherName = row.cells[1].querySelector('strong').textContent;
-        const className = row.cells[2].querySelector('.badge').textContent;
-        const subjectName = row.cells[3].querySelector('.badge').textContent;
-        
-        detailsHtml += `${index + 1}. ${teacherName} - ${className} - ${subjectName}<br>`;
+        if (row && row.cells && row.cells.length >= 4) {
+            const teacherElement = row.cells[1] ? row.cells[1].querySelector('strong') : null;
+            const classElement = row.cells[2] ? row.cells[2].querySelector('.badge') : null;
+            const subjectElement = row.cells[3] ? row.cells[3].querySelector('.badge') : null;
+            
+            const teacherName = teacherElement ? teacherElement.textContent : 'Unknown';
+            const className = classElement ? classElement.textContent : 'Unknown';
+            const subjectName = subjectElement ? subjectElement.textContent : 'Unknown';
+            
+            detailsHtml += `${index + 1}. ${teacherName} - ${className} - ${subjectName}<br>`;
+        }
     });
     
-    document.getElementById('bulkDeleteDetails').innerHTML = detailsHtml;
+    const bulkDeleteDetails = document.getElementById('bulkDeleteDetails');
+    if (bulkDeleteDetails) {
+        bulkDeleteDetails.innerHTML = detailsHtml;
+    }
     
-    const modal = new bootstrap.Modal(document.getElementById('bulkDeleteModal'));
-    modal.show();
-    
-    document.getElementById('confirmBulkDelete').onclick = function() {
-        // Prepare form data
-        const inputs = document.getElementById('bulkDeleteInputs');
-        inputs.innerHTML = '';
+    const bulkDeleteModal = document.getElementById('bulkDeleteModal');
+    if (bulkDeleteModal) {
+        const modal = new bootstrap.Modal(bulkDeleteModal);
+        modal.show();
         
-        checkedBoxes.forEach(checkbox => {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'assignment_ids[]';
-            input.value = checkbox.value;
-            inputs.appendChild(input);
-        });
-        
-        // Hide modal first
-        const modal = bootstrap.Modal.getInstance(document.getElementById('bulkDeleteModal'));
-        if (modal) {
-            modal.hide();
+        const confirmButton = document.getElementById('confirmBulkDelete');
+        if (confirmButton) {
+            confirmButton.onclick = function() {
+                // Prepare form data
+                const inputs = document.getElementById('bulkDeleteInputs');
+                if (inputs) {
+                    inputs.innerHTML = '';
+                    
+                    checkedBoxes.forEach(checkbox => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'assignment_ids[]';
+                        input.value = checkbox.value;
+                        inputs.appendChild(input);
+                    });
+                }
+                
+                // Hide modal first
+                const modalInstance = bootstrap.Modal.getInstance(bulkDeleteModal);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+                
+                // Submit form after a brief delay to ensure modal is hidden
+                setTimeout(() => {
+                    const form = document.getElementById('bulkDeleteForm');
+                    if (form) {
+                        form.submit();
+                    }
+                }, 200);
+            };
         }
-        
-        // Submit form after a brief delay to ensure modal is hidden
-        setTimeout(() => {
-            document.getElementById('bulkDeleteForm').submit();
-        }, 200);
-    };
+    }
 }
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Only initialize if elements exist
-    const selectAll = document.getElementById('selectAll');
-    const bulkActions = document.getElementById('bulkActions');
-    const checkboxes = document.querySelectorAll('.assignment-checkbox');
-    
-    if (selectAll && bulkActions) {
-        updateBulkActions();
+    try {
+        // Only initialize if elements exist
+        const selectAll = document.getElementById('selectAll');
+        const bulkActions = document.getElementById('bulkActions');
+        const checkboxes = document.querySelectorAll('.assignment-checkbox');
         
-        // Add event listeners to individual checkboxes
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', updateBulkActions);
-        });
-        
-        // Add event listener to select all checkbox
-        selectAll.addEventListener('change', toggleSelectAll);
+        if (selectAll && bulkActions && checkboxes.length > 0) {
+            updateBulkActions();
+            
+            // Add event listeners to individual checkboxes
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateBulkActions);
+            });
+            
+            // Add event listener to select all checkbox
+            selectAll.addEventListener('change', toggleSelectAll);
+        }
+    } catch (error) {
+        console.error('Error initializing bulk actions:', error);
     }
 });
 </script>
