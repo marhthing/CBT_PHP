@@ -1,7 +1,10 @@
 <?php
 session_start();
+require_once '../config/db.php';
 require_once '../includes/functions.php';
 validateRole(['admin']);
+
+$db = new Database();
 
 $page_title = 'Admin - Edit Question';
 $error = '';
@@ -101,7 +104,7 @@ include '../includes/header.php';
 ?>
 
 <div class="row">
-    <div class="col-md-8">
+    <div class="col-md-<?php echo $question['image'] ? '8' : '12'; ?>">
         <div class="card">
             <div class="card-header bg-warning text-dark">
                 <h5 class="mb-0"><i class="fas fa-edit me-2"></i>Edit Question (Admin)</h5>
@@ -267,42 +270,9 @@ include '../includes/header.php';
         </div>
     </div>
 
+    <?php if ($question['image']): ?>
     <div class="col-md-4">
         <div class="card">
-            <div class="card-header bg-info text-white">
-                <h6 class="mb-0"><i class="fas fa-crown me-2"></i>Admin Edit Privileges</h6>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-warning mb-3">
-                    <small><strong>Admin Override:</strong> You can edit any question regardless of who created it.</small>
-                </div>
-                <ul class="list-unstyled mb-0">
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Edit class and subject assignments
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Update session and term details
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Modify question content
-                    </li>
-                    <li class="mb-2">
-                        <i class="fas fa-check text-success me-2"></i>
-                        Change correct answers
-                    </li>
-                    <li class="mb-0">
-                        <i class="fas fa-exclamation-triangle text-warning me-2"></i>
-                        Changes are logged for accountability
-                    </li>
-                </ul>
-            </div>
-        </div>
-
-        <?php if ($question['image']): ?>
-        <div class="card mt-3">
             <div class="card-header bg-light">
                 <h6 class="mb-0">Current Image</h6>
             </div>
@@ -311,8 +281,8 @@ include '../includes/header.php';
                      class="img-fluid rounded" style="max-height: 200px;" alt="Question Image">
             </div>
         </div>
-        <?php endif; ?>
     </div>
+    <?php endif; ?>
 </div>
 
 <?php include '../includes/footer.php'; ?>

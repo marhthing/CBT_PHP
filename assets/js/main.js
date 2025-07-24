@@ -126,13 +126,19 @@ function initializeNavigationEffects() {
     const navLinks = document.querySelectorAll('.nav-link');
     
     navLinks.forEach(link => {
-        link.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-2px)';
-        });
-        
-        link.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-        });
+        if (link && link.style) {
+            link.addEventListener('mouseenter', function() {
+                if (this.style) {
+                    this.style.transform = 'translateY(-2px)';
+                }
+            });
+            
+            link.addEventListener('mouseleave', function() {
+                if (this.style) {
+                    this.style.transform = 'translateY(0)';
+                }
+            });
+        }
     });
 }
 
@@ -141,15 +147,21 @@ function initializeCardAnimations() {
     const cards = document.querySelectorAll('.card:not(.no-hover)');
     
     cards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-4px)';
-            this.style.boxShadow = 'var(--shadow-xl)';
-        });
-        
-        card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
-            this.style.boxShadow = 'var(--shadow)';
-        });
+        if (card) {
+            card.addEventListener('mouseenter', function() {
+                if (this.style) {
+                    this.style.transform = 'translateY(-4px)';
+                    this.style.boxShadow = 'var(--shadow-xl)';
+                }
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                if (this.style) {
+                    this.style.transform = 'translateY(0)';
+                    this.style.boxShadow = 'var(--shadow)';
+                }
+            });
+        }
     });
 }
 
