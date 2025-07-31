@@ -2,6 +2,15 @@
 
 This is a Computer-Based Testing (CBT) Portal application designed for secondary schools. The system provides a comprehensive platform for administering online tests with role-based access for students, teachers, and administrators. The application features secure test management, question banking, result tracking, and real-time test administration capabilities.
 
+## Recent Changes (July 31, 2025)
+- ✓ Successfully migrated from Replit Agent to Replit environment
+- ✓ Fixed authentication system with automatic role detection (no manual role selection needed)
+- ✓ Students login with registration numbers, teachers/admins use email/username
+- ✓ Resolved CORS issues and network connectivity between frontend and backend
+- ✓ Updated password hashing and test credentials (password123 for all test users)
+- ✓ Fixed Tailwind CSS configuration and created inline-styled login form
+- ✓ Both workflows (Frontend on port 5000, Backend on port 8000) running successfully
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
