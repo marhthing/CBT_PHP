@@ -55,6 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const autoLogin = async (identifier: string, password: string) => {
     try {
       console.log('Making API request to:', '/api/auth/auto-login.php')
+      console.log('API Base URL:', api.defaults.baseURL)
       const response = await api.post('/api/auth/auto-login.php', {
         identifier,
         password,

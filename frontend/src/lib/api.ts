@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const API_URL = 'http://0.0.0.0:8000'
+// Use relative URLs to proxy through the same domain
+const API_URL = '/api'
 
 export const api = axios.create({
   baseURL: API_URL,
