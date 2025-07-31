@@ -27,7 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const response = await api.get('/api/auth/me.php')
+      const response = await api.get('/auth/me')
       setUser(response.data.user)
     } catch (error) {
       localStorage.removeItem('token')
@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (username: string, password: string, role: string) => {
     try {
-      const response = await api.post('/api/auth/login.php', {
+      const response = await api.post('/auth/login', {
         identifier: username,
         password,
         role,
@@ -54,9 +54,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const autoLogin = async (identifier: string, password: string) => {
     try {
-      console.log('Making API request to:', '/api/auth/auto-login.php')
+      console.log('Making API request to:', '/auth/auto-login')
       console.log('API Base URL:', api.defaults.baseURL)
-      const response = await api.post('/api/auth/auto-login.php', {
+      const response = await api.post('/auth/auto-login', {
         identifier,
         password,
       })
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await api.post('/api/auth/logout.php')
+      await api.post('/auth/logout')
     } catch (error) {
       // Continue with logout even if API call fails
     } finally {
