@@ -9,13 +9,30 @@ export default function Layout({ children }: LayoutProps) {
   const { user } = useAuth()
 
   if (!user) {
-    return <div className="min-h-screen bg-background">{children}</div>
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#f8fafc' 
+      }}>
+        {children}
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: '#f8fafc', 
+      display: 'flex',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    }}>
       <Sidebar />
-      <main className="flex-1 ml-64 p-6">
+      <main style={{
+        flex: '1',
+        marginLeft: '280px',
+        padding: '2rem',
+        transition: 'margin-left 0.3s ease'
+      }}>
         {children}
       </main>
     </div>

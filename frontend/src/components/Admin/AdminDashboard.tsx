@@ -1,9 +1,7 @@
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/card'
-import { Button } from '../ui/button'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import api from '../../lib/api'
-import { BookOpen, Users, FileText, ClipboardList, TrendingUp } from 'lucide-react'
+import { BookOpen, Users, FileText, ClipboardList, TrendingUp, Plus, Eye, Settings } from 'lucide-react'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -11,7 +9,7 @@ export default function AdminDashboard() {
   const { data: stats } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: async () => {
-      const response = await api.get('/api/admin/questions.php?stats=true')
+      const response = await api.get('/admin/questions?stats=true')
       return response.data
     },
   })
@@ -19,251 +17,385 @@ export default function AdminDashboard() {
   const { data: recentTests } = useQuery({
     queryKey: ['admin-recent-tests'],
     queryFn: async () => {
-      const response = await api.get('/api/admin/test-codes.php?recent=true')
+      const response = await api.get('/admin/test-codes?recent=true')
       return response.data.test_codes
     },
   })
 
+  const styles = {
+    container: {
+      maxWidth: '1400px',
+      margin: '0 auto',
+      padding: '0',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    },
+    header: {
+      marginBottom: '2.5rem'
+    },
+    title: {
+      fontSize: '2.25rem',
+      fontWeight: '800',
+      color: '#1e293b',
+      marginBottom: '0.5rem',
+      letterSpacing: '-0.025em'
+    },
+    subtitle: {
+      color: '#64748b',
+      fontSize: '1.125rem',
+      fontWeight: '400'
+    },
+    statsGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+      gap: '1.5rem',
+      marginBottom: '2.5rem'
+    },
+    statCard: {
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: '2rem',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      border: '1px solid rgba(226, 232, 240, 0.8)',
+      transition: 'all 0.3s ease',
+      position: 'relative' as const,
+      overflow: 'hidden'
+    },
+    statCardHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '1rem'
+    },
+    statLabel: {
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      color: '#64748b',
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.05em'
+    },
+    statValue: {
+      fontSize: '2.5rem',
+      fontWeight: '800',
+      color: '#1e293b',
+      lineHeight: '1'
+    },
+    statChange: {
+      fontSize: '0.875rem',
+      fontWeight: '500',
+      color: '#059669',
+      marginTop: '0.5rem'
+    },
+    iconContainer: {
+      width: '50px',
+      height: '50px',
+      borderRadius: '12px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#f0f9ff',
+      border: '2px solid #e0f2fe'
+    },
+    actionsGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+      gap: '1.5rem',
+      marginBottom: '2.5rem'
+    },
+    actionCard: {
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: '2rem',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      border: '1px solid rgba(226, 232, 240, 0.8)',
+      transition: 'all 0.3s ease'
+    },
+    actionHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '1rem',
+      marginBottom: '1.5rem'
+    },
+    actionIcon: {
+      width: '40px',
+      height: '40px',
+      borderRadius: '10px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: '#4f46e5',
+      color: 'white'
+    },
+    actionTitle: {
+      fontSize: '1.25rem',
+      fontWeight: '700',
+      color: '#1e293b'
+    },
+    actionDescription: {
+      color: '#64748b',
+      fontSize: '0.975rem',
+      lineHeight: '1.6',
+      marginBottom: '1.5rem'
+    },
+    button: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.75rem 1.5rem',
+      backgroundColor: '#4f46e5',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      textDecoration: 'none'
+    },
+    secondaryButton: {
+      backgroundColor: '#f8fafc',
+      color: '#475569',
+      border: '1px solid #e2e8f0',
+      marginLeft: '0.75rem'
+    },
+    recentSection: {
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: '2rem',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      border: '1px solid rgba(226, 232, 240, 0.8)'
+    },
+    sectionTitle: {
+      fontSize: '1.5rem',
+      fontWeight: '700',
+      color: '#1e293b',
+      marginBottom: '1.5rem',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.75rem'
+    },
+    table: {
+      width: '100%',
+      borderCollapse: 'collapse' as const
+    },
+    tableHeader: {
+      backgroundColor: '#f8fafc',
+      borderBottom: '1px solid #e2e8f0'
+    },
+    tableHeaderCell: {
+      padding: '0.875rem 1rem',
+      textAlign: 'left' as const,
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      color: '#475569',
+      textTransform: 'uppercase' as const,
+      letterSpacing: '0.05em'
+    },
+    tableCell: {
+      padding: '1rem',
+      borderBottom: '1px solid #f1f5f9',
+      fontSize: '0.875rem',
+      color: '#374151'
+    },
+    badge: {
+      padding: '0.25rem 0.75rem',
+      borderRadius: '9999px',
+      fontSize: '0.75rem',
+      fontWeight: '600',
+      backgroundColor: '#dcfce7',
+      color: '#166534'
+    }
+  }
+
+  const statCards = [
+    {
+      label: 'Total Questions',
+      value: stats?.total_questions || 0,
+      change: `+${stats?.questions_this_week || 0} this week`,
+      icon: FileText,
+      color: '#3b82f6'
+    },
+    {
+      label: 'Active Test Codes',
+      value: stats?.active_test_codes || 0,
+      change: `+${stats?.tests_this_month || 0} this month`,
+      icon: BookOpen,
+      color: '#10b981'
+    },
+    {
+      label: 'Total Teachers',
+      value: stats?.total_teachers || 0,
+      change: `${stats?.active_teachers || 0} active`,
+      icon: Users,
+      color: '#f59e0b'
+    },
+    {
+      label: 'Tests Completed',
+      value: stats?.completed_tests || 0,
+      change: `${stats?.completion_rate || 0}% completion rate`,
+      icon: ClipboardList,
+      color: '#8b5cf6'
+    }
+  ]
+
+  const quickActions = [
+    {
+      title: 'Manage Test Codes',
+      description: 'Generate new test codes, configure test settings, and monitor active tests across all subjects.',
+      icon: BookOpen,
+      primaryAction: () => navigate('/admin/test-codes'),
+      primaryLabel: 'Manage Codes',
+      secondaryAction: () => navigate('/admin/test-codes?action=create'),
+      secondaryLabel: 'Create New'
+    },
+    {
+      title: 'Teacher Management',
+      description: 'Assign teachers to subjects, manage permissions, and track teaching activities and performance.',
+      icon: Users,
+      primaryAction: () => navigate('/admin/teachers'),
+      primaryLabel: 'View Teachers',
+      secondaryAction: () => navigate('/admin/teachers?action=assign'),
+      secondaryLabel: 'Assign'
+    },
+    {
+      title: 'Question Bank',
+      description: 'Browse, review, and manage all questions from teachers. Monitor quality and approve submissions.',
+      icon: FileText,
+      primaryAction: () => navigate('/admin/questions'),
+      primaryLabel: 'View All',
+      secondaryAction: () => navigate('/admin/questions?filter=pending'),
+      secondaryLabel: 'Review'
+    }
+  ]
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground">
-          Manage the CBT system, oversee tests, and monitor system-wide activities
+    <div style={styles.container}>
+      {/* Header */}
+      <div style={styles.header}>
+        <h1 style={styles.title}>Admin Dashboard</h1>
+        <p style={styles.subtitle}>
+          Comprehensive management for Sure Foundation Comprehensive School CBT System
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Questions</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_questions || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              +{stats?.questions_this_week || 0} this week
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Test Codes</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.active_tests || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.total_tests || 0} total created
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Teachers</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_teachers || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats?.assigned_teachers || 0} with assignments
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Test Submissions</CardTitle>
-            <ClipboardList className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_submissions || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              +{stats?.submissions_today || 0} today
-            </p>
-          </CardContent>
-        </Card>
+      <div style={styles.statsGrid}>
+        {statCards.map((card, index) => {
+          const Icon = card.icon
+          return (
+            <div
+              key={index}
+              style={styles.statCard}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px)'
+                e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.1)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+              }}
+            >
+              <div style={styles.statCardHeader}>
+                <div style={styles.statLabel}>{card.label}</div>
+                <div style={{ ...styles.iconContainer, backgroundColor: `${card.color}15`, borderColor: `${card.color}30` }}>
+                  <Icon size={24} style={{ color: card.color }} />
+                </div>
+              </div>
+              <div style={styles.statValue}>{card.value}</div>
+              <div style={styles.statChange}>{card.change}</div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Quick Actions */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Test Management
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              Create and manage test codes for students to access tests.
-            </p>
-            <Button 
-              onClick={() => navigate('/admin/test-codes')}
-              className="w-full"
-            >
-              Manage Test Codes
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Teacher Assignments
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              Assign teachers to classes and subjects for question management.
-            </p>
-            <Button 
-              onClick={() => navigate('/admin/teachers')}
-              variant="outline"
-              className="w-full"
-            >
-              Manage Teachers
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Question Bank
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-muted-foreground">
-              View and manage all questions across all subjects and teachers.
-            </p>
-            <Button 
-              onClick={() => navigate('/admin/questions')}
-              variant="outline"
-              className="w-full"
-            >
-              View All Questions
-            </Button>
-          </CardContent>
-        </Card>
+      <div style={styles.actionsGrid}>
+        {quickActions.map((action, index) => {
+          const Icon = action.icon
+          return (
+            <div key={index} style={styles.actionCard}>
+              <div style={styles.actionHeader}>
+                <div style={styles.actionIcon}>
+                  <Icon size={20} />
+                </div>
+                <h3 style={styles.actionTitle}>{action.title}</h3>
+              </div>
+              <p style={styles.actionDescription}>{action.description}</p>
+              <div>
+                <button
+                  onClick={action.primaryAction}
+                  style={styles.button}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#4338ca'
+                    e.currentTarget.style.transform = 'translateY(-1px)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#4f46e5'
+                    e.currentTarget.style.transform = 'translateY(0)'
+                  }}
+                >
+                  <Plus size={16} />
+                  {action.primaryLabel}
+                </button>
+                <button
+                  onClick={action.secondaryAction}
+                  style={{ ...styles.button, ...styles.secondaryButton }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f1f5f9'
+                    e.currentTarget.style.borderColor = '#cbd5e1'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f8fafc'
+                    e.currentTarget.style.borderColor = '#e2e8f0'
+                  }}
+                >
+                  <Eye size={16} />
+                  {action.secondaryLabel}
+                </button>
+              </div>
+            </div>
+          )
+        })}
       </div>
 
-      {/* Recent Test Codes */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5" />
-            Recent Test Codes
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentTests && recentTests.length > 0 ? (
-            <div className="space-y-3">
-              {recentTests.map((test: any) => (
-                <div key={test.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <div className="font-medium">{test.title}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {test.subject} - {test.class_level} | Code: {test.code}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      test.is_active 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {test.is_active ? 'Active' : 'Inactive'}
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {test.question_count} questions
-                    </div>
-                  </div>
-                </div>
+      {/* Recent Activity */}
+      <div style={styles.recentSection}>
+        <h2 style={styles.sectionTitle}>
+          <TrendingUp size={24} />
+          Recent Test Activity
+        </h2>
+        {recentTests && recentTests.length > 0 ? (
+          <table style={styles.table}>
+            <thead style={styles.tableHeader}>
+              <tr>
+                <th style={styles.tableHeaderCell}>Test Code</th>
+                <th style={styles.tableHeaderCell}>Subject</th>
+                <th style={styles.tableHeaderCell}>Class</th>
+                <th style={styles.tableHeaderCell}>Created</th>
+                <th style={styles.tableHeaderCell}>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentTests.slice(0, 5).map((test: any, index: number) => (
+                <tr key={index}>
+                  <td style={styles.tableCell}>
+                    <span style={{ fontWeight: '600', fontFamily: 'monospace' }}>{test.code}</span>
+                  </td>
+                  <td style={styles.tableCell}>{test.subject}</td>
+                  <td style={styles.tableCell}>{test.class}</td>
+                  <td style={styles.tableCell}>{new Date(test.created_at).toLocaleDateString()}</td>
+                  <td style={styles.tableCell}>
+                    <span style={styles.badge}>{test.status || 'Active'}</span>
+                  </td>
+                </tr>
               ))}
-            </div>
-          ) : (
-            <div className="text-center text-muted-foreground py-8">
-              No test codes created yet. Create your first test code to get started!
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* System Overview */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Subject Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats?.subject_stats && stats.subject_stats.length > 0 ? (
-              <div className="space-y-3">
-                {stats.subject_stats.map((subject: any) => (
-                  <div key={subject.subject} className="flex items-center justify-between">
-                    <span className="text-sm">{subject.subject}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-20 bg-secondary rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full" 
-                          style={{ 
-                            width: `${(subject.question_count / stats.total_questions) * 100}%` 
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm text-muted-foreground w-8">
-                        {subject.question_count}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center text-muted-foreground py-4">
-                No data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Class Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {stats?.class_stats && stats.class_stats.length > 0 ? (
-              <div className="space-y-3">
-                {stats.class_stats.map((cls: any) => (
-                  <div key={cls.class_level} className="flex items-center justify-between">
-                    <span className="text-sm">Class {cls.class_level}</span>
-                    <div className="flex items-center gap-2">
-                      <div className="w-20 bg-secondary rounded-full h-2">
-                        <div 
-                          className="bg-primary h-2 rounded-full" 
-                          style={{ 
-                            width: `${(cls.question_count / stats.total_questions) * 100}%` 
-                          }}
-                        />
-                      </div>
-                      <span className="text-sm text-muted-foreground w-8">
-                        {cls.question_count}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center text-muted-foreground py-4">
-                No data available
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </tbody>
+          </table>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#64748b' }}>
+            <ClipboardList size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+            <p>No recent test activity found.</p>
+          </div>
+        )}
       </div>
     </div>
   )

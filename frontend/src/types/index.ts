@@ -5,6 +5,8 @@ export interface User {
   role: 'student' | 'teacher' | 'admin'
   full_name: string
   created_at: string
+  current_term?: string
+  current_session?: string
 }
 
 export interface Question {
