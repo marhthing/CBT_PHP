@@ -54,15 +54,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const autoLogin = async (identifier: string, password: string) => {
     try {
+      console.log('Making API request to:', '/api/auth/auto-login.php')
       const response = await api.post('/api/auth/auto-login.php', {
         identifier,
         password,
       })
 
-      const { token, user } = response.data
+      console.log('API response:', response.data)
+      const { token, user } = response.data.data || response.data
       localStorage.setItem('token', token)
       setUser(user)
     } catch (error: any) {
+      console.error('API error:', error)
       throw new Error(error.response?.data?.message || 'Login failed')
     }
   }

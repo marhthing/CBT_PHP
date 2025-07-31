@@ -14,8 +14,11 @@ export default function SimpleLogin() {
     setLoading(true)
 
     try {
+      console.log('Attempting login with:', { identifier, password: '***' })
       await autoLogin(identifier, password)
+      console.log('Login successful')
     } catch (error: any) {
+      console.error('Login error:', error)
       setError(error.message)
     } finally {
       setLoading(false)
