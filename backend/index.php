@@ -72,6 +72,7 @@ if ($path === '/docs' || $path === 'docs') {
 $routes = [
     // Authentication routes
     'auth/login' => 'auth/login.php',
+    'auth/auto-login' => 'auth/auto-login.php',
     'auth/logout' => 'auth/logout.php',
     'auth/me' => 'auth/me.php',
     

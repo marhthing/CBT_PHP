@@ -4,30 +4,23 @@ import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card'
 import { Alert, AlertDescription } from '../ui/alert'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+
 import { GraduationCap } from 'lucide-react'
 
 export default function Login() {
-  const [username, setUsername] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { autoLogin } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    if (!role) {
-      setError('Please select a role')
-      setLoading(false)
-      return
-    }
-
     try {
-      await login(username, password, role)
+      await autoLogin(identifier, password)
     } catch (error: any) {
       setError(error.message)
     } finally {
@@ -56,30 +49,15 @@ export default function Login() {
             )}
 
             <div className="space-y-2">
-              <label htmlFor="role" className="text-sm font-medium">
-                Role
-              </label>
-              <Select value={role} onValueChange={setRole}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="student">Student</SelectItem>
-                  <SelectItem value="teacher">Teacher</SelectItem>
-                  <SelectItem value="admin">Administrator</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="username" className="text-sm font-medium">
-                Username
+              <label htmlFor="identifier" className="text-sm font-medium">
+                Student Registration Number / Email / Username
               </label>
               <Input
-                id="username"
+                id="identifier"
                 type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="Enter your registration number, email, or username"
                 required
               />
             </div>

@@ -5,6 +5,7 @@ import api from '../lib/api'
 interface AuthContextType {
   user: User | null
   login: (username: string, password: string, role: string) => Promise<void>
+  autoLogin: (identifier: string, password: string) => Promise<void>
   logout: () => void
   loading: boolean
 }
@@ -38,9 +39,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (username: string, password: string, role: string) => {
     try {
       const response = await api.post('/api/auth/login.php', {
-        username,
+        identifier: username,
         password,
         role,
+      })
+
+      const { token, user } = response.data
+      localStorage.setItem('token', token)
+      setUser(user)
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Login failed')
+    }
+  }
+
+  const autoLogin = async (identifier: string, password: string) => {
+    try {
+      const response = await api.post('/api/auth/auto-login.php', {
+        identifier,
+        password,
       })
 
       const { token, user } = response.data
@@ -63,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, autoLogin, logout, loading }}>
       {children}
     </AuthContext.Provider>
   )
