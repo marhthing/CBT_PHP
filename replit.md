@@ -60,6 +60,17 @@ Preferred communication style: Simple, everyday language.
 
 ## Backend Integration
 - **API Communication**: RESTful API endpoints for all data operations
-- **Authentication**: JWT token-based authentication with automatic renewal
+- **Authentication**: JWT token-based authentication with role-based login (reg_number for students, email/username for teachers/admins)
+- **Database**: PostgreSQL with comprehensive schema including users, questions, test_codes, test_results, and test_answers
+- **Security**: CORS configuration, rate limiting, and security headers
+- **Academic Features**: Term and Session tracking for all academic activities
 - **File Upload**: Support for bulk question uploads via CSV/Excel files
 - **Real-time Features**: Timed tests with automatic submission capabilities
+
+## Database Schema
+- **Users**: Multi-role system (student/teacher/admin) with term/session tracking
+- **Authentication**: Registration number for students, email/username for teachers/admins
+- **Academic Structure**: Term (First/Second/Third) and Session (e.g., 2024/2025) integration
+- **Test Management**: Complete test lifecycle from question creation to result tracking
+- **Question Banking**: Subject and class-level organization with difficulty levels
+- **Result Tracking**: Comprehensive scoring and analytics system

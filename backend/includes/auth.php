@@ -85,9 +85,9 @@ class Auth {
         // Get full user data from database
         try {
             $stmt = $this->db->prepare("
-                SELECT id, username, email, role, full_name, created_at 
+                SELECT id, username, email, reg_number, role, full_name, created_at, current_term, current_session
                 FROM users 
-                WHERE id = ? AND role = ?
+                WHERE id = ? AND role = ? AND is_active = true
             ");
             $stmt->execute([$payload['user_id'], $payload['role']]);
             
@@ -99,14 +99,26 @@ class Auth {
     }
 
     // Authenticate user login
-    public function authenticate($username, $password, $role) {
+    public function authenticate($identifier, $password, $role) {
         try {
-            $stmt = $this->db->prepare("
-                SELECT id, username, email, password, role, full_name, created_at 
-                FROM users 
-                WHERE username = ? AND role = ?
-            ");
-            $stmt->execute([$username, $role]);
+            // For students, use reg_number; for teachers/admins, use email or username
+            if ($role === 'student') {
+                $stmt = $this->db->prepare("
+                    SELECT id, username, email, reg_number, password, role, full_name, created_at, current_term, current_session
+                    FROM users 
+                    WHERE reg_number = ? AND role = 'student' AND is_active = true
+                ");
+                $stmt->execute([$identifier]);
+            } else {
+                // For teacher and admin - allow login with either email or username
+                $stmt = $this->db->prepare("
+                    SELECT id, username, email, reg_number, password, role, full_name, created_at, current_term, current_session
+                    FROM users 
+                    WHERE (email = ? OR username = ?) AND role = ? AND is_active = true
+                ");
+                $stmt->execute([$identifier, $identifier, $role]);
+            }
+            
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password'])) {

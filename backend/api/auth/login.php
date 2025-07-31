@@ -22,10 +22,10 @@ try {
     }
     
     // Validate required fields
-    Response::validateRequired($input, ['username', 'password', 'role']);
+    Response::validateRequired($input, ['identifier', 'password', 'role']);
     
     // Sanitize input
-    $username = Response::sanitizeInput($input['username']);
+    $identifier = Response::sanitizeInput($input['identifier']); // Can be reg_number, email, or username
     $password = $input['password']; // Don't sanitize password
     $role = Response::sanitizeInput($input['role']);
     
@@ -37,16 +37,17 @@ try {
     
     // Authenticate user
     $auth = new Auth();
-    $user = $auth->authenticate($username, $password, $role);
+    $user = $auth->authenticate($identifier, $password, $role);
     
     if (!$user) {
         // Log failed login attempt
-        error_log("Failed login attempt for username: $username, role: $role, IP: $ip");
+        error_log("Failed login attempt for identifier: $identifier, role: $role, IP: $ip");
         Response::unauthorized('Invalid credentials');
     }
     
-    // Generate JWT token
-    $token = $auth->generateToken($user['id'], $user['username'], $user['role']);
+    // Generate JWT token - use reg_number for students, username for others
+    $token_identifier = ($role === 'student' && $user['reg_number']) ? $user['reg_number'] : $user['username'];
+    $token = $auth->generateToken($user['id'], $token_identifier, $user['role']);
     
     // Log successful login
     Response::logRequest('auth/login', 'POST', $user['id']);
