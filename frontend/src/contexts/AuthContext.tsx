@@ -47,7 +47,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error.response?.status === 401 || error.response?.status === 403) {
         handleAuthFailure()
       } else {
-        console.log('Network or other error during token validation - keeping user state')
+        console.log('Network or other error during token validation - keeping existing token')
+        // Keep the existing user state if we have one and it's just a network issue
+        const existingUser = localStorage.getItem('token')
+        if (existingUser) {
+          console.log('Keeping user logged in despite network error')
+        }
       }
     } finally {
       setLoading(false)
