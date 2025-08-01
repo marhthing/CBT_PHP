@@ -22,12 +22,11 @@ function App() {
 
   // Redirect to appropriate dashboard after login
   useEffect(() => {
-    if (user && (location.pathname === '/login' || location.pathname === '/')) {
+    if (user && location.pathname === '/') {
       const redirectPath = user.role === 'student' ? '/student' : 
                           user.role === 'teacher' ? '/teacher' : 
                           user.role === 'admin' ? '/admin' : '/student'
-      window.history.replaceState(null, '', redirectPath)
-      window.location.reload()
+      window.location.href = redirectPath
     }
   }, [user, location])
 
@@ -154,15 +153,6 @@ function App() {
         {/* Default redirects */}
         <Route
           path="/"
-          element={
-            user?.role === 'student' ? <Navigate to="/student" replace /> :
-            user?.role === 'teacher' ? <Navigate to="/teacher" replace /> :
-            user?.role === 'admin' ? <Navigate to="/admin" replace /> :
-            <Navigate to="/student" replace />
-          }
-        />
-        <Route
-          path="/login"
           element={
             user?.role === 'student' ? <Navigate to="/student" replace /> :
             user?.role === 'teacher' ? <Navigate to="/teacher" replace /> :

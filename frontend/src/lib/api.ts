@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-// Use relative URLs to proxy through the same domain
-const API_URL = '/api'
+// Point to the backend server running on port 8000
+const API_URL = 'http://localhost:8000'
 
 export const api = axios.create({
   baseURL: API_URL,

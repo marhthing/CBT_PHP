@@ -15,8 +15,15 @@ export default function SimpleLogin() {
 
     try {
       console.log('Attempting login with:', { identifier, password: '***' })
-      await autoLogin(identifier, password)
-      console.log('Login successful')
+      const user = await autoLogin(identifier, password)
+      console.log('Login successful:', user)
+      
+      // Force navigation to dashboard based on role
+      const dashboardPath = (user as any)?.role === 'student' ? '/student' : 
+                           (user as any)?.role === 'teacher' ? '/teacher' : 
+                           (user as any)?.role === 'admin' ? '/admin' : '/student'
+      
+      window.location.href = dashboardPath
     } catch (error: any) {
       console.error('Login error:', error)
       setError(error.message)

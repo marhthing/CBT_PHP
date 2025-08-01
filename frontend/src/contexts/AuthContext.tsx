@@ -5,7 +5,7 @@ import api from '../lib/api'
 interface AuthContextType {
   user: User | null
   login: (username: string, password: string, role: string) => Promise<void>
-  autoLogin: (identifier: string, password: string) => Promise<void>
+  autoLogin: (identifier: string, password: string) => Promise<any>
   logout: () => void
   loading: boolean
 }
@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuth = async () => {
     try {
       const response = await api.get('/auth/me')
-      setUser(response.data.user)
+      setUser(response.data.data?.user || response.data.user)
     } catch (error) {
       localStorage.removeItem('token')
     } finally {
@@ -66,7 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('token', token)
       setUser(user)
       
-      // The App component will handle the redirect automatically
       return user
     } catch (error: any) {
       console.error('API error:', error)
