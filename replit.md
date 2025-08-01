@@ -16,6 +16,14 @@ This is a Computer-Based Testing (CBT) Portal application designed for secondary
 - ✓ Resolved login page refresh issue with proper route handling
 - ✓ Both workflows (Frontend on port 5000, Backend on port 8000) running cleanly
 
+### Database Normalization Update (Latest)
+- ✓ Created separate lookup tables: terms, sessions, subjects
+- ✓ Updated all tables to use foreign keys instead of text columns
+- ✓ Removed old subject columns from questions, test_codes, teacher_assignments
+- ✓ Updated schema.sql with proper normalized structure
+- ✓ Fixed authentication redirect to prevent login page loops
+- ✓ All API endpoints now use lookup table relationships
+
 ### Complete UI Overhaul (Latest Update)
 - ✓ Professional SFGS branding implemented across all pages
 - ✓ Modern gradient-based login page with school identity

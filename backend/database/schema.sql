@@ -4,6 +4,31 @@
 -- Enable UUID extension (optional, for UUID primary keys)
 -- CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Lookup tables for better data normalization
+CREATE TABLE terms (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(20) UNIQUE NOT NULL,
+    display_order INTEGER NOT NULL,
+    is_active BOOLEAN DEFAULT true
+);
+
+CREATE TABLE sessions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(20) UNIQUE NOT NULL,
+    start_date DATE,
+    end_date DATE,
+    is_current BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true
+);
+
+CREATE TABLE subjects (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    code VARCHAR(10) UNIQUE,
+    description TEXT,
+    is_active BOOLEAN DEFAULT true
+);
+
 -- Users table for all system users (students, teachers, admins)
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -12,6 +37,9 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) NOT NULL CHECK (role IN ('student', 'teacher', 'admin')),
     full_name VARCHAR(255) NOT NULL,
+    reg_number VARCHAR(20) UNIQUE,
+    current_term VARCHAR(20) DEFAULT 'First',
+    current_session VARCHAR(20) DEFAULT '2024/2025',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_login TIMESTAMP NULL,
@@ -28,18 +56,18 @@ CREATE INDEX idx_users_created_at ON users(created_at);
 CREATE TABLE teacher_assignments (
     id SERIAL PRIMARY KEY,
     teacher_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    subject VARCHAR(100) NOT NULL,
+    subject_id INTEGER REFERENCES subjects(id) NOT NULL,
     class_level VARCHAR(10) NOT NULL,
     assigned_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
     -- Ensure unique assignment per teacher-subject-class combination
-    UNIQUE(teacher_id, subject, class_level)
+    UNIQUE(teacher_id, subject_id, class_level)
 );
 
 -- Create indexes for teacher_assignments
 CREATE INDEX idx_teacher_assignments_teacher_id ON teacher_assignments(teacher_id);
-CREATE INDEX idx_teacher_assignments_subject ON teacher_assignments(subject);
+CREATE INDEX idx_teacher_assignments_subject_id ON teacher_assignments(subject_id);
 CREATE INDEX idx_teacher_assignments_class_level ON teacher_assignments(class_level);
 
 -- Questions table for storing all test questions
@@ -51,31 +79,35 @@ CREATE TABLE questions (
     option_c TEXT NOT NULL,
     option_d TEXT NOT NULL,
     correct_answer CHAR(1) NOT NULL CHECK (correct_answer IN ('A', 'B', 'C', 'D')),
-    subject VARCHAR(100) NOT NULL,
+    subject_id INTEGER REFERENCES subjects(id) NOT NULL,
     class_level VARCHAR(10) NOT NULL,
     difficulty VARCHAR(10) NOT NULL DEFAULT 'medium' CHECK (difficulty IN ('easy', 'medium', 'hard')),
+    term_id INTEGER REFERENCES terms(id) DEFAULT 1,
+    session_id INTEGER REFERENCES sessions(id) DEFAULT 1,
     teacher_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for questions table
-CREATE INDEX idx_questions_subject ON questions(subject);
+CREATE INDEX idx_questions_subject_id ON questions(subject_id);
 CREATE INDEX idx_questions_class_level ON questions(class_level);
 CREATE INDEX idx_questions_difficulty ON questions(difficulty);
 CREATE INDEX idx_questions_teacher_id ON questions(teacher_id);
 CREATE INDEX idx_questions_created_at ON questions(created_at);
-CREATE INDEX idx_questions_subject_class ON questions(subject, class_level);
+CREATE INDEX idx_questions_subject_class ON questions(subject_id, class_level);
 
 -- Test codes table for managing test access
 CREATE TABLE test_codes (
     id SERIAL PRIMARY KEY,
     code VARCHAR(10) UNIQUE NOT NULL,
     title VARCHAR(255) NOT NULL,
-    subject VARCHAR(100) NOT NULL,
+    subject_id INTEGER REFERENCES subjects(id) NOT NULL,
     class_level VARCHAR(10) NOT NULL,
     duration_minutes INTEGER NOT NULL DEFAULT 60,
     question_count INTEGER NOT NULL DEFAULT 20,
+    term_id INTEGER REFERENCES terms(id) DEFAULT 1,
+    session_id INTEGER REFERENCES sessions(id) DEFAULT 1,
     is_active BOOLEAN DEFAULT true,
     expires_at TIMESTAMP NOT NULL,
     created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -85,7 +117,7 @@ CREATE TABLE test_codes (
 
 -- Create indexes for test_codes
 CREATE INDEX idx_test_codes_code ON test_codes(code);
-CREATE INDEX idx_test_codes_subject ON test_codes(subject);
+CREATE INDEX idx_test_codes_subject_id ON test_codes(subject_id);
 CREATE INDEX idx_test_codes_class_level ON test_codes(class_level);
 CREATE INDEX idx_test_codes_is_active ON test_codes(is_active);
 CREATE INDEX idx_test_codes_expires_at ON test_codes(expires_at);
@@ -147,41 +179,53 @@ CREATE TRIGGER update_questions_updated_at BEFORE UPDATE ON questions
 CREATE TRIGGER update_test_codes_updated_at BEFORE UPDATE ON test_codes
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Sample data for development/testing (optional)
--- Insert default admin user (password: admin123)
-INSERT INTO users (username, email, password, role, full_name) VALUES
-('admin', 'admin@cbtportal.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'System Administrator');
+-- Insert default lookup data
+INSERT INTO terms (name, display_order) VALUES 
+('First', 1), ('Second', 2), ('Third', 3);
 
--- Insert sample teacher (password: teacher123)
-INSERT INTO users (username, email, password, role, full_name) VALUES
-('teacher1', 'teacher1@cbtportal.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'teacher', 'John Doe'),
-('teacher2', 'teacher2@cbtportal.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'teacher', 'Jane Smith');
+INSERT INTO sessions (name, start_date, end_date, is_current) VALUES 
+('2024/2025', '2024-09-01', '2025-07-31', true);
 
--- Insert sample student (password: student123)
-INSERT INTO users (username, email, password, role, full_name) VALUES
-('student1', 'student1@cbtportal.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'Alice Johnson'),
-('student2', 'student2@cbtportal.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'Bob Wilson');
+INSERT INTO subjects (name, code) VALUES 
+('Mathematics', 'MATH'),
+('English Language', 'ENG'),
+('Physics', 'PHY'),
+('Chemistry', 'CHEM'),
+('Biology', 'BIO'),
+('Economics', 'ECON'),
+('Government', 'GOV'),
+('History', 'HIST'),
+('Geography', 'GEO'),
+('Literature', 'LIT');
 
--- Insert sample teacher assignments
-INSERT INTO teacher_assignments (teacher_id, subject, class_level, assigned_by) VALUES
-(2, 'Mathematics', 'SS1', 1),
-(2, 'Mathematics', 'SS2', 1),
-(3, 'English Language', 'SS1', 1),
-(3, 'English Language', 'SS2', 1);
+-- Sample data for development/testing (password: password123)
+INSERT INTO users (username, email, password, role, full_name, reg_number) VALUES
+('admin', 'admin@sfgs.edu.ng', '$2y$10$KrCmWnksoqB8EmsD9UEupu87sg6G/w.SXySusvUCVFLOkln84/gBG', 'admin', 'System Administrator', NULL),
+('teacher1', 'teacher1@sfgs.edu.ng', '$2y$10$KrCmWnksoqB8EmsD9UEupu87sg6G/w.SXySusvUCVFLOkln84/gBG', 'teacher', 'John Doe', NULL),
+('teacher2', 'teacher2@sfgs.edu.ng', '$2y$10$KrCmWnksoqB8EmsD9UEupu87sg6G/w.SXySusvUCVFLOkln84/gBG', 'teacher', 'Jane Smith', NULL),
+('2023001', 'student1@sfgs.edu.ng', '$2y$10$KrCmWnksoqB8EmsD9UEupu87sg6G/w.SXySusvUCVFLOkln84/gBG', 'student', 'Alice Johnson', '2023001'),
+('2023002', 'student2@sfgs.edu.ng', '$2y$10$KrCmWnksoqB8EmsD9UEupu87sg6G/w.SXySusvUCVFLOkln84/gBG', 'student', 'Bob Wilson', '2023002');
 
--- Insert sample questions
-INSERT INTO questions (question_text, option_a, option_b, option_c, option_d, correct_answer, subject, class_level, difficulty, teacher_id) VALUES
-('What is 2 + 2?', '2', '3', '4', '5', 'C', 'Mathematics', 'SS1', 'easy', 2),
-('What is 5 × 3?', '8', '15', '12', '18', 'B', 'Mathematics', 'SS1', 'easy', 2),
-('What is the square root of 16?', '2', '4', '6', '8', 'B', 'Mathematics', 'SS1', 'medium', 2),
-('Solve: 2x + 3 = 7', 'x = 1', 'x = 2', 'x = 3', 'x = 4', 'B', 'Mathematics', 'SS2', 'medium', 2),
-('What is a noun?', 'An action word', 'A describing word', 'A naming word', 'A connecting word', 'C', 'English Language', 'SS1', 'easy', 3),
-('Which is a pronoun?', 'Run', 'Beautiful', 'He', 'Quickly', 'C', 'English Language', 'SS1', 'easy', 3);
+-- Insert sample teacher assignments using subject_id
+INSERT INTO teacher_assignments (teacher_id, subject_id, class_level, assigned_by) VALUES
+(2, 1, 'SS1', 1), -- John Doe -> Mathematics -> SS1
+(2, 1, 'SS2', 1), -- John Doe -> Mathematics -> SS2
+(3, 2, 'SS1', 1), -- Jane Smith -> English Language -> SS1
+(3, 2, 'SS2', 1); -- Jane Smith -> English Language -> SS2
 
--- Insert sample test code
-INSERT INTO test_codes (code, title, subject, class_level, duration_minutes, question_count, expires_at, created_by) VALUES
-('TEST01', 'Mathematics Mid-term Test', 'Mathematics', 'SS1', 30, 3, CURRENT_TIMESTAMP + INTERVAL '30 days', 1),
-('TEST02', 'English Language Quiz', 'English Language', 'SS1', 20, 2, CURRENT_TIMESTAMP + INTERVAL '15 days', 1);
+-- Insert sample questions using subject_id
+INSERT INTO questions (question_text, option_a, option_b, option_c, option_d, correct_answer, subject_id, class_level, difficulty, teacher_id, term_id, session_id) VALUES
+('What is 2 + 2?', '2', '3', '4', '5', 'C', 1, 'SS1', 'easy', 2, 1, 1),
+('What is 5 × 3?', '8', '15', '12', '18', 'B', 1, 'SS1', 'easy', 2, 1, 1),
+('What is the square root of 16?', '2', '4', '6', '8', 'B', 1, 'SS1', 'medium', 2, 1, 1),
+('Solve: 2x + 3 = 7', 'x = 1', 'x = 2', 'x = 3', 'x = 4', 'B', 1, 'SS2', 'medium', 2, 1, 1),
+('What is a noun?', 'An action word', 'A describing word', 'A naming word', 'A connecting word', 'C', 2, 'SS1', 'easy', 3, 1, 1),
+('Which is a pronoun?', 'Run', 'Beautiful', 'He', 'Quickly', 'C', 2, 'SS1', 'easy', 3, 1, 1);
+
+-- Insert sample test codes using subject_id
+INSERT INTO test_codes (code, title, subject_id, class_level, duration_minutes, question_count, expires_at, created_by, term_id, session_id) VALUES
+('TEST01', 'Mathematics Mid-term Test', 1, 'SS1', 30, 3, CURRENT_TIMESTAMP + INTERVAL '30 days', 1, 1, 1),
+('TEST02', 'English Language Quiz', 2, 'SS1', 20, 2, CURRENT_TIMESTAMP + INTERVAL '15 days', 1, 1, 1);
 
 -- Create views for common queries
 CREATE VIEW active_test_codes AS
