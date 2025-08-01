@@ -19,9 +19,11 @@ interface QuestionForm {
   option_c: string
   option_d: string
   correct_answer: string
-  subject: string
+  subject_id: string
   class_level: string
   difficulty: string
+  term_id: string
+  session_id: string
 }
 
 export default function QuestionManager() {
@@ -38,9 +40,11 @@ export default function QuestionManager() {
     option_c: '',
     option_d: '',
     correct_answer: '',
-    subject: '',
+    subject_id: '',
     class_level: '',
-    difficulty: 'medium'
+    difficulty: 'medium',
+    term_id: '1',
+    session_id: '1'
   })
 
   const queryClient = useQueryClient()
@@ -58,11 +62,36 @@ export default function QuestionManager() {
     },
   })
 
-  const { data: classes } = useQuery({
-    queryKey: ['teacher-classes'],
+  // Get lookup data for dropdowns
+  const { data: subjects } = useQuery({
+    queryKey: ['subjects'],
     queryFn: async () => {
-      const response = await api.get('/api/teacher/classes.php')
-      return response.data.classes
+      const response = await api.get('/system/lookup?type=subjects')
+      return response.data.data
+    },
+  })
+
+  const { data: terms } = useQuery({
+    queryKey: ['terms'],
+    queryFn: async () => {
+      const response = await api.get('/system/lookup?type=terms')
+      return response.data.data
+    },
+  })
+
+  const { data: sessions } = useQuery({
+    queryKey: ['sessions'],
+    queryFn: async () => {
+      const response = await api.get('/system/lookup?type=sessions')
+      return response.data.data
+    },
+  })
+
+  const { data: classLevels } = useQuery({
+    queryKey: ['class-levels'],
+    queryFn: async () => {
+      const response = await api.get('/system/lookup?type=class_levels')
+      return response.data.data
     },
   })
 

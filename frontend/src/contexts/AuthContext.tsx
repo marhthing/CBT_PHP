@@ -66,11 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('token', token)
       setUser(user)
       
-      // Programmatically navigate to the appropriate dashboard
-      const redirectPath = user.role === 'student' ? '/student' : 
-                          user.role === 'teacher' ? '/teacher' : 
-                          user.role === 'admin' ? '/admin' : '/student'
-      window.location.href = redirectPath
+      // The App component will handle the redirect automatically
+      return user
     } catch (error: any) {
       console.error('API error:', error)
       throw new Error(error.response?.data?.message || 'Login failed')

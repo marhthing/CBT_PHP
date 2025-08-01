@@ -13,11 +13,13 @@ import { Plus, Edit, Trash2, Power, PowerOff, Copy, CheckCircle } from 'lucide-r
 
 interface TestCodeForm {
   title: string
-  subject: string
+  subject_id: string
   class_level: string
   duration_minutes: number
   question_count: number
   expires_at: string
+  term_id: string
+  session_id: string
 }
 
 export default function TestCodeManager() {
@@ -27,11 +29,13 @@ export default function TestCodeManager() {
   
   const [formData, setFormData] = useState<TestCodeForm>({
     title: '',
-    subject: '',
+    subject_id: '',
     class_level: '',
     duration_minutes: 60,
     question_count: 20,
-    expires_at: ''
+    expires_at: '',
+    term_id: '1',
+    session_id: '1'
   })
 
   const queryClient = useQueryClient()
@@ -44,11 +48,36 @@ export default function TestCodeManager() {
     },
   })
 
+  // Get lookup data for dropdowns
   const { data: subjects } = useQuery({
-    queryKey: ['available-subjects'],
+    queryKey: ['subjects'],
     queryFn: async () => {
-      const response = await api.get('/api/admin/questions.php?subjects=true')
-      return response.data.subjects
+      const response = await api.get('/system/lookup?type=subjects')
+      return response.data.data
+    },
+  })
+
+  const { data: terms } = useQuery({
+    queryKey: ['terms'],
+    queryFn: async () => {
+      const response = await api.get('/system/lookup?type=terms')
+      return response.data.data
+    },
+  })
+
+  const { data: sessions } = useQuery({
+    queryKey: ['sessions'],
+    queryFn: async () => {
+      const response = await api.get('/system/lookup?type=sessions')
+      return response.data.data
+    },
+  })
+
+  const { data: classLevels } = useQuery({
+    queryKey: ['class-levels'],
+    queryFn: async () => {
+      const response = await api.get('/system/lookup?type=class_levels')
+      return response.data.data
     },
   })
 

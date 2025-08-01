@@ -22,11 +22,12 @@ function App() {
 
   // Redirect to appropriate dashboard after login
   useEffect(() => {
-    if (user && location.pathname === '/login') {
+    if (user && (location.pathname === '/login' || location.pathname === '/')) {
       const redirectPath = user.role === 'student' ? '/student' : 
                           user.role === 'teacher' ? '/teacher' : 
                           user.role === 'admin' ? '/admin' : '/student'
       window.history.replaceState(null, '', redirectPath)
+      window.location.reload()
     }
   }, [user, location])
 
