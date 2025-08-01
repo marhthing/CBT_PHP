@@ -20,15 +20,7 @@ function App() {
   const { user, loading } = useAuth()
   const location = useLocation()
 
-  // Redirect to appropriate dashboard after login
-  useEffect(() => {
-    if (user && location.pathname === '/') {
-      const redirectPath = user.role === 'student' ? '/student' : 
-                          user.role === 'teacher' ? '/teacher' : 
-                          user.role === 'admin' ? '/admin' : '/student'
-      window.location.href = redirectPath
-    }
-  }, [user, location])
+  // Don't use useEffect for redirects - let routing handle it
 
   if (loading) {
     return (
@@ -57,6 +49,7 @@ function App() {
     )
   }
 
+  // Show login page only if no user
   if (!user) {
     return <SimpleLogin />
   }
@@ -150,7 +143,7 @@ function App() {
           }
         />
 
-        {/* Default redirects */}
+        {/* Default redirect based on user role */}
         <Route
           path="/"
           element={
@@ -160,6 +153,10 @@ function App() {
             <Navigate to="/student" replace />
           }
         />
+        
+        {/* Login route */}
+        <Route path="/login" element={<SimpleLogin />} />
+        
         {/* Catch all route */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

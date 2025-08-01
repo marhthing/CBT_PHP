@@ -18,12 +18,8 @@ export default function SimpleLogin() {
       const user = await autoLogin(identifier, password)
       console.log('Login successful:', user)
       
-      // Force navigation to dashboard based on role
-      const dashboardPath = (user as any)?.role === 'student' ? '/student' : 
-                           (user as any)?.role === 'teacher' ? '/teacher' : 
-                           (user as any)?.role === 'admin' ? '/admin' : '/student'
-      
-      window.location.href = dashboardPath
+      // Let the App component handle the redirect based on user state
+      // The user state is now set, so we don't need to force redirect here
     } catch (error: any) {
       console.error('Login error:', error)
       setError(error.message)
