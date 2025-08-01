@@ -1,13 +1,14 @@
 import axios from 'axios'
 
-// Point to the backend server running on port 8000
-const API_URL = 'http://localhost:8000'
+// Use the Vite proxy configuration
+const API_URL = '/api'
 
 export const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000,
 })
 
 // Request interceptor to add auth token

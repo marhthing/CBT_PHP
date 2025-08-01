@@ -56,20 +56,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       console.log('Making API request to:', '/auth/auto-login')
       console.log('API Base URL:', api.defaults.baseURL)
+      console.log('Request payload:', { identifier, password: '***' })
+      
       const response = await api.post('/auth/auto-login', {
         identifier,
         password,
       })
 
-      console.log('API response:', response.data)
+      console.log('Full API response:', response)
+      console.log('Response data:', response.data)
+      
       const { token, user } = response.data.data || response.data
+      
+      if (!token || !user) {
+        throw new Error('Invalid response from server')
+      }
+      
       localStorage.setItem('token', token)
       setUser(user)
       
       return user
     } catch (error: any) {
-      console.error('API error:', error)
-      throw new Error(error.response?.data?.message || 'Login failed')
+      console.error('Full API error:', error)
+      console.error('Error response:', error.response)
+      console.error('Error status:', error.response?.status)
+      console.error('Error data:', error.response?.data)
+      
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message)
+      } else if (error.message) {
+        throw new Error(error.message)
+      } else {
+        throw new Error('Network error - please check your connection')
+      }
     }
   }
 
