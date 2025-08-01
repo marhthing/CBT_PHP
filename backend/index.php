@@ -92,6 +92,9 @@ $routes = [
     'admin/questions' => 'admin/questions.php',
     'admin/teachers' => 'admin/teachers.php',
     'admin/assignments' => 'admin/assignments.php',
+    
+    // System routes
+    'system/lookup' => 'system/lookup.php',
 ];
 
 // Find matching route

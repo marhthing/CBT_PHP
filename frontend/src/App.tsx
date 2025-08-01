@@ -1,6 +1,7 @@
 
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
+import { useEffect } from 'react'
 import Layout from './components/Layout/Layout'
 import SimpleLogin from './components/Auth/SimpleLogin'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
@@ -17,6 +18,17 @@ import AllQuestions from './components/Admin/AllQuestions'
 
 function App() {
   const { user, loading } = useAuth()
+  const location = useLocation()
+
+  // Redirect to appropriate dashboard after login
+  useEffect(() => {
+    if (user && location.pathname === '/login') {
+      const redirectPath = user.role === 'student' ? '/student' : 
+                          user.role === 'teacher' ? '/teacher' : 
+                          user.role === 'admin' ? '/admin' : '/student'
+      window.history.replaceState(null, '', redirectPath)
+    }
+  }, [user, location])
 
   if (loading) {
     return (
@@ -148,6 +160,17 @@ function App() {
             <Navigate to="/student" replace />
           }
         />
+        <Route
+          path="/login"
+          element={
+            user?.role === 'student' ? <Navigate to="/student" replace /> :
+            user?.role === 'teacher' ? <Navigate to="/teacher" replace /> :
+            user?.role === 'admin' ? <Navigate to="/admin" replace /> :
+            <Navigate to="/student" replace />
+          }
+        />
+        {/* Catch all route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Layout>
   )

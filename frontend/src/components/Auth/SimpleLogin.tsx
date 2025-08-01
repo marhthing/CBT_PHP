@@ -206,9 +206,9 @@ export default function SimpleLogin() {
           textAlign: 'center' as const 
         }}>
           <p style={{ fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>Test Credentials</p>
-          <p style={{ margin: '0.25rem 0' }}>Student: <span style={{ fontWeight: '500', color: '#1e293b' }}>STU001</span> / password123</p>
-          <p style={{ margin: '0.25rem 0' }}>Teacher: <span style={{ fontWeight: '500', color: '#1e293b' }}>teacher001@school.edu</span> / password123</p>
-          <p style={{ margin: '0.25rem 0' }}>Admin: <span style={{ fontWeight: '500', color: '#1e293b' }}>admin@cbt-portal.com</span> / password123</p>
+          <p style={{ margin: '0.25rem 0' }}>Student: <span style={{ fontWeight: '500', color: '#1e293b' }}>2023001</span> / password123</p>
+          <p style={{ margin: '0.25rem 0' }}>Teacher: <span style={{ fontWeight: '500', color: '#1e293b' }}>teacher1</span> / password123</p>
+          <p style={{ margin: '0.25rem 0' }}>Admin: <span style={{ fontWeight: '500', color: '#1e293b' }}>admin</span> / password123</p>
         </div>
       </div>
     </div>
