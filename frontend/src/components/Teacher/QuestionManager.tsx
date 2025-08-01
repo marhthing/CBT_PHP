@@ -1,16 +1,7 @@
 import { useState } from 'react'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { Textarea } from '../ui/textarea'
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/card'
-import { Alert, AlertDescription } from '../ui/alert'
-import { Badge } from '../ui/badge'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../../lib/api'
-import { Plus, Edit, Trash2, Search } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, X } from 'lucide-react'
 
 interface QuestionForm {
   question_text: string
@@ -57,12 +48,11 @@ export default function QuestionManager() {
       if (subjectFilter) params.append('subject', subjectFilter)
       if (classFilter) params.append('class', classFilter)
       
-      const response = await api.get(`/api/teacher/questions.php?${params}`)
+      const response = await api.get(`/teacher/questions?${params}`)
       return response.data.questions
     },
   })
 
-  // Get lookup data for dropdowns
   const { data: subjects } = useQuery({
     queryKey: ['subjects'],
     queryFn: async () => {
@@ -87,17 +77,9 @@ export default function QuestionManager() {
     },
   })
 
-  const { data: classLevels } = useQuery({
-    queryKey: ['class-levels'],
-    queryFn: async () => {
-      const response = await api.get('/system/lookup?type=class_levels')
-      return response.data.data
-    },
-  })
-
   const createMutation = useMutation({
     mutationFn: async (data: QuestionForm) => {
-      const response = await api.post('/api/teacher/questions.php', data)
+      const response = await api.post('/teacher/questions', data)
       return response.data
     },
     onSuccess: () => {
@@ -109,7 +91,7 @@ export default function QuestionManager() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: QuestionForm }) => {
-      const response = await api.put(`/api/teacher/questions.php?id=${id}`, data)
+      const response = await api.put(`/teacher/questions?id=${id}`, data)
       return response.data
     },
     onSuccess: () => {
@@ -121,7 +103,7 @@ export default function QuestionManager() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await api.delete(`/api/teacher/questions.php?id=${id}`)
+      const response = await api.delete(`/teacher/questions?id=${id}`)
       return response.data
     },
     onSuccess: () => {
@@ -137,9 +119,11 @@ export default function QuestionManager() {
       option_c: '',
       option_d: '',
       correct_answer: '',
-      subject: '',
+      subject_id: '',
       class_level: '',
-      difficulty: 'medium'
+      difficulty: 'medium',
+      term_id: '1',
+      session_id: '1'
     })
   }
 
@@ -153,6 +137,7 @@ export default function QuestionManager() {
   }
 
   const handleEdit = (question: any) => {
+    setEditingQuestion(question)
     setFormData({
       question_text: question.question_text,
       option_a: question.option_a,
@@ -160,304 +145,595 @@ export default function QuestionManager() {
       option_c: question.option_c,
       option_d: question.option_d,
       correct_answer: question.correct_answer,
-      subject: question.subject,
+      subject_id: question.subject_id?.toString() || '',
       class_level: question.class_level,
-      difficulty: question.difficulty
+      difficulty: question.difficulty,
+      term_id: question.term_id?.toString() || '1',
+      session_id: question.session_id?.toString() || '1'
     })
-    setEditingQuestion(question)
+    setIsCreateOpen(true)
   }
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'easy': return 'bg-green-500'
-      case 'medium': return 'bg-yellow-500'
-      case 'hard': return 'bg-red-500'
-      default: return 'bg-gray-500'
+      case 'easy': return '#10b981'
+      case 'medium': return '#f59e0b'
+      case 'hard': return '#ef4444'
+      default: return '#6b7280'
     }
   }
 
-  const uniqueSubjects = [...new Set(questions?.map((q: any) => q.subject) || [])]
-  const uniqueClasses = [...new Set(questions?.map((q: any) => q.class_level) || [])]
+  const classes = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3']
+
+  const styles = {
+    container: {
+      maxWidth: '1400px',
+      margin: '0 auto',
+      padding: '0',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    },
+    header: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '2.5rem'
+    },
+    headerContent: {
+      flex: 1
+    },
+    title: {
+      fontSize: '2.25rem',
+      fontWeight: '800',
+      color: '#1e293b',
+      marginBottom: '0.5rem',
+      letterSpacing: '-0.025em'
+    },
+    subtitle: {
+      color: '#64748b',
+      fontSize: '1.125rem',
+      fontWeight: '400'
+    },
+    addButton: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.75rem 1.5rem',
+      backgroundColor: '#4f46e5',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      boxShadow: '0 4px 14px 0 rgba(79, 70, 229, 0.3)'
+    },
+    filtersCard: {
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: '2rem',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      border: '1px solid rgba(226, 232, 240, 0.8)',
+      marginBottom: '2rem'
+    },
+    filtersGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: '1rem'
+    },
+    searchContainer: {
+      position: 'relative' as const,
+      gridColumn: 'span 2'
+    },
+    searchInput: {
+      width: '100%',
+      padding: '0.75rem 1rem 0.75rem 2.5rem',
+      border: '1px solid #d1d5db',
+      borderRadius: '8px',
+      fontSize: '0.875rem',
+      outline: 'none',
+      transition: 'border-color 0.2s'
+    },
+    searchIcon: {
+      position: 'absolute' as const,
+      left: '0.75rem',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      color: '#9ca3af',
+      width: '16px',
+      height: '16px'
+    },
+    select: {
+      width: '100%',
+      padding: '0.75rem',
+      border: '1px solid #d1d5db',
+      borderRadius: '8px',
+      fontSize: '0.875rem',
+      backgroundColor: 'white',
+      outline: 'none'
+    },
+    questionsCard: {
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: '2rem',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      border: '1px solid rgba(226, 232, 240, 0.8)'
+    },
+    table: {
+      width: '100%',
+      borderCollapse: 'collapse' as const
+    },
+    th: {
+      textAlign: 'left' as const,
+      padding: '1rem',
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      color: '#374151',
+      borderBottom: '1px solid #e5e7eb'
+    },
+    td: {
+      padding: '1rem',
+      fontSize: '0.875rem',
+      color: '#6b7280',
+      borderBottom: '1px solid #f3f4f6'
+    },
+    badge: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      padding: '0.25rem 0.75rem',
+      borderRadius: '9999px',
+      fontSize: '0.75rem',
+      fontWeight: '500',
+      color: 'white'
+    },
+    actionButtons: {
+      display: 'flex',
+      gap: '0.5rem'
+    },
+    editButton: {
+      display: 'flex',
+      alignItems: 'center',
+      padding: '0.5rem',
+      backgroundColor: '#eff6ff',
+      color: '#2563eb',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease'
+    },
+    deleteButton: {
+      display: 'flex',
+      alignItems: 'center',
+      padding: '0.5rem',
+      backgroundColor: '#fef2f2',
+      color: '#dc2626',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease'
+    },
+    modal: {
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    },
+    modalContent: {
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: '2rem',
+      width: '100%',
+      maxWidth: '600px',
+      margin: '1rem',
+      maxHeight: '90vh',
+      overflowY: 'auto' as const
+    },
+    modalHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '1.5rem'
+    },
+    modalTitle: {
+      fontSize: '1.25rem',
+      fontWeight: '600',
+      color: '#1f2937'
+    },
+    closeButton: {
+      padding: '0.5rem',
+      backgroundColor: 'transparent',
+      color: '#6b7280',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer'
+    },
+    form: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '1rem'
+    },
+    formGroup: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem'
+    },
+    label: {
+      fontSize: '0.875rem',
+      fontWeight: '500',
+      color: '#374151'
+    },
+    input: {
+      padding: '0.75rem',
+      border: '1px solid #d1d5db',
+      borderRadius: '8px',
+      fontSize: '0.875rem',
+      outline: 'none'
+    },
+    textarea: {
+      padding: '0.75rem',
+      border: '1px solid #d1d5db',
+      borderRadius: '8px',
+      fontSize: '0.875rem',
+      outline: 'none',
+      minHeight: '100px',
+      resize: 'vertical' as const
+    },
+    optionsGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(2, 1fr)',
+      gap: '1rem'
+    },
+    submitButton: {
+      padding: '0.75rem 1.5rem',
+      backgroundColor: '#4f46e5',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+      marginTop: '1rem'
+    },
+    loading: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '50vh'
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div style={styles.loading}>
+        <div style={{
+          width: '32px',
+          height: '32px',
+          border: '3px solid #f3f3f3',
+          borderTop: '3px solid #3b82f6',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Question Manager</h1>
-          <p className="text-muted-foreground">
-            Create and manage your questions
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <div style={styles.headerContent}>
+          <h1 style={styles.title}>Question Manager</h1>
+          <p style={styles.subtitle}>
+            Create and manage questions for your subjects
           </p>
         </div>
-        <Dialog open={isCreateOpen || !!editingQuestion} onOpenChange={(open) => {
-          if (!open) {
-            setIsCreateOpen(false)
-            setEditingQuestion(null)
+        <button
+          style={styles.addButton}
+          onClick={() => {
             resetForm()
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setIsCreateOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Question
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
+            setEditingQuestion(null)
+            setIsCreateOpen(true)
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4338ca'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4f46e5'}
+        >
+          <Plus size={16} />
+          New Question
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div style={styles.filtersCard}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '1.5rem' }}>
+          Filter Questions
+        </h3>
+        <div style={styles.filtersGrid}>
+          <div style={styles.searchContainer}>
+            <Search style={styles.searchIcon} />
+            <input
+              type="text"
+              placeholder="Search questions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={styles.searchInput}
+            />
+          </div>
+
+          <select
+            style={styles.select}
+            value={subjectFilter}
+            onChange={(e) => setSubjectFilter(e.target.value)}
+          >
+            <option value="">All Subjects</option>
+            {subjects?.map((subject: any) => (
+              <option key={subject.id} value={subject.id}>{subject.name}</option>
+            ))}
+          </select>
+
+          <select
+            style={styles.select}
+            value={classFilter}
+            onChange={(e) => setClassFilter(e.target.value)}
+          >
+            <option value="">All Classes</option>
+            {classes.map(classLevel => (
+              <option key={classLevel} value={classLevel}>{classLevel}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Questions Table */}
+      <div style={styles.questionsCard}>
+        <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#1f2937', marginBottom: '1.5rem' }}>
+          My Questions ({questions?.length || 0})
+        </h3>
+        
+        {questions?.length > 0 ? (
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.th}>Question</th>
+                <th style={styles.th}>Subject</th>
+                <th style={styles.th}>Class</th>
+                <th style={styles.th}>Difficulty</th>
+                <th style={styles.th}>Correct Answer</th>
+                <th style={styles.th}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {questions.map((question: any) => (
+                <tr key={question.id}>
+                  <td style={styles.td}>
+                    <div style={{ maxWidth: '300px' }}>
+                      {question.question_text.length > 100 
+                        ? question.question_text.substring(0, 100) + '...'
+                        : question.question_text
+                      }
+                    </div>
+                  </td>
+                  <td style={styles.td}>{question.subject}</td>
+                  <td style={styles.td}>{question.class_level}</td>
+                  <td style={styles.td}>
+                    <span style={{
+                      ...styles.badge,
+                      backgroundColor: getDifficultyColor(question.difficulty)
+                    }}>
+                      {question.difficulty}
+                    </span>
+                  </td>
+                  <td style={styles.td}>{question.correct_answer}</td>
+                  <td style={styles.td}>
+                    <div style={styles.actionButtons}>
+                      <button
+                        style={styles.editButton}
+                        onClick={() => handleEdit(question)}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#eff6ff'}
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        style={styles.deleteButton}
+                        onClick={() => deleteMutation.mutate(question.id)}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
+            <Search size={48} style={{ margin: '0 auto 1rem', color: '#d1d5db' }} />
+            <p>No questions found matching your criteria</p>
+          </div>
+        )}
+      </div>
+
+      {/* Create/Edit Question Modal */}
+      {isCreateOpen && (
+        <div style={styles.modal} onClick={() => setIsCreateOpen(false)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>
                 {editingQuestion ? 'Edit Question' : 'Create New Question'}
-              </DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Subject</label>
-                  <Select value={formData.subject} onValueChange={(value) => 
-                    setFormData(prev => ({ ...prev, subject: value }))
-                  }>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select subject" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {classes?.map((cls: any) => (
-                        <SelectItem key={cls.subject} value={cls.subject}>
-                          {cls.subject}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Class Level</label>
-                  <Select value={formData.class_level} onValueChange={(value) => 
-                    setFormData(prev => ({ ...prev, class_level: value }))
-                  }>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {classes?.map((cls: any) => (
-                        <SelectItem key={cls.class_level} value={cls.class_level}>
-                          {cls.class_level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Difficulty</label>
-                <Select value={formData.difficulty} onValueChange={(value) => 
-                  setFormData(prev => ({ ...prev, difficulty: value }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="easy">Easy</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="hard">Hard</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Question</label>
-                <Textarea
+              </h2>
+              <button
+                style={styles.closeButton}
+                onClick={() => setIsCreateOpen(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <form onSubmit={handleSubmit} style={styles.form}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Question Text *</label>
+                <textarea
+                  style={styles.textarea}
                   value={formData.question_text}
                   onChange={(e) => setFormData(prev => ({ ...prev, question_text: e.target.value }))}
-                  placeholder="Enter your question"
+                  placeholder="Enter your question here..."
                   required
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium">Option A</label>
-                  <Input
+              <div style={styles.optionsGrid}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Option A *</label>
+                  <input
+                    style={styles.input}
                     value={formData.option_a}
                     onChange={(e) => setFormData(prev => ({ ...prev, option_a: e.target.value }))}
+                    placeholder="Option A"
                     required
                   />
                 </div>
-                <div>
-                  <label className="text-sm font-medium">Option B</label>
-                  <Input
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Option B *</label>
+                  <input
+                    style={styles.input}
                     value={formData.option_b}
                     onChange={(e) => setFormData(prev => ({ ...prev, option_b: e.target.value }))}
+                    placeholder="Option B"
                     required
                   />
                 </div>
-                <div>
-                  <label className="text-sm font-medium">Option C</label>
-                  <Input
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Option C *</label>
+                  <input
+                    style={styles.input}
                     value={formData.option_c}
                     onChange={(e) => setFormData(prev => ({ ...prev, option_c: e.target.value }))}
+                    placeholder="Option C"
                     required
                   />
                 </div>
-                <div>
-                  <label className="text-sm font-medium">Option D</label>
-                  <Input
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Option D *</label>
+                  <input
+                    style={styles.input}
                     value={formData.option_d}
                     onChange={(e) => setFormData(prev => ({ ...prev, option_d: e.target.value }))}
+                    placeholder="Option D"
                     required
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="text-sm font-medium">Correct Answer</label>
-                <Select value={formData.correct_answer} onValueChange={(value) => 
-                  setFormData(prev => ({ ...prev, correct_answer: value }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select correct answer" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="A">A</SelectItem>
-                    <SelectItem value="B">B</SelectItem>
-                    <SelectItem value="C">C</SelectItem>
-                    <SelectItem value="D">D</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>Correct Answer *</label>
+                <select
+                  style={styles.select}
+                  value={formData.correct_answer}
+                  onChange={(e) => setFormData(prev => ({ ...prev, correct_answer: e.target.value }))}
+                  required
+                >
+                  <option value="">Select correct answer</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="D">D</option>
+                </select>
               </div>
 
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => {
-                  setIsCreateOpen(false)
-                  setEditingQuestion(null)
-                  resetForm()
-                }}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                  {createMutation.isPending || updateMutation.isPending
-                    ? 'Saving...'
-                    : editingQuestion ? 'Update' : 'Create'
-                  }
-                </Button>
+              <div style={styles.optionsGrid}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Subject *</label>
+                  <select
+                    style={styles.select}
+                    value={formData.subject_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, subject_id: e.target.value }))}
+                    required
+                  >
+                    <option value="">Select subject</option>
+                    {subjects?.map((subject: any) => (
+                      <option key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Class Level *</label>
+                  <select
+                    style={styles.select}
+                    value={formData.class_level}
+                    onChange={(e) => setFormData(prev => ({ ...prev, class_level: e.target.value }))}
+                    required
+                  >
+                    <option value="">Select class level</option>
+                    {classes.map(classLevel => (
+                      <option key={classLevel} value={classLevel}>
+                        {classLevel}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Difficulty</label>
+                  <select
+                    style={styles.select}
+                    value={formData.difficulty}
+                    onChange={(e) => setFormData(prev => ({ ...prev, difficulty: e.target.value }))}
+                  >
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Term</label>
+                  <select
+                    style={styles.select}
+                    value={formData.term_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, term_id: e.target.value }))}
+                  >
+                    {terms?.map((term: any) => (
+                      <option key={term.id} value={term.id}>
+                        {term.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
+
+              <button
+                type="submit"
+                style={styles.submitButton}
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {createMutation.isPending || updateMutation.isPending 
+                  ? (editingQuestion ? 'Updating...' : 'Creating...') 
+                  : (editingQuestion ? 'Update Question' : 'Create Question')
+                }
+              </button>
             </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search questions..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Subjects" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Subjects</SelectItem>
-                {uniqueSubjects.map((subject) => (
-                  <SelectItem key={subject} value={subject}>
-                    {subject}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={classFilter} onValueChange={setClassFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Classes" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">All Classes</SelectItem>
-                {uniqueClasses.map((cls) => (
-                  <SelectItem key={cls} value={cls}>
-                    {cls}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Questions Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Questions ({questions?.length || 0})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : questions && questions.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Question</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Difficulty</TableHead>
-                  <TableHead>Answer</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {questions.map((question: any) => (
-                  <TableRow key={question.id}>
-                    <TableCell className="max-w-[300px]">
-                      <div className="truncate" title={question.question_text}>
-                        {question.question_text}
-                      </div>
-                    </TableCell>
-                    <TableCell>{question.subject}</TableCell>
-                    <TableCell>{question.class_level}</TableCell>
-                    <TableCell>
-                      <Badge className={`${getDifficultyColor(question.difficulty)} text-white`}>
-                        {question.difficulty}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{question.correct_answer}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEdit(question)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => deleteMutation.mutate(question.id)}
-                          disabled={deleteMutation.isPending}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center text-muted-foreground py-8">
-              No questions found. Create your first question to get started!
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   )
 }

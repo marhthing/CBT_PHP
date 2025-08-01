@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../../lib/api'
-import { Plus, Edit, Trash2, Power, PowerOff, Copy, CheckCircle } from 'lucide-react'
+import { formatDate } from '../../lib/utils'
+import { Plus, Edit, Trash2, Power, PowerOff, Copy, CheckCircle, X } from 'lucide-react'
 
 interface TestCodeForm {
   title: string
@@ -36,7 +37,7 @@ export default function TestCodeManager() {
     queryKey: ['admin-test-codes'],
     queryFn: async () => {
       const response = await api.get('/admin/test-codes')
-      return response.data.test_codes || []
+      return response.data.test_codes
     },
   })
 
@@ -44,7 +45,7 @@ export default function TestCodeManager() {
     queryKey: ['subjects'],
     queryFn: async () => {
       const response = await api.get('/system/lookup?type=subjects')
-      return response.data.data || []
+      return response.data.data
     },
   })
 
@@ -52,7 +53,7 @@ export default function TestCodeManager() {
     queryKey: ['terms'],
     queryFn: async () => {
       const response = await api.get('/system/lookup?type=terms')
-      return response.data.data || []
+      return response.data.data
     },
   })
 
@@ -60,11 +61,11 @@ export default function TestCodeManager() {
     queryKey: ['sessions'],
     queryFn: async () => {
       const response = await api.get('/system/lookup?type=sessions')
-      return response.data.data || []
+      return response.data.data
     },
   })
 
-  const createTestMutation = useMutation({
+  const createMutation = useMutation({
     mutationFn: async (data: TestCodeForm) => {
       const response = await api.post('/admin/test-codes', data)
       return response.data
@@ -76,9 +77,9 @@ export default function TestCodeManager() {
     },
   })
 
-  const updateTestMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number, data: TestCodeForm }) => {
-      const response = await api.put(`/admin/test-codes/${id}`, data)
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: TestCodeForm }) => {
+      const response = await api.put(`/admin/test-codes?id=${id}`, data)
       return response.data
     },
     onSuccess: () => {
@@ -88,9 +89,10 @@ export default function TestCodeManager() {
     },
   })
 
-  const deleteTestMutation = useMutation({
+  const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await api.delete(`/admin/test-codes/${id}`)
+      const response = await api.delete(`/admin/test-codes?id=${id}`)
+      return response.data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-test-codes'] })
@@ -98,8 +100,8 @@ export default function TestCodeManager() {
   })
 
   const toggleStatusMutation = useMutation({
-    mutationFn: async ({ id, is_active }: { id: number, is_active: boolean }) => {
-      const response = await api.patch(`/admin/test-codes/${id}/status`, { is_active })
+    mutationFn: async (id: number) => {
+      const response = await api.patch(`/admin/test-codes?id=${id}`)
       return response.data
     },
     onSuccess: () => {
@@ -123,21 +125,43 @@ export default function TestCodeManager() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (editingTest) {
-      updateTestMutation.mutate({ id: editingTest.id, data: formData })
+      updateMutation.mutate({ id: editingTest.id, data: formData })
     } else {
-      createTestMutation.mutate(formData)
+      createMutation.mutate(formData)
     }
   }
 
-  const copyToClipboard = (code: string) => {
+  const handleEdit = (testCode: any) => {
+    setEditingTest(testCode)
+    setFormData({
+      title: testCode.title,
+      subject_id: testCode.subject_id?.toString() || '',
+      class_level: testCode.class_level,
+      duration_minutes: testCode.duration_minutes,
+      question_count: testCode.question_count,
+      expires_at: testCode.expires_at?.split('T')[0] || '',
+      term_id: testCode.term_id?.toString() || '1',
+      session_id: testCode.session_id?.toString() || '1'
+    })
+    setIsCreateOpen(true)
+  }
+
+  const copyTestCode = (code: string) => {
     navigator.clipboard.writeText(code)
     setCopiedCode(code)
     setTimeout(() => setCopiedCode(null), 2000)
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString()
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'active': return '#10b981'
+      case 'inactive': return '#ef4444'
+      case 'expired': return '#6b7280'
+      default: return '#f59e0b'
+    }
   }
+
+  const classes = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3']
 
   const styles = {
     container: {
@@ -147,102 +171,139 @@ export default function TestCodeManager() {
       fontFamily: 'system-ui, -apple-system, sans-serif'
     },
     header: {
-      marginBottom: '2rem'
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '2.5rem'
+    },
+    headerContent: {
+      flex: 1
     },
     title: {
       fontSize: '2.25rem',
       fontWeight: '800',
       color: '#1e293b',
-      marginBottom: '0.5rem'
+      marginBottom: '0.5rem',
+      letterSpacing: '-0.025em'
     },
     subtitle: {
       color: '#64748b',
-      fontSize: '1.125rem'
+      fontSize: '1.125rem',
+      fontWeight: '400'
     },
-    buttonPrimary: {
-      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-      color: 'white',
-      border: 'none',
-      borderRadius: '8px',
-      padding: '0.75rem 1.5rem',
-      fontSize: '0.875rem',
-      fontWeight: '600',
-      cursor: 'pointer',
+    addButton: {
       display: 'flex',
       alignItems: 'center',
       gap: '0.5rem',
-      transition: 'all 0.3s ease',
-      boxShadow: '0 4px 14px 0 rgba(79, 70, 229, 0.3)'
-    },
-    buttonSecondary: {
-      background: 'white',
-      color: '#374151',
-      border: '1px solid #d1d5db',
-      borderRadius: '6px',
-      padding: '0.5rem 1rem',
-      fontSize: '0.875rem',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease'
-    },
-    buttonDanger: {
-      background: '#dc2626',
+      padding: '0.75rem 1.5rem',
+      backgroundColor: '#4f46e5',
       color: 'white',
       border: 'none',
-      borderRadius: '6px',
-      padding: '0.5rem 1rem',
+      borderRadius: '8px',
       fontSize: '0.875rem',
-      cursor: 'pointer'
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      boxShadow: '0 4px 14px 0 rgba(79, 70, 229, 0.3)'
     },
-    card: {
+    testCodesCard: {
       backgroundColor: 'white',
-      borderRadius: '12px',
-      padding: '1.5rem',
+      borderRadius: '16px',
+      padding: '2rem',
       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      border: '1px solid rgba(226, 232, 240, 0.8)',
-      marginBottom: '1.5rem'
+      border: '1px solid rgba(226, 232, 240, 0.8)'
     },
     table: {
       width: '100%',
-      borderCollapse: 'collapse' as const,
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      overflow: 'hidden',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+      borderCollapse: 'collapse' as const
     },
-    tableHeader: {
-      backgroundColor: '#f8fafc',
+    th: {
+      textAlign: 'left' as const,
+      padding: '1rem',
+      fontSize: '0.875rem',
       fontWeight: '600',
       color: '#374151',
-      padding: '1rem',
-      textAlign: 'left' as const,
       borderBottom: '1px solid #e5e7eb'
     },
-    tableCell: {
+    td: {
       padding: '1rem',
-      borderBottom: '1px solid #f1f5f9',
-      color: '#374151'
+      fontSize: '0.875rem',
+      color: '#6b7280',
+      borderBottom: '1px solid #f3f4f6'
     },
     badge: {
-      display: 'inline-block',
+      display: 'inline-flex',
+      alignItems: 'center',
       padding: '0.25rem 0.75rem',
       borderRadius: '9999px',
       fontSize: '0.75rem',
-      fontWeight: '600'
+      fontWeight: '500',
+      color: 'white'
     },
-    badgeActive: {
-      backgroundColor: '#dcfce7',
-      color: '#166534'
+    codeDisplay: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.5rem',
+      backgroundColor: '#f8fafc',
+      borderRadius: '6px',
+      fontFamily: 'monospace',
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      color: '#1e293b'
     },
-    badgeInactive: {
-      backgroundColor: '#fee2e2',
-      color: '#dc2626'
+    copyButton: {
+      padding: '0.25rem',
+      backgroundColor: 'transparent',
+      color: '#6b7280',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer',
+      transition: 'color 0.2s ease'
+    },
+    actionButtons: {
+      display: 'flex',
+      gap: '0.5rem'
+    },
+    editButton: {
+      display: 'flex',
+      alignItems: 'center',
+      padding: '0.5rem',
+      backgroundColor: '#eff6ff',
+      color: '#2563eb',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease'
+    },
+    deleteButton: {
+      display: 'flex',
+      alignItems: 'center',
+      padding: '0.5rem',
+      backgroundColor: '#fef2f2',
+      color: '#dc2626',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease'
+    },
+    statusButton: {
+      display: 'flex',
+      alignItems: 'center',
+      padding: '0.5rem',
+      backgroundColor: '#f0fdf4',
+      color: '#059669',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease'
     },
     modal: {
       position: 'fixed' as const,
-      top: '0',
-      left: '0',
-      right: '0',
-      bottom: '0',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
       display: 'flex',
       alignItems: 'center',
@@ -251,12 +312,32 @@ export default function TestCodeManager() {
     },
     modalContent: {
       backgroundColor: 'white',
-      borderRadius: '12px',
+      borderRadius: '16px',
       padding: '2rem',
-      width: '90%',
+      width: '100%',
       maxWidth: '600px',
+      margin: '1rem',
       maxHeight: '90vh',
       overflowY: 'auto' as const
+    },
+    modalHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '1.5rem'
+    },
+    modalTitle: {
+      fontSize: '1.25rem',
+      fontWeight: '600',
+      color: '#1f2937'
+    },
+    closeButton: {
+      padding: '0.5rem',
+      backgroundColor: 'transparent',
+      color: '#6b7280',
+      border: 'none',
+      borderRadius: '6px',
+      cursor: 'pointer'
     },
     form: {
       display: 'flex',
@@ -274,30 +355,47 @@ export default function TestCodeManager() {
       color: '#374151'
     },
     input: {
-      width: '100%',
       padding: '0.75rem',
       border: '1px solid #d1d5db',
-      borderRadius: '6px',
+      borderRadius: '8px',
       fontSize: '0.875rem',
-      outline: 'none',
-      transition: 'border-color 0.2s',
-      boxSizing: 'border-box' as const
+      outline: 'none'
     },
     select: {
-      width: '100%',
       padding: '0.75rem',
       border: '1px solid #d1d5db',
-      borderRadius: '6px',
+      borderRadius: '8px',
       fontSize: '0.875rem',
       backgroundColor: 'white',
-      outline: 'none',
-      boxSizing: 'border-box' as const
+      outline: 'none'
+    },
+    formGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(2, 1fr)',
+      gap: '1rem'
+    },
+    submitButton: {
+      padding: '0.75rem 1.5rem',
+      backgroundColor: '#4f46e5',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+      marginTop: '1rem'
+    },
+    loading: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '50vh'
     }
   }
 
   if (isLoading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '50vh' }}>
+      <div style={styles.loading}>
         <div style={{
           width: '32px',
           height: '32px',
@@ -306,7 +404,12 @@ export default function TestCodeManager() {
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }}></div>
-        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     )
   }
@@ -314,151 +417,167 @@ export default function TestCodeManager() {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>Test Code Manager</h1>
-        <p style={styles.subtitle}>Create and manage test codes for your examinations</p>
-        <div style={{ marginTop: '1rem' }}>
-          <button
-            style={styles.buttonPrimary}
-            onClick={() => setIsCreateOpen(true)}
-          >
-            <Plus size={16} />
-            Create Test Code
-          </button>
+        <div style={styles.headerContent}>
+          <h1 style={styles.title}>Test Code Manager</h1>
+          <p style={styles.subtitle}>
+            Create and manage test codes for online examinations
+          </p>
         </div>
+        <button
+          style={styles.addButton}
+          onClick={() => {
+            resetForm()
+            setEditingTest(null)
+            setIsCreateOpen(true)
+          }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4338ca'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4f46e5'}
+        >
+          <Plus size={16} />
+          New Test Code
+        </button>
       </div>
 
-      <div style={styles.card}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: '700', marginBottom: '1rem', color: '#1e293b' }}>
-          Active Test Codes
-        </h2>
+      {/* Test Codes Table */}
+      <div style={styles.testCodesCard}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937', marginBottom: '1.5rem' }}>
+          Test Codes ({testCodes?.length || 0})
+        </h3>
         
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.tableHeader}>Code</th>
-              <th style={styles.tableHeader}>Title</th>
-              <th style={styles.tableHeader}>Subject</th>
-              <th style={styles.tableHeader}>Class</th>
-              <th style={styles.tableHeader}>Duration</th>
-              <th style={styles.tableHeader}>Questions</th>
-              <th style={styles.tableHeader}>Status</th>
-              <th style={styles.tableHeader}>Expires</th>
-              <th style={styles.tableHeader}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {testCodes?.map((test: any) => (
-              <tr key={test.id}>
-                <td style={styles.tableCell}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <strong>{test.code}</strong>
-                    <button
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280' }}
-                      onClick={() => copyToClipboard(test.code)}
-                      title="Copy code"
-                    >
-                      {copiedCode === test.code ? <CheckCircle size={16} /> : <Copy size={16} />}
-                    </button>
-                  </div>
-                </td>
-                <td style={styles.tableCell}>{test.title}</td>
-                <td style={styles.tableCell}>{test.subject_name}</td>
-                <td style={styles.tableCell}>{test.class_level}</td>
-                <td style={styles.tableCell}>{test.duration_minutes} min</td>
-                <td style={styles.tableCell}>{test.question_count}</td>
-                <td style={styles.tableCell}>
-                  <span style={{
-                    ...styles.badge,
-                    ...(test.is_active ? styles.badgeActive : styles.badgeInactive)
-                  }}>
-                    {test.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td style={styles.tableCell}>{formatDate(test.expires_at)}</td>
-                <td style={styles.tableCell}>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button
-                      style={styles.buttonSecondary}
-                      onClick={() => {
-                        setEditingTest(test)
-                        setFormData({
-                          title: test.title,
-                          subject_id: test.subject_id,
-                          class_level: test.class_level,
-                          duration_minutes: test.duration_minutes,
-                          question_count: test.question_count,
-                          expires_at: test.expires_at.split('T')[0],
-                          term_id: test.term_id,
-                          session_id: test.session_id
-                        })
-                        setIsCreateOpen(true)
-                      }}
-                    >
-                      <Edit size={14} />
-                    </button>
-                    <button
-                      style={styles.buttonSecondary}
-                      onClick={() => toggleStatusMutation.mutate({
-                        id: test.id,
-                        is_active: !test.is_active
-                      })}
-                    >
-                      {test.is_active ? <PowerOff size={14} /> : <Power size={14} />}
-                    </button>
-                    <button
-                      style={styles.buttonDanger}
-                      onClick={() => {
-                        if (confirm('Are you sure you want to delete this test code?')) {
-                          deleteTestMutation.mutate(test.id)
-                        }
-                      }}
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
-                </td>
+        {testCodes?.length > 0 ? (
+          <table style={styles.table}>
+            <thead>
+              <tr>
+                <th style={styles.th}>Test Code</th>
+                <th style={styles.th}>Title</th>
+                <th style={styles.th}>Subject</th>
+                <th style={styles.th}>Class</th>
+                <th style={styles.th}>Duration</th>
+                <th style={styles.th}>Questions</th>
+                <th style={styles.th}>Status</th>
+                <th style={styles.th}>Expires At</th>
+                <th style={styles.th}>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {(!testCodes || testCodes.length === 0) && (
-          <div style={{ textAlign: 'center', padding: '3rem', color: '#6b7280' }}>
-            <p>No test codes created yet. Create your first test code to get started.</p>
+            </thead>
+            <tbody>
+              {testCodes.map((testCode: any) => (
+                <tr key={testCode.id}>
+                  <td style={styles.td}>
+                    <div style={styles.codeDisplay}>
+                      <span>{testCode.code}</span>
+                      <button
+                        style={{
+                          ...styles.copyButton,
+                          color: copiedCode === testCode.code ? '#10b981' : '#6b7280'
+                        }}
+                        onClick={() => copyTestCode(testCode.code)}
+                      >
+                        {copiedCode === testCode.code ? <CheckCircle size={16} /> : <Copy size={16} />}
+                      </button>
+                    </div>
+                  </td>
+                  <td style={styles.td}>
+                    <div style={{ fontWeight: '500', color: '#1f2937' }}>
+                      {testCode.title}
+                    </div>
+                  </td>
+                  <td style={styles.td}>{testCode.subject}</td>
+                  <td style={styles.td}>{testCode.class_level}</td>
+                  <td style={styles.td}>{testCode.duration_minutes} min</td>
+                  <td style={styles.td}>{testCode.question_count}</td>
+                  <td style={styles.td}>
+                    <span style={{
+                      ...styles.badge,
+                      backgroundColor: getStatusColor(testCode.status)
+                    }}>
+                      {testCode.status}
+                    </span>
+                  </td>
+                  <td style={styles.td}>{formatDate(testCode.expires_at)}</td>
+                  <td style={styles.td}>
+                    <div style={styles.actionButtons}>
+                      <button
+                        style={{
+                          ...styles.statusButton,
+                          backgroundColor: testCode.status === 'active' ? '#fef2f2' : '#f0fdf4',
+                          color: testCode.status === 'active' ? '#dc2626' : '#059669'
+                        }}
+                        onClick={() => toggleStatusMutation.mutate(testCode.id)}
+                        title={testCode.status === 'active' ? 'Deactivate' : 'Activate'}
+                      >
+                        {testCode.status === 'active' ? <PowerOff size={16} /> : <Power size={16} />}
+                      </button>
+                      <button
+                        style={styles.editButton}
+                        onClick={() => handleEdit(testCode)}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#eff6ff'}
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        style={styles.deleteButton}
+                        onClick={() => deleteMutation.mutate(testCode.id)}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '4rem 2rem', color: '#6b7280' }}>
+            <CheckCircle size={64} style={{ margin: '0 auto 1rem', color: '#d1d5db' }} />
+            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
+              No test codes yet
+            </h3>
+            <p>Create your first test code to start administering online tests.</p>
           </div>
         )}
       </div>
 
-      {/* Create/Edit Modal */}
+      {/* Create/Edit Test Code Modal */}
       {isCreateOpen && (
         <div style={styles.modal} onClick={() => setIsCreateOpen(false)}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1e293b' }}>
-              {editingTest ? 'Edit Test Code' : 'Create New Test Code'}
-            </h2>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>
+                {editingTest ? 'Edit Test Code' : 'Create New Test Code'}
+              </h2>
+              <button
+                style={styles.closeButton}
+                onClick={() => setIsCreateOpen(false)}
+              >
+                <X size={20} />
+              </button>
+            </div>
             
             <form onSubmit={handleSubmit} style={styles.form}>
               <div style={styles.formGroup}>
-                <label style={styles.label}>Test Title</label>
+                <label style={styles.label}>Test Title *</label>
                 <input
-                  type="text"
                   style={styles.input}
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="e.g., Mathematics Mid-Term Test"
                   required
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div style={styles.formGrid}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Subject</label>
+                  <label style={styles.label}>Subject *</label>
                   <select
                     style={styles.select}
                     value={formData.subject_id}
-                    onChange={(e) => setFormData({ ...formData, subject_id: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, subject_id: e.target.value }))}
                     required
                   >
-                    <option value="">Select Subject</option>
+                    <option value="">Select subject</option>
                     {subjects?.map((subject: any) => (
                       <option key={subject.id} value={subject.id}>
                         {subject.name}
@@ -468,79 +587,86 @@ export default function TestCodeManager() {
                 </div>
 
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Class Level</label>
+                  <label style={styles.label}>Class Level *</label>
                   <select
                     style={styles.select}
                     value={formData.class_level}
-                    onChange={(e) => setFormData({ ...formData, class_level: e.target.value })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, class_level: e.target.value }))}
                     required
                   >
-                    <option value="">Select Class</option>
-                    <option value="JSS1">JSS1</option>
-                    <option value="JSS2">JSS2</option>
-                    <option value="JSS3">JSS3</option>
-                    <option value="SS1">SS1</option>
-                    <option value="SS2">SS2</option>
-                    <option value="SS3">SS3</option>
+                    <option value="">Select class level</option>
+                    {classes.map(classLevel => (
+                      <option key={classLevel} value={classLevel}>
+                        {classLevel}
+                      </option>
+                    ))}
                   </select>
                 </div>
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Duration (minutes)</label>
+                  <label style={styles.label}>Duration (minutes) *</label>
                   <input
                     type="number"
                     style={styles.input}
                     value={formData.duration_minutes}
-                    onChange={(e) => setFormData({ ...formData, duration_minutes: parseInt(e.target.value) })}
-                    min="1"
+                    onChange={(e) => setFormData(prev => ({ ...prev, duration_minutes: parseInt(e.target.value) }))}
+                    min="5"
                     max="180"
                     required
                   />
                 </div>
 
                 <div style={styles.formGroup}>
-                  <label style={styles.label}>Number of Questions</label>
+                  <label style={styles.label}>Number of Questions *</label>
                   <input
                     type="number"
                     style={styles.input}
                     value={formData.question_count}
-                    onChange={(e) => setFormData({ ...formData, question_count: parseInt(e.target.value) })}
+                    onChange={(e) => setFormData(prev => ({ ...prev, question_count: parseInt(e.target.value) }))}
                     min="1"
                     max="100"
                     required
                   />
                 </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Expires At *</label>
+                  <input
+                    type="date"
+                    style={styles.input}
+                    value={formData.expires_at}
+                    onChange={(e) => setFormData(prev => ({ ...prev, expires_at: e.target.value }))}
+                    min={new Date().toISOString().split('T')[0]}
+                    required
+                  />
+                </div>
+
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Term</label>
+                  <select
+                    style={styles.select}
+                    value={formData.term_id}
+                    onChange={(e) => setFormData(prev => ({ ...prev, term_id: e.target.value }))}
+                  >
+                    {terms?.map((term: any) => (
+                      <option key={term.id} value={term.id}>
+                        {term.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div style={styles.formGroup}>
-                <label style={styles.label}>Expires At</label>
-                <input
-                  type="date"
-                  style={styles.input}
-                  value={formData.expires_at}
-                  onChange={(e) => setFormData({ ...formData, expires_at: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-                <button type="submit" style={styles.buttonPrimary}>
-                  {editingTest ? 'Update Test Code' : 'Create Test Code'}
-                </button>
-                <button
-                  type="button"
-                  style={styles.buttonSecondary}
-                  onClick={() => {
-                    setIsCreateOpen(false)
-                    setEditingTest(null)
-                    resetForm()
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
+              <button
+                type="submit"
+                style={styles.submitButton}
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {createMutation.isPending || updateMutation.isPending 
+                  ? (editingTest ? 'Updating...' : 'Creating...') 
+                  : (editingTest ? 'Update Test Code' : 'Create Test Code')
+                }
+              </button>
             </form>
           </div>
         </div>

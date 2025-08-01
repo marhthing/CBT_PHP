@@ -1,11 +1,7 @@
 import { useState } from 'react'
-import { Button } from '../ui/button'
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/card'
-import { Alert, AlertDescription } from '../ui/alert'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import api from '../../lib/api'
-import { Upload, Download, FileText, CheckCircle, AlertCircle } from 'lucide-react'
+import { Upload, Download, FileText, CheckCircle, AlertCircle, X } from 'lucide-react'
 
 export default function BulkUpload() {
   const [file, setFile] = useState<File | null>(null)
@@ -19,14 +15,22 @@ export default function BulkUpload() {
   const { data: classes } = useQuery({
     queryKey: ['teacher-classes'],
     queryFn: async () => {
-      const response = await api.get('/api/teacher/classes.php')
+      const response = await api.get('/teacher/classes')
       return response.data.classes
+    },
+  })
+
+  const { data: subjects } = useQuery({
+    queryKey: ['subjects'],
+    queryFn: async () => {
+      const response = await api.get('/system/lookup?type=subjects')
+      return response.data.data
     },
   })
 
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      const response = await api.post('/api/teacher/bulk-upload.php', formData, {
+      const response = await api.post('/teacher/bulk-upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -90,200 +94,411 @@ export default function BulkUpload() {
     window.URL.revokeObjectURL(url)
   }
 
+  const styles = {
+    container: {
+      maxWidth: '1000px',
+      margin: '0 auto',
+      padding: '0',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    },
+    header: {
+      marginBottom: '2.5rem'
+    },
+    title: {
+      fontSize: '2.25rem',
+      fontWeight: '800',
+      color: '#1e293b',
+      marginBottom: '0.5rem',
+      letterSpacing: '-0.025em'
+    },
+    subtitle: {
+      color: '#64748b',
+      fontSize: '1.125rem',
+      fontWeight: '400'
+    },
+    card: {
+      backgroundColor: 'white',
+      borderRadius: '16px',
+      padding: '2rem',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      border: '1px solid rgba(226, 232, 240, 0.8)',
+      marginBottom: '2rem'
+    },
+    cardHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.75rem',
+      marginBottom: '1.5rem'
+    },
+    cardTitle: {
+      fontSize: '1.25rem',
+      fontWeight: '600',
+      color: '#1f2937'
+    },
+    description: {
+      color: '#6b7280',
+      fontSize: '0.875rem',
+      lineHeight: '1.6',
+      marginBottom: '1.5rem'
+    },
+    button: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.75rem 1.5rem',
+      border: '1px solid #d1d5db',
+      borderRadius: '8px',
+      fontSize: '0.875rem',
+      fontWeight: '500',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      backgroundColor: 'white',
+      color: '#374151'
+    },
+    primaryButton: {
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      padding: '0.75rem 1.5rem',
+      backgroundColor: '#4f46e5',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      boxShadow: '0 4px 14px 0 rgba(79, 70, 229, 0.3)'
+    },
+    formGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+      gap: '1rem',
+      marginBottom: '1.5rem'
+    },
+    formGroup: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: '0.5rem'
+    },
+    label: {
+      fontSize: '0.875rem',
+      fontWeight: '500',
+      color: '#374151'
+    },
+    select: {
+      padding: '0.75rem',
+      border: '1px solid #d1d5db',
+      borderRadius: '8px',
+      fontSize: '0.875rem',
+      backgroundColor: 'white',
+      outline: 'none'
+    },
+    fileInput: {
+      display: 'none'
+    },
+    fileUploadArea: {
+      border: '2px dashed #d1d5db',
+      borderRadius: '12px',
+      padding: '2rem',
+      textAlign: 'center' as const,
+      backgroundColor: '#f9fafb',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      marginBottom: '1rem'
+    },
+    fileUploadContent: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      alignItems: 'center',
+      gap: '1rem'
+    },
+    fileIcon: {
+      width: '48px',
+      height: '48px',
+      color: '#9ca3af'
+    },
+    fileText: {
+      fontSize: '1rem',
+      fontWeight: '500',
+      color: '#374151'
+    },
+    fileSubtext: {
+      fontSize: '0.875rem',
+      color: '#6b7280'
+    },
+    selectedFile: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.75rem',
+      padding: '1rem',
+      backgroundColor: '#eff6ff',
+      border: '1px solid #dbeafe',
+      borderRadius: '8px',
+      marginBottom: '1rem'
+    },
+    alert: {
+      padding: '1rem',
+      borderRadius: '8px',
+      fontSize: '0.875rem',
+      marginBottom: '1rem'
+    },
+    alertSuccess: {
+      backgroundColor: '#f0fdf4',
+      color: '#166534',
+      border: '1px solid #bbf7d0'
+    },
+    alertError: {
+      backgroundColor: '#fef2f2',
+      color: '#dc2626',
+      border: '1px solid #fecaca'
+    },
+    alertInfo: {
+      backgroundColor: '#eff6ff',
+      color: '#1d4ed8',
+      border: '1px solid #dbeafe'
+    },
+    resultsList: {
+      marginTop: '1rem'
+    },
+    resultItem: {
+      padding: '0.75rem',
+      backgroundColor: '#f9fafb',
+      border: '1px solid #f3f4f6',
+      borderRadius: '6px',
+      marginBottom: '0.5rem',
+      fontSize: '0.875rem'
+    },
+    removeButton: {
+      padding: '0.25rem',
+      backgroundColor: 'transparent',
+      color: '#6b7280',
+      border: 'none',
+      borderRadius: '4px',
+      cursor: 'pointer'
+    }
+  }
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Bulk Upload Questions</h1>
-        <p className="text-muted-foreground">
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h1 style={styles.title}>Bulk Upload Questions</h1>
+        <p style={styles.subtitle}>
           Upload multiple questions at once using CSV or Excel files
         </p>
       </div>
 
       {/* Template Download */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Download className="h-5 w-5" />
-            Download Template
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-muted-foreground">
-            Download the CSV template to format your questions correctly before uploading.
-          </p>
-          <Button variant="outline" onClick={downloadTemplate}>
-            <Download className="mr-2 h-4 w-4" />
-            Download CSV Template
-          </Button>
-        </CardContent>
-      </Card>
+      <div style={styles.card}>
+        <div style={styles.cardHeader}>
+          <Download size={20} style={{ color: '#4f46e5' }} />
+          <h2 style={styles.cardTitle}>Download Template</h2>
+        </div>
+        <p style={styles.description}>
+          Download the CSV template to format your questions correctly before uploading. 
+          The template includes sample questions to guide you.
+        </p>
+        <button 
+          style={styles.button}
+          onClick={downloadTemplate}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
+        >
+          <Download size={16} />
+          Download CSV Template
+        </button>
+      </div>
 
       {/* Upload Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Upload Questions
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-sm font-medium">Subject</label>
-              <Select value={subject} onValueChange={setSubject}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {classes?.map((cls: any) => (
-                    <SelectItem key={cls.subject} value={cls.subject}>
-                      {cls.subject}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+      <div style={styles.card}>
+        <div style={styles.cardHeader}>
+          <Upload size={20} style={{ color: '#4f46e5' }} />
+          <h2 style={styles.cardTitle}>Upload Questions</h2>
+        </div>
 
-            <div>
-              <label className="text-sm font-medium">Class Level</label>
-              <Select value={classLevel} onValueChange={setClassLevel}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select class" />
-                </SelectTrigger>
-                <SelectContent>
-                  {classes?.map((cls: any) => (
-                    <SelectItem key={cls.class_level} value={cls.class_level}>
-                      {cls.class_level}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Default Difficulty</label>
-              <Select value={difficulty} onValueChange={setDifficulty}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="easy">Easy</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="hard">Hard</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+        <div style={styles.formGrid}>
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Subject *</label>
+            <select
+              style={styles.select}
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+            >
+              <option value="">Select subject</option>
+              {subjects?.map((subj: any) => (
+                <option key={subj.id} value={subj.id}>{subj.name}</option>
+              ))}
+            </select>
           </div>
 
-          <div>
-            <label className="text-sm font-medium">Upload File</label>
-            <div className="mt-2">
-              <input
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                onChange={handleFileChange}
-                className="block w-full text-sm text-muted-foreground
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-lg file:border-0
-                  file:text-sm file:font-medium
-                  file:bg-primary file:text-primary-foreground
-                  hover:file:bg-primary/90"
-              />
-            </div>
-            {file && (
-              <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <FileText className="h-4 w-4" />
-                {file.name} ({Math.round(file.size / 1024)} KB)
-              </div>
-            )}
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Class Level *</label>
+            <select
+              style={styles.select}
+              value={classLevel}
+              onChange={(e) => setClassLevel(e.target.value)}
+            >
+              <option value="">Select class level</option>
+              {['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].map(level => (
+                <option key={level} value={level}>{level}</option>
+              ))}
+            </select>
           </div>
 
-          <Button 
-            onClick={handleUpload}
-            disabled={!file || !subject || !classLevel || uploadMutation.isPending}
-            className="w-full"
+          <div style={styles.formGroup}>
+            <label style={styles.label}>Difficulty</label>
+            <select
+              style={styles.select}
+              value={difficulty}
+              onChange={(e) => setDifficulty(e.target.value)}
+            >
+              <option value="easy">Easy</option>
+              <option value="medium">Medium</option>
+              <option value="hard">Hard</option>
+            </select>
+          </div>
+        </div>
+
+        {/* File Upload */}
+        <input
+          type="file"
+          accept=".csv,.xlsx,.xls"
+          onChange={handleFileChange}
+          style={styles.fileInput}
+          id="file-upload"
+        />
+        
+        {!file ? (
+          <label
+            htmlFor="file-upload"
+            style={styles.fileUploadArea}
+            onMouseOver={(e) => {
+              e.currentTarget.style.borderColor = '#4f46e5'
+              e.currentTarget.style.backgroundColor = '#fafbff'
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.borderColor = '#d1d5db'
+              e.currentTarget.style.backgroundColor = '#f9fafb'
+            }}
           >
-            {uploadMutation.isPending ? 'Uploading...' : 'Upload Questions'}
-          </Button>
-        </CardContent>
-      </Card>
+            <div style={styles.fileUploadContent}>
+              <Upload style={styles.fileIcon} />
+              <div>
+                <p style={styles.fileText}>Click to select your file</p>
+                <p style={styles.fileSubtext}>CSV, XLS, or XLSX files supported</p>
+              </div>
+            </div>
+          </label>
+        ) : (
+          <div style={styles.selectedFile}>
+            <FileText size={20} style={{ color: '#4f46e5' }} />
+            <span style={{ flex: 1 }}>{file.name}</span>
+            <button
+              style={styles.removeButton}
+              onClick={() => setFile(null)}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        <button
+          style={{
+            ...styles.primaryButton,
+            opacity: (!file || !subject || !classLevel || uploadMutation.isPending) ? 0.6 : 1,
+            cursor: (!file || !subject || !classLevel || uploadMutation.isPending) ? 'not-allowed' : 'pointer'
+          }}
+          onClick={handleUpload}
+          disabled={!file || !subject || !classLevel || uploadMutation.isPending}
+          onMouseOver={(e) => {
+            if (!e.currentTarget.disabled) {
+              e.currentTarget.style.backgroundColor = '#4338ca'
+            }
+          }}
+          onMouseOut={(e) => {
+            if (!e.currentTarget.disabled) {
+              e.currentTarget.style.backgroundColor = '#4f46e5'
+            }
+          }}
+        >
+          <Upload size={16} />
+          {uploadMutation.isPending ? 'Uploading...' : 'Upload Questions'}
+        </button>
+      </div>
 
       {/* Upload Results */}
       {uploadResults && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {uploadResults.success ? (
-                <CheckCircle className="h-5 w-5 text-green-500" />
-              ) : (
-                <AlertCircle className="h-5 w-5 text-red-500" />
-              )}
-              Upload Results
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <div style={styles.card}>
+          <div style={styles.cardHeader}>
             {uploadResults.success ? (
-              <Alert>
-                <CheckCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Successfully uploaded {uploadResults.created_count} questions!
-                  {uploadResults.skipped_count > 0 && 
-                    ` Skipped ${uploadResults.skipped_count} invalid rows.`
-                  }
-                </AlertDescription>
-              </Alert>
+              <CheckCircle size={20} style={{ color: '#10b981' }} />
             ) : (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Upload failed: {uploadResults.message}
-                </AlertDescription>
-              </Alert>
+              <AlertCircle size={20} style={{ color: '#ef4444' }} />
             )}
+            <h2 style={styles.cardTitle}>Upload Results</h2>
+          </div>
 
-            {uploadResults.errors && uploadResults.errors.length > 0 && (
-              <div className="space-y-2">
-                <h4 className="font-medium">Errors found:</h4>
-                <div className="max-h-40 overflow-y-auto space-y-1">
-                  {uploadResults.errors.map((error: string, index: number) => (
-                    <div key={index} className="text-sm text-red-600 bg-red-50 p-2 rounded">
-                      {error}
-                    </div>
-                  ))}
-                </div>
+          {uploadResults.success ? (
+            <div style={styles.alertSuccess}>
+              <strong>Success!</strong> {uploadResults.imported_count} questions imported successfully.
+            </div>
+          ) : (
+            <div style={styles.alertError}>
+              <strong>Upload failed:</strong> {uploadResults.message}
+            </div>
+          )}
+
+          {uploadResults.errors && uploadResults.errors.length > 0 && (
+            <div>
+              <h4 style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>
+                Errors found:
+              </h4>
+              <div style={styles.resultsList}>
+                {uploadResults.errors.map((error: string, index: number) => (
+                  <div key={index} style={styles.resultItem}>
+                    {error}
+                  </div>
+                ))}
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </div>
+          )}
+
+          {uploadResults.skipped && uploadResults.skipped.length > 0 && (
+            <div style={{ marginTop: '1rem' }}>
+              <h4 style={{ color: '#f59e0b', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>
+                Skipped rows:
+              </h4>
+              <div style={styles.resultsList}>
+                {uploadResults.skipped.map((skip: string, index: number) => (
+                  <div key={index} style={styles.resultItem}>
+                    {skip}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Instructions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Upload Instructions</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="text-sm space-y-2">
-            <p><strong>File Format:</strong> CSV or Excel (.xlsx, .xls)</p>
-            <p><strong>Required Columns:</strong></p>
-            <ul className="list-disc list-inside ml-4 space-y-1">
-              <li>question_text - The question text</li>
-              <li>option_a - First option</li>
-              <li>option_b - Second option</li>
-              <li>option_c - Third option</li>
-              <li>option_d - Fourth option</li>
-              <li>correct_answer - Correct answer (A, B, C, or D)</li>
-            </ul>
-            <p><strong>Notes:</strong></p>
-            <ul className="list-disc list-inside ml-4 space-y-1">
-              <li>First row should contain column headers</li>
-              <li>All questions will use the subject, class, and difficulty selected above</li>
-              <li>Invalid rows will be skipped and reported</li>
-              <li>Maximum file size: 5MB</li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
+      <div style={styles.card}>
+        <h3 style={{ ...styles.cardTitle, marginBottom: '1rem' }}>File Format Instructions</h3>
+        <div style={{ color: '#6b7280', fontSize: '0.875rem', lineHeight: '1.6' }}>
+          <p><strong>Required columns:</strong></p>
+          <ul style={{ marginLeft: '1.5rem', marginBottom: '1rem' }}>
+            <li>question_text - The main question</li>
+            <li>option_a, option_b, option_c, option_d - Multiple choice options</li>
+            <li>correct_answer - Must be A, B, C, or D</li>
+          </ul>
+          <p><strong>Tips:</strong></p>
+          <ul style={{ marginLeft: '1.5rem' }}>
+            <li>Use the downloaded template as a starting point</li>
+            <li>Ensure all required fields are filled</li>
+            <li>Keep questions clear and concise</li>
+            <li>Double-check your correct answers</li>
+          </ul>
+        </div>
+      </div>
     </div>
   )
 }
