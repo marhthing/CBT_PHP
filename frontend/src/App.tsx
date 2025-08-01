@@ -80,6 +80,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="/student/test"
+                  element={
+                    <ProtectedRoute requiredRole="student">
+                      <TakeTest />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
                   path="/student/take-test/:testCode"
                   element={
                     <ProtectedRoute requiredRole="student">

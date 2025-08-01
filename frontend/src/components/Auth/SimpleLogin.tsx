@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 export default function SimpleLogin() {
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState('student')
+
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   
@@ -97,38 +97,7 @@ export default function SimpleLogin() {
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          {/* Role Selection */}
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{
-              display: 'block',
-              fontSize: '13px',
-              fontWeight: '600',
-              color: '#374151',
-              marginBottom: '6px'
-            }}>
-              Login as
-            </label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '2px solid #e2e8f0',
-                borderRadius: '8px',
-                fontSize: '14px',
-                outline: 'none',
-                transition: 'all 0.2s',
-                background: 'white'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-              onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-            >
-              <option value="student">Student</option>
-              <option value="teacher">Teacher</option>
-              <option value="admin">Administrator</option>
-            </select>
-          </div>
+
 
           {/* Identifier Input */}
           <div style={{ marginBottom: '16px' }}>
@@ -139,13 +108,13 @@ export default function SimpleLogin() {
               color: '#374151',
               marginBottom: '6px'
             }}>
-              {role === 'student' ? 'Registration Number' : 'Username/Email'}
+              Username / Registration Number
             </label>
             <input
               type="text"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder={role === 'student' ? 'e.g. STU001' : 'Enter username or email'}
+              placeholder="Enter username or registration number"
               required
               style={{
                 width: '100%',

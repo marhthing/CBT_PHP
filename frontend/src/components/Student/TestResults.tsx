@@ -1,499 +1,465 @@
-import { useQuery } from '@tanstack/react-query'
-import api from '../../lib/api'
-import { formatDate, calculateGrade } from '../../lib/utils'
-import { Trophy, Clock, Target, TrendingUp, BookOpen } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
+import { api } from '../../lib/api'
+
+interface TestResult {
+  id: number
+  score: number
+  total_questions: number
+  percentage: number
+  test_title: string
+  subject: string
+  class_level: string
+  submitted_at: string
+  duration_taken: number
+  test_code: string
+}
+
+interface FilterOptions {
+  subject: string
+  term: string
+  session: string
+}
 
 export default function TestResults() {
-  const { data: results, isLoading } = useQuery({
-    queryKey: ['student-results'],
-    queryFn: async () => {
-      const response = await api.get('/student/results')
-      return response.data.results
-    },
+  const { user } = useAuth()
+  const [results, setResults] = useState<TestResult[]>([])
+  const [filteredResults, setFilteredResults] = useState<TestResult[]>([])
+  const [loading, setLoading] = useState(true)
+  const [filters, setFilters] = useState<FilterOptions>({
+    subject: '',
+    term: '',
+    session: ''
   })
+  const [lookupData, setLookupData] = useState<any>({})
 
-  if (isLoading) {
+  useEffect(() => {
+    fetchResults()
+    fetchLookupData()
+  }, [])
+
+  useEffect(() => {
+    applyFilters()
+  }, [results, filters])
+
+  const fetchResults = async () => {
+    try {
+      const response = await api.get('/student/results')
+      setResults(response.data.data || [])
+    } catch (error) {
+      console.error('Failed to fetch results:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchLookupData = async () => {
+    try {
+      const response = await api.get('/system/lookup')
+      setLookupData(response.data.data || {})
+    } catch (error) {
+      console.error('Failed to fetch lookup data:', error)
+    }
+  }
+
+  const applyFilters = () => {
+    let filtered = [...results]
+
+    if (filters.subject) {
+      filtered = filtered.filter(result => result.subject === filters.subject)
+    }
+
+    setFilteredResults(filtered)
+  }
+
+  const resetFilters = () => {
+    setFilters({ subject: '', term: '', session: '' })
+  }
+
+  const getGradeColor = (percentage: number) => {
+    if (percentage >= 80) return { bg: '#dcfce7', color: '#166534' }
+    if (percentage >= 70) return { bg: '#fef3c7', color: '#92400e' }
+    if (percentage >= 50) return { bg: '#dbeafe', color: '#1e40af' }
+    return { bg: '#fef2f2', color: '#dc2626' }
+  }
+
+  if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '50vh'
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '200px',
+        color: '#64748b'
       }}>
-        <div style={{
-          width: '32px',
-          height: '32px',
-          border: '3px solid #f3f3f3',
-          borderTop: '3px solid #3b82f6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
+        Loading results...
       </div>
     )
   }
 
-  const totalTests = results?.length || 0
-  const averageScore = totalTests > 0 
-    ? Math.round(results.reduce((acc: number, result: any) => 
-        acc + (result.score / result.total_questions) * 100, 0
-      ) / totalTests)
-    : 0
-
-  const bestScore = totalTests > 0
-    ? Math.max(...results.map((r: any) => (r.score / r.total_questions) * 100))
-    : 0
-
-  const recentTests = results?.slice(0, 5) || []
-
-  const getGradeColor = (grade: string) => {
-    switch (grade) {
-      case 'A': return '#10b981'
-      case 'B': return '#3b82f6'
-      case 'C': return '#f59e0b'
-      case 'D': return '#f97316'
-      case 'F': return '#ef4444'
-      default: return '#6b7280'
-    }
-  }
-
-  const getPerformanceColor = (percentage: number) => {
-    if (percentage >= 80) return '#10b981'
-    if (percentage >= 70) return '#3b82f6'
-    if (percentage >= 60) return '#f59e0b'
-    if (percentage >= 50) return '#f97316'
-    return '#ef4444'
-  }
-
-  const styles = {
-    container: {
-      maxWidth: '1200px',
+  return (
+    <div style={{
+      maxWidth: '100%',
       margin: '0 auto',
       padding: '0',
       fontFamily: 'system-ui, -apple-system, sans-serif'
-    },
-    header: {
-      marginBottom: '2.5rem'
-    },
-    title: {
-      fontSize: '2.25rem',
-      fontWeight: '800',
-      color: '#1e293b',
-      marginBottom: '0.5rem',
-      letterSpacing: '-0.025em'
-    },
-    subtitle: {
-      color: '#64748b',
-      fontSize: '1.125rem',
-      fontWeight: '400'
-    },
-    statsGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-      gap: '1.5rem',
-      marginBottom: '2.5rem'
-    },
-    statCard: {
-      backgroundColor: 'white',
-      borderRadius: '16px',
-      padding: '2rem',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      border: '1px solid rgba(226, 232, 240, 0.8)',
-      transition: 'all 0.3s ease'
-    },
-    statCardHeader: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: '1rem'
-    },
-    statLabel: {
-      fontSize: '0.875rem',
-      fontWeight: '600',
-      color: '#64748b',
-      textTransform: 'uppercase' as const,
-      letterSpacing: '0.05em'
-    },
-    statValue: {
-      fontSize: '2.5rem',
-      fontWeight: '800',
-      color: '#1e293b',
-      lineHeight: '1'
-    },
-    iconContainer: {
-      width: '50px',
-      height: '50px',
-      borderRadius: '12px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#f0f9ff',
-      color: '#0ea5e9'
-    },
-    resultsCard: {
-      backgroundColor: 'white',
-      borderRadius: '16px',
-      padding: '2rem',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      border: '1px solid rgba(226, 232, 240, 0.8)',
-      marginBottom: '2rem'
-    },
-    cardTitle: {
-      fontSize: '1.25rem',
-      fontWeight: '600',
-      color: '#1f2937',
-      marginBottom: '1.5rem'
-    },
-    table: {
-      width: '100%',
-      borderCollapse: 'collapse' as const
-    },
-    th: {
-      textAlign: 'left' as const,
-      padding: '1rem',
-      fontSize: '0.875rem',
-      fontWeight: '600',
-      color: '#374151',
-      borderBottom: '1px solid #e5e7eb'
-    },
-    td: {
-      padding: '1rem',
-      fontSize: '0.875rem',
-      color: '#6b7280',
-      borderBottom: '1px solid #f3f4f6'
-    },
-    badge: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      padding: '0.25rem 0.75rem',
-      borderRadius: '9999px',
-      fontSize: '0.75rem',
-      fontWeight: '500',
-      color: 'white'
-    },
-    progressBar: {
-      width: '100%',
-      height: '8px',
-      backgroundColor: '#f3f4f6',
-      borderRadius: '4px',
-      overflow: 'hidden'
-    },
-    progressFill: {
-      height: '100%',
-      borderRadius: '4px',
-      transition: 'width 0.3s ease'
-    },
-    emptyState: {
-      textAlign: 'center' as const,
-      padding: '4rem 2rem',
-      color: '#6b7280'
-    },
-    emptyIcon: {
-      margin: '0 auto 1rem',
-      color: '#d1d5db'
-    },
-    performanceGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-      gap: '1.5rem'
-    },
-    performanceCard: {
-      backgroundColor: 'white',
-      borderRadius: '16px',
-      padding: '1.5rem',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      border: '1px solid rgba(226, 232, 240, 0.8)'
-    },
-    subjectName: {
-      fontSize: '1rem',
-      fontWeight: '600',
-      color: '#1f2937',
-      marginBottom: '0.5rem'
-    },
-    subjectStats: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      fontSize: '0.875rem',
-      color: '#6b7280',
-      marginBottom: '0.75rem'
-    },
-    scoreDisplay: {
-      fontSize: '1.5rem',
-      fontWeight: '700',
-      marginBottom: '0.5rem'
-    }
-  }
-
-  const subjectPerformance = results?.reduce((acc: any, result: any) => {
-    const percentage = (result.score / result.total_questions) * 100
-    if (!acc[result.subject]) {
-      acc[result.subject] = {
-        total: 0,
-        count: 0,
-        best: 0
-      }
-    }
-    acc[result.subject].total += percentage
-    acc[result.subject].count += 1
-    acc[result.subject].best = Math.max(acc[result.subject].best, percentage)
-    return acc
-  }, {}) || {}
-
-  return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h1 style={styles.title}>Test Results</h1>
-        <p style={styles.subtitle}>
-          View your test performance and track your progress
+    }}>
+      {/* Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
+        color: 'white',
+        padding: '20px 16px',
+        borderRadius: '12px',
+        marginBottom: '20px'
+      }}>
+        <h1 style={{ 
+          fontSize: '20px', 
+          fontWeight: 'bold',
+          margin: '0 0 4px 0'
+        }}>
+          Test Results
+        </h1>
+        <p style={{ 
+          fontSize: '14px', 
+          opacity: 0.9,
+          margin: '0'
+        }}>
+          View your test performance and grades
         </p>
       </div>
 
-      {/* Summary Cards */}
-      <div style={styles.statsGrid}>
-        <div style={styles.statCard}>
-          <div style={styles.statCardHeader}>
-            <span style={styles.statLabel}>Total Tests</span>
-            <div style={styles.iconContainer}>
-              <Target size={24} />
+      {/* Filters */}
+      <div style={{
+        background: 'white',
+        padding: '16px',
+        borderRadius: '12px',
+        marginBottom: '20px',
+        border: '1px solid #e2e8f0'
+      }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '12px'
+        }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '12px'
+          }}>
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '12px',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: '4px'
+              }}>
+                Subject
+              </label>
+              <select
+                value={filters.subject}
+                onChange={(e) => setFilters(prev => ({ ...prev, subject: e.target.value }))}
+                style={{
+                  width: '100%',
+                  padding: '8px 10px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
+              >
+                <option value="">All Subjects</option>
+                {lookupData.subjects?.map((subject: any) => (
+                  <option key={subject.id} value={subject.name}>
+                    {subject.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
-          <div style={styles.statValue}>{totalTests}</div>
-        </div>
 
-        <div style={styles.statCard}>
-          <div style={styles.statCardHeader}>
-            <span style={styles.statLabel}>Average Score</span>
-            <div style={styles.iconContainer}>
-              <TrendingUp size={24} />
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '12px',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: '4px'
+              }}>
+                Term
+              </label>
+              <select
+                value={filters.term}
+                onChange={(e) => setFilters(prev => ({ ...prev, term: e.target.value }))}
+                style={{
+                  width: '100%',
+                  padding: '8px 10px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
+              >
+                <option value="">All Terms</option>
+                {lookupData.terms?.map((term: any) => (
+                  <option key={term.id} value={term.name}>
+                    {term.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
-          <div style={styles.statValue}>{averageScore}%</div>
-          <div style={styles.progressBar}>
-            <div 
-              style={{
-                ...styles.progressFill,
-                width: `${averageScore}%`,
-                backgroundColor: getPerformanceColor(averageScore)
-              }}
-            />
-          </div>
-        </div>
 
-        <div style={styles.statCard}>
-          <div style={styles.statCardHeader}>
-            <span style={styles.statLabel}>Best Score</span>
-            <div style={styles.iconContainer}>
-              <Trophy size={24} />
+            <div>
+              <label style={{
+                display: 'block',
+                fontSize: '12px',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: '4px'
+              }}>
+                Session
+              </label>
+              <select
+                value={filters.session}
+                onChange={(e) => setFilters(prev => ({ ...prev, session: e.target.value }))}
+                style={{
+                  width: '100%',
+                  padding: '8px 10px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  outline: 'none'
+                }}
+              >
+                <option value="">All Sessions</option>
+                {lookupData.sessions?.map((session: any) => (
+                  <option key={session.id} value={session.name}>
+                    {session.name}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
-          <div style={styles.statValue}>{Math.round(bestScore)}%</div>
-          <div style={styles.progressBar}>
-            <div 
-              style={{
-                ...styles.progressFill,
-                width: `${bestScore}%`,
-                backgroundColor: getPerformanceColor(bestScore)
-              }}
-            />
-          </div>
-        </div>
 
-        <div style={styles.statCard}>
-          <div style={styles.statCardHeader}>
-            <span style={styles.statLabel}>Subjects</span>
-            <div style={styles.iconContainer}>
-              <BookOpen size={24} />
-            </div>
-          </div>
-          <div style={styles.statValue}>{Object.keys(subjectPerformance).length}</div>
+          <button
+            onClick={resetFilters}
+            style={{
+              background: '#f1f5f9',
+              border: '1px solid #e2e8f0',
+              color: '#64748b',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '12px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              alignSelf: 'flex-start'
+            }}
+          >
+            Reset Filters
+          </button>
         </div>
       </div>
 
-      {/* Subject Performance */}
-      {Object.keys(subjectPerformance).length > 0 && (
-        <div style={styles.resultsCard}>
-          <h3 style={styles.cardTitle}>Performance by Subject</h3>
-          <div style={styles.performanceGrid}>
-            {Object.entries(subjectPerformance).map(([subject, stats]: [string, any]) => {
-              const avgScore = Math.round(stats.total / stats.count)
+      {/* Results Summary */}
+      {filteredResults.length > 0 && (
+        <div style={{
+          background: 'white',
+          padding: '16px',
+          borderRadius: '12px',
+          marginBottom: '20px',
+          border: '1px solid #e2e8f0'
+        }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+            gap: '12px'
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: '#1e40af'
+              }}>
+                {filteredResults.length}
+              </div>
+              <div style={{
+                fontSize: '11px',
+                color: '#64748b',
+                fontWeight: '500'
+              }}>
+                Total Tests
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: '#059669'
+              }}>
+                {Math.round(filteredResults.reduce((sum, result) => sum + result.percentage, 0) / filteredResults.length)}%
+              </div>
+              <div style={{
+                fontSize: '11px',
+                color: '#64748b',
+                fontWeight: '500'
+              }}>
+                Average Score
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: '#7c3aed'
+              }}>
+                {Math.max(...filteredResults.map(r => r.percentage))}%
+              </div>
+              <div style={{
+                fontSize: '11px',
+                color: '#64748b',
+                fontWeight: '500'
+              }}>
+                Best Score
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: '#dc2626'
+              }}>
+                {filteredResults.filter(r => r.percentage >= 50).length}
+              </div>
+              <div style={{
+                fontSize: '11px',
+                color: '#64748b',
+                fontWeight: '500'
+              }}>
+                Passed
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Results List */}
+      <div style={{
+        background: 'white',
+        borderRadius: '12px',
+        border: '1px solid #e2e8f0',
+        overflow: 'hidden'
+      }}>
+        {filteredResults.length > 0 ? (
+          <div>
+            {filteredResults.map((result) => {
+              const gradeColors = getGradeColor(result.percentage)
               return (
-                <div key={subject} style={styles.performanceCard}>
-                  <div style={styles.subjectName}>{subject}</div>
-                  <div style={styles.subjectStats}>
-                    <span>{stats.count} test{stats.count !== 1 ? 's' : ''}</span>
-                    <span>Best: {Math.round(stats.best)}%</span>
-                  </div>
+                <div
+                  key={result.id}
+                  style={{
+                    padding: '16px',
+                    borderBottom: '1px solid #f1f5f9'
+                  }}
+                >
                   <div style={{
-                    ...styles.scoreDisplay,
-                    color: getPerformanceColor(avgScore)
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: '8px'
                   }}>
-                    {avgScore}%
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: '#1e293b',
+                        margin: '0 0 4px 0'
+                      }}>
+                        {result.test_title}
+                      </h3>
+                      <div style={{
+                        fontSize: '12px',
+                        color: '#64748b',
+                        marginBottom: '4px'
+                      }}>
+                        {result.subject} • {result.class_level}
+                      </div>
+                      <div style={{
+                        fontSize: '11px',
+                        color: '#94a3b8'
+                      }}>
+                        Code: {result.test_code} • {new Date(result.submitted_at).toLocaleDateString()}
+                      </div>
+                    </div>
+
+                    <div style={{
+                      background: gradeColors.bg,
+                      color: gradeColors.color,
+                      padding: '6px 12px',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      fontWeight: '700',
+                      textAlign: 'center',
+                      minWidth: '60px'
+                    }}>
+                      {result.percentage}%
+                    </div>
                   </div>
-                  <div style={styles.progressBar}>
-                    <div 
-                      style={{
-                        ...styles.progressFill,
-                        width: `${avgScore}%`,
-                        backgroundColor: getPerformanceColor(avgScore)
-                      }}
-                    />
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+                    gap: '12px',
+                    fontSize: '11px',
+                    color: '#64748b'
+                  }}>
+                    <div>
+                      <span style={{ fontWeight: '500' }}>Score:</span> {result.score}/{result.total_questions}
+                    </div>
+                    <div>
+                      <span style={{ fontWeight: '500' }}>Duration:</span> {Math.round(result.duration_taken / 60)} min
+                    </div>
+                    <div>
+                      <span style={{ fontWeight: '500' }}>Grade:</span> {
+                        result.percentage >= 80 ? 'A' :
+                        result.percentage >= 70 ? 'B' :
+                        result.percentage >= 60 ? 'C' :
+                        result.percentage >= 50 ? 'D' : 'F'
+                      }
+                    </div>
                   </div>
                 </div>
               )
             })}
           </div>
-        </div>
-      )}
-
-      {/* Recent Test Results */}
-      <div style={styles.resultsCard}>
-        <h3 style={styles.cardTitle}>Recent Test Results</h3>
-        
-        {recentTests.length > 0 ? (
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>Test</th>
-                <th style={styles.th}>Subject</th>
-                <th style={styles.th}>Score</th>
-                <th style={styles.th}>Percentage</th>
-                <th style={styles.th}>Grade</th>
-                <th style={styles.th}>Time Taken</th>
-                <th style={styles.th}>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentTests.map((result: any) => {
-                const percentage = Math.round((result.score / result.total_questions) * 100)
-                const grade = calculateGrade(percentage)
-                const timeTaken = Math.round(result.time_taken / 60)
-                
-                return (
-                  <tr key={result.id}>
-                    <td style={styles.td}>
-                      <div style={{ fontWeight: '500', color: '#1f2937' }}>
-                        {result.test_title}
-                      </div>
-                      <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                        {result.class_level}
-                      </div>
-                    </td>
-                    <td style={styles.td}>{result.subject}</td>
-                    <td style={styles.td}>
-                      <span style={{ fontWeight: '600', color: '#1f2937' }}>
-                        {result.score}/{result.total_questions}
-                      </span>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={{
-                        fontWeight: '600',
-                        fontSize: '1rem',
-                        color: getPerformanceColor(percentage)
-                      }}>
-                        {percentage}%
-                      </div>
-                      <div style={styles.progressBar}>
-                        <div 
-                          style={{
-                            ...styles.progressFill,
-                            width: `${percentage}%`,
-                            backgroundColor: getPerformanceColor(percentage)
-                          }}
-                        />
-                      </div>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{
-                        ...styles.badge,
-                        backgroundColor: getGradeColor(grade)
-                      }}>
-                        {grade}
-                      </span>
-                    </td>
-                    <td style={styles.td}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Clock size={14} style={{ color: '#9ca3af' }} />
-                        {timeTaken} min
-                      </div>
-                    </td>
-                    <td style={styles.td}>{formatDate(result.completed_at)}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
         ) : (
-          <div style={styles.emptyState}>
-            <Trophy size={64} style={styles.emptyIcon} />
-            <h3 style={{ fontSize: '1.125rem', fontWeight: '600', color: '#374151', marginBottom: '0.5rem' }}>
-              No test results yet
+          <div style={{
+            textAlign: 'center',
+            padding: '40px 20px',
+            color: '#64748b'
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}>📊</div>
+            <h3 style={{
+              fontSize: '16px',
+              fontWeight: '600',
+              margin: '0 0 8px 0'
+            }}>
+              No Results Found
             </h3>
-            <p>Take your first test to see your results and track your progress.</p>
+            <p style={{
+              fontSize: '14px',
+              margin: '0',
+              opacity: 0.8
+            }}>
+              {results.length === 0 ? 
+                "You haven't taken any tests yet. Start by entering a test code!" :
+                "No results match your current filters. Try adjusting the filter options."
+              }
+            </p>
           </div>
         )}
       </div>
-
-      {/* All Results */}
-      {results?.length > 5 && (
-        <div style={styles.resultsCard}>
-          <h3 style={styles.cardTitle}>All Test Results ({results.length})</h3>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>Test</th>
-                <th style={styles.th}>Subject</th>
-                <th style={styles.th}>Score</th>
-                <th style={styles.th}>Percentage</th>
-                <th style={styles.th}>Grade</th>
-                <th style={styles.th}>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results?.slice(5).map((result: any) => {
-                const percentage = Math.round((result.score / result.total_questions) * 100)
-                const grade = calculateGrade(percentage)
-                
-                return (
-                  <tr key={result.id}>
-                    <td style={styles.td}>
-                      <div style={{ fontWeight: '500', color: '#1f2937' }}>
-                        {result.test_title}
-                      </div>
-                    </td>
-                    <td style={styles.td}>{result.subject}</td>
-                    <td style={styles.td}>
-                      {result.score}/{result.total_questions}
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{
-                        fontWeight: '600',
-                        color: getPerformanceColor(percentage)
-                      }}>
-                        {percentage}%
-                      </span>
-                    </td>
-                    <td style={styles.td}>
-                      <span style={{
-                        ...styles.badge,
-                        backgroundColor: getGradeColor(grade)
-                      }}>
-                        {grade}
-                      </span>
-                    </td>
-                    <td style={styles.td}>{formatDate(result.completed_at)}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   )
 }

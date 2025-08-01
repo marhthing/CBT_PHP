@@ -1,71 +1,140 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import api from '../../lib/api'
-import { TestQuestion, TestSubmission } from '../../types'
-import { Clock, CheckCircle, AlertCircle, ArrowLeft, ArrowRight } from 'lucide-react'
+import { useAuth } from '../../contexts/AuthContext'
+import { api } from '../../lib/api'
+import { useNavigate, useParams } from 'react-router-dom'
+
+interface Question {
+  id: number
+  question_text: string
+  option_a: string
+  option_b: string
+  option_c: string
+  option_d: string
+}
+
+interface TestData {
+  id: number
+  title: string
+  subject: string
+  class_level: string
+  duration_minutes: number
+  questions: Question[]
+}
 
 export default function TakeTest() {
-  const { testCode } = useParams()
+  const { user } = useAuth()
   const navigate = useNavigate()
-  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const { testCode } = useParams()
+  const [inputTestCode, setInputTestCode] = useState(testCode || '')
+  const [testData, setTestData] = useState<TestData | null>(null)
   const [answers, setAnswers] = useState<{ [key: number]: string }>({})
   const [timeLeft, setTimeLeft] = useState(0)
-  const [startTime] = useState(Date.now())
-
-  const { data: testData, isLoading, error } = useQuery({
-    queryKey: ['test', testCode],
-    queryFn: async () => {
-      const response = await api.get(`/student/take-test?code=${testCode}`)
-      return response.data
-    },
-  })
-
-  const submitTestMutation = useMutation({
-    mutationFn: async (submission: TestSubmission) => {
-      const response = await api.post('/student/submit-test', submission)
-      return response.data
-    },
-    onSuccess: () => {
-      navigate('/student/results')
-    },
-  })
+  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const [testStarted, setTestStarted] = useState(false)
 
   useEffect(() => {
-    if (testData?.test_code?.duration_minutes) {
-      setTimeLeft(testData.test_code.duration_minutes * 60)
+    if (testCode) {
+      validateAndStartTest(testCode)
     }
-  }, [testData])
+  }, [testCode])
 
   useEffect(() => {
-    if (timeLeft > 0) {
+    if (testStarted && timeLeft > 0) {
       const timer = setInterval(() => {
-        setTimeLeft((prev) => {
+        setTimeLeft(prev => {
           if (prev <= 1) {
-            handleSubmit()
+            submitTest()
             return 0
           }
           return prev - 1
         })
       }, 1000)
+      
       return () => clearInterval(timer)
     }
-  }, [timeLeft])
+  }, [testStarted, timeLeft])
 
-  const handleAnswerSelect = (questionId: number, answer: string) => {
-    setAnswers(prev => ({
-      ...prev,
-      [questionId]: answer
-    }))
+  const validateTestCode = async () => {
+    if (!inputTestCode.trim()) {
+      setError('Please enter a test code')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await api.post('/student/validate-test-code', {
+        test_code: inputTestCode.toUpperCase()
+      })
+
+      if (response.data.success) {
+        validateAndStartTest(inputTestCode.toUpperCase())
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Invalid test code')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleSubmit = () => {
-    const timeTaken = Math.floor((Date.now() - startTime) / 1000)
-    submitTestMutation.mutate({
-      test_code: testCode!,
-      answers,
-      time_taken: timeTaken
-    })
+  const validateAndStartTest = async (code: string) => {
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await api.get(`/student/take-test?test_code=${code}`)
+      
+      if (response.data.success) {
+        const test = response.data.data
+        setTestData(test)
+        setTimeLeft(test.duration_minutes * 60)
+        setTestStarted(true)
+      }
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Failed to start test')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const selectAnswer = (questionId: number, answer: string) => {
+    setAnswers(prev => ({ ...prev, [questionId]: answer }))
+  }
+
+  const nextQuestion = () => {
+    if (currentQuestion < (testData?.questions.length || 0) - 1) {
+      setCurrentQuestion(prev => prev + 1)
+    }
+  }
+
+  const prevQuestion = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(prev => prev - 1)
+    }
+  }
+
+  const submitTest = async () => {
+    if (submitting) return
+
+    setSubmitting(true)
+
+    try {
+      await api.post('/student/submit-test', {
+        test_code: inputTestCode.toUpperCase(),
+        answers
+      })
+
+      navigate('/student/results', { 
+        state: { message: 'Test submitted successfully!' }
+      })
+    } catch (error: any) {
+      setError(error.response?.data?.message || 'Failed to submit test')
+      setSubmitting(false)
+    }
   }
 
   const formatTime = (seconds: number) => {
@@ -74,419 +143,424 @@ export default function TakeTest() {
     return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
   }
 
-  const getTimeColor = (seconds: number) => {
-    if (seconds < 300) return '#ef4444' // Red for < 5 minutes
-    if (seconds < 600) return '#f59e0b' // Yellow for < 10 minutes
-    return '#10b981' // Green for > 10 minutes
+  const getTimeColor = () => {
+    if (timeLeft <= 300) return '#dc2626' // Red for last 5 minutes
+    if (timeLeft <= 600) return '#f59e0b' // Yellow for last 10 minutes
+    return '#059669' // Green
   }
 
-  const styles = {
-    container: {
-      maxWidth: '1000px',
-      margin: '0 auto',
-      padding: '0',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    },
-    header: {
-      backgroundColor: 'white',
-      borderRadius: '16px',
-      padding: '1.5rem 2rem',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      border: '1px solid rgba(226, 232, 240, 0.8)',
-      marginBottom: '2rem',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between'
-    },
-    testInfo: {
-      flex: 1
-    },
-    testTitle: {
-      fontSize: '1.5rem',
-      fontWeight: '700',
-      color: '#1e293b',
-      marginBottom: '0.5rem'
-    },
-    testMeta: {
-      fontSize: '0.875rem',
-      color: '#64748b',
-      display: 'flex',
-      gap: '1rem',
-      alignItems: 'center'
-    },
-    timer: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      padding: '0.75rem 1.5rem',
-      borderRadius: '12px',
-      fontSize: '1.125rem',
-      fontWeight: '700',
-      color: 'white'
-    },
-    progressBar: {
-      backgroundColor: 'white',
-      borderRadius: '16px',
-      padding: '1.5rem 2rem',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      border: '1px solid rgba(226, 232, 240, 0.8)',
-      marginBottom: '2rem'
-    },
-    progressHeader: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: '1rem'
-    },
-    progressText: {
-      fontSize: '0.875rem',
-      color: '#64748b'
-    },
-    progressTrack: {
-      width: '100%',
-      height: '8px',
-      backgroundColor: '#f1f5f9',
-      borderRadius: '4px',
-      overflow: 'hidden'
-    },
-    progressFill: {
-      height: '100%',
-      backgroundColor: '#4f46e5',
-      borderRadius: '4px',
-      transition: 'width 0.3s ease'
-    },
-    questionCard: {
-      backgroundColor: 'white',
-      borderRadius: '16px',
-      padding: '2rem',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      border: '1px solid rgba(226, 232, 240, 0.8)',
-      marginBottom: '2rem'
-    },
-    questionHeader: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: '1.5rem'
-    },
-    questionNumber: {
-      fontSize: '0.875rem',
-      fontWeight: '600',
-      color: '#4f46e5',
-      textTransform: 'uppercase' as const,
-      letterSpacing: '0.05em'
-    },
-    questionText: {
-      fontSize: '1.125rem',
-      fontWeight: '600',
-      color: '#1e293b',
-      lineHeight: '1.6',
-      marginBottom: '2rem'
-    },
-    optionsGrid: {
-      display: 'grid',
-      gap: '1rem'
-    },
-    option: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '1rem',
-      padding: '1rem 1.5rem',
-      border: '2px solid #e2e8f0',
-      borderRadius: '12px',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      backgroundColor: '#ffffff'
-    },
-    optionSelected: {
-      borderColor: '#4f46e5',
-      backgroundColor: '#f8faff'
-    },
-    optionRadio: {
-      width: '20px',
-      height: '20px',
-      border: '2px solid #d1d5db',
-      borderRadius: '50%',
-      position: 'relative' as const,
-      flexShrink: 0
-    },
-    optionRadioSelected: {
-      borderColor: '#4f46e5'
-    },
-    optionRadioDot: {
-      position: 'absolute' as const,
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      width: '10px',
-      height: '10px',
-      backgroundColor: '#4f46e5',
-      borderRadius: '50%'
-    },
-    optionLabel: {
-      fontWeight: '600',
-      color: '#4f46e5',
-      marginRight: '0.75rem',
-      fontSize: '1rem'
-    },
-    optionText: {
-      color: '#374151',
-      fontSize: '1rem',
-      flex: 1
-    },
-    navigation: {
-      backgroundColor: 'white',
-      borderRadius: '16px',
-      padding: '1.5rem 2rem',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      border: '1px solid rgba(226, 232, 240, 0.8)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between'
-    },
-    navButton: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      padding: '0.75rem 1.5rem',
-      border: '1px solid #d1d5db',
-      borderRadius: '8px',
-      fontSize: '0.875rem',
-      fontWeight: '500',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      backgroundColor: 'white',
-      color: '#374151'
-    },
-    submitButton: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      padding: '0.75rem 2rem',
-      backgroundColor: '#4f46e5',
-      color: 'white',
-      border: 'none',
-      borderRadius: '8px',
-      fontSize: '0.875rem',
-      fontWeight: '600',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      boxShadow: '0 4px 14px 0 rgba(79, 70, 229, 0.3)'
-    },
-    alert: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.75rem',
-      padding: '1rem',
-      borderRadius: '8px',
-      fontSize: '0.875rem',
-      marginBottom: '1rem'
-    },
-    alertError: {
-      backgroundColor: '#fef2f2',
-      color: '#dc2626',
-      border: '1px solid #fecaca'
-    },
-    backButton: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      padding: '0.5rem 1rem',
-      color: '#6b7280',
-      textDecoration: 'none',
-      fontSize: '0.875rem',
-      fontWeight: '500',
-      transition: 'color 0.2s ease',
-      marginBottom: '1rem'
-    },
-    loading: {
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '50vh'
-    }
-  }
-
-  if (isLoading) {
+  if (!testStarted) {
     return (
-      <div style={styles.loading}>
+      <div style={{
+        maxWidth: '400px',
+        margin: '0 auto',
+        padding: '20px 16px',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      }}>
+        {/* Header */}
         <div style={{
-          width: '32px',
-          height: '32px',
-          border: '3px solid #f3f3f3',
-          borderTop: '3px solid #3b82f6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
+          background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
+          color: 'white',
+          padding: '20px 16px',
+          borderRadius: '12px',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          <h1 style={{ 
+            fontSize: '20px', 
+            fontWeight: 'bold',
+            margin: '0 0 8px 0'
+          }}>
+            Enter Test Code
+          </h1>
+          <p style={{ 
+            fontSize: '14px', 
+            opacity: 0.9,
+            margin: '0'
+          }}>
+            Get your test code from your teacher
+          </p>
+        </div>
+
+        {/* Test Code Form */}
+        <div style={{
+          background: 'white',
+          padding: '24px 20px',
+          borderRadius: '12px',
+          border: '1px solid #e2e8f0'
+        }}>
+          {error && (
+            <div style={{
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#dc2626',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              fontSize: '14px'
+            }}>
+              {error}
+            </div>
+          )}
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '8px'
+            }}>
+              Test Code
+            </label>
+            <input
+              type="text"
+              value={inputTestCode}
+              onChange={(e) => setInputTestCode(e.target.value.toUpperCase())}
+              placeholder="Enter test code (e.g., TEST123)"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '16px',
+                outline: 'none',
+                textAlign: 'center',
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+                fontWeight: '600'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+              onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+              onKeyPress={(e) => e.key === 'Enter' && validateTestCode()}
+            />
+          </div>
+
+          <button
+            onClick={validateTestCode}
+            disabled={loading || !inputTestCode.trim()}
+            style={{
+              width: '100%',
+              background: loading || !inputTestCode.trim() ? '#9ca3af' : 'linear-gradient(135deg, #1e40af, #3b82f6)',
+              color: 'white',
+              border: 'none',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: loading || !inputTestCode.trim() ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {loading ? 'Validating...' : 'Start Test'}
+          </button>
+        </div>
       </div>
     )
   }
 
-  if (error) {
+  if (!testData) {
     return (
-      <div style={styles.container}>
-        <div style={styles.alert}>
-          <AlertCircle size={20} />
-          <span>{(error as any)?.response?.data?.message || 'Failed to load test'}</span>
-        </div>
-        <button
-          style={styles.navButton}
-          onClick={() => navigate('/student')}
-        >
-          Back to Dashboard
-        </button>
-      </div>
-    )
-  }
-
-  if (!testData?.questions?.length) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.alert}>
-          <AlertCircle size={20} />
-          <span>This test has no questions or is not available.</span>
-        </div>
-        <button
-          style={styles.navButton}
-          onClick={() => navigate('/student')}
-        >
-          Back to Dashboard
-        </button>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        minHeight: '200px',
+        color: '#64748b'
+      }}>
+        Loading test...
       </div>
     )
   }
 
   const question = testData.questions[currentQuestion]
-  const isLastQuestion = currentQuestion === testData.questions.length - 1
-  const totalQuestions = testData.questions.length
-  const answeredQuestions = Object.keys(answers).length
-  const progress = ((currentQuestion + 1) / totalQuestions) * 100
+  const answeredCount = Object.keys(answers).length
+  const progress = ((currentQuestion + 1) / testData.questions.length) * 100
 
   return (
-    <div style={styles.container}>
+    <div style={{
+      maxWidth: '800px',
+      margin: '0 auto',
+      padding: '0',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    }}>
       {/* Test Header */}
-      <div style={styles.header}>
-        <div style={styles.testInfo}>
-          <h1 style={styles.testTitle}>{testData.test_code.title}</h1>
-          <div style={styles.testMeta}>
-            <span>{testData.test_code.subject}</span>
-            <span>•</span>
-            <span>{testData.test_code.class_level}</span>
-            <span>•</span>
-            <span>{totalQuestions} Questions</span>
+      <div style={{
+        background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
+        color: 'white',
+        padding: '16px',
+        borderRadius: '12px',
+        marginBottom: '16px'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '8px'
+        }}>
+          <div>
+            <h1 style={{
+              fontSize: '18px',
+              fontWeight: 'bold',
+              margin: '0 0 4px 0'
+            }}>
+              {testData.title}
+            </h1>
+            <div style={{
+              fontSize: '12px',
+              opacity: 0.9
+            }}>
+              {testData.subject} • {testData.class_level}
+            </div>
+          </div>
+
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.2)',
+            padding: '8px 12px',
+            borderRadius: '8px',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              fontSize: '16px',
+              fontWeight: 'bold',
+              color: getTimeColor()
+            }}>
+              {formatTime(timeLeft)}
+            </div>
+            <div style={{
+              fontSize: '10px',
+              opacity: 0.8
+            }}>
+              Time Left
+            </div>
           </div>
         </div>
-        <div style={{
-          ...styles.timer,
-          backgroundColor: getTimeColor(timeLeft)
-        }}>
-          <Clock size={20} />
-          {formatTime(timeLeft)}
-        </div>
-      </div>
 
-      {/* Progress Bar */}
-      <div style={styles.progressBar}>
-        <div style={styles.progressHeader}>
-          <span style={styles.progressText}>
-            Question {currentQuestion + 1} of {totalQuestions}
-          </span>
-          <span style={styles.progressText}>
-            {answeredQuestions} answered
-          </span>
+        {/* Progress Bar */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.2)',
+          borderRadius: '4px',
+          height: '6px',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            background: 'white',
+            height: '100%',
+            width: `${progress}%`,
+            transition: 'width 0.3s ease'
+          }} />
         </div>
-        <div style={styles.progressTrack}>
-          <div 
-            style={{
-              ...styles.progressFill,
-              width: `${progress}%`
-            }}
-          />
+
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          fontSize: '11px',
+          marginTop: '4px',
+          opacity: 0.9
+        }}>
+          <span>Question {currentQuestion + 1} of {testData.questions.length}</span>
+          <span>{answeredCount} answered</span>
         </div>
       </div>
 
       {/* Question Card */}
-      <div style={styles.questionCard}>
-        <div style={styles.questionHeader}>
-          <span style={styles.questionNumber}>
-            Question {currentQuestion + 1}
-          </span>
-        </div>
-        
-        <div style={styles.questionText}>
+      <div style={{
+        background: 'white',
+        padding: '20px',
+        borderRadius: '12px',
+        marginBottom: '16px',
+        border: '1px solid #e2e8f0'
+      }}>
+        <div style={{
+          fontSize: '16px',
+          fontWeight: '600',
+          color: '#1e293b',
+          marginBottom: '20px',
+          lineHeight: '1.5'
+        }}>
           {question.question_text}
         </div>
 
-        <div style={styles.optionsGrid}>
-          {['A', 'B', 'C', 'D'].map((option) => {
-            const optionText = question[`option_${option.toLowerCase()}`]
-            const isSelected = answers[question.id] === option
+        {/* Options */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {['A', 'B', 'C', 'D'].map((letter) => {
+            const optionText = question[`option_${letter.toLowerCase()}` as keyof Question] as string
+            const isSelected = answers[question.id] === letter
             
             return (
-              <div
-                key={option}
+              <button
+                key={letter}
+                onClick={() => selectAnswer(question.id, letter)}
                 style={{
-                  ...styles.option,
-                  ...(isSelected ? styles.optionSelected : {})
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '12px 16px',
+                  border: `2px solid ${isSelected ? '#3b82f6' : '#e2e8f0'}`,
+                  borderRadius: '8px',
+                  background: isSelected ? '#eff6ff' : 'white',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: isSelected ? '#1e40af' : '#374151',
+                  transition: 'all 0.2s'
                 }}
-                onClick={() => handleAnswerSelect(question.id, option)}
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    const target = e.target as HTMLButtonElement
+                    target.style.borderColor = '#93c5fd'
+                    target.style.background = '#f8fafc'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) {
+                    const target = e.target as HTMLButtonElement
+                    target.style.borderColor = '#e2e8f0'
+                    target.style.background = 'white'
+                  }
+                }}
               >
-                <div style={{
-                  ...styles.optionRadio,
-                  ...(isSelected ? styles.optionRadioSelected : {})
+                <span style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  background: isSelected ? '#3b82f6' : '#e2e8f0',
+                  color: isSelected ? 'white' : '#64748b',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
                 }}>
-                  {isSelected && <div style={styles.optionRadioDot} />}
-                </div>
-                <span style={styles.optionLabel}>{option}.</span>
-                <span style={styles.optionText}>{optionText}</span>
-              </div>
+                  {letter}
+                </span>
+                <span style={{ flex: 1 }}>{optionText}</span>
+              </button>
             )
           })}
         </div>
       </div>
 
       {/* Navigation */}
-      <div style={styles.navigation}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        gap: '12px'
+      }}>
         <button
+          onClick={prevQuestion}
+          disabled={currentQuestion === 0}
           style={{
-            ...styles.navButton,
-            opacity: currentQuestion === 0 ? 0.5 : 1,
+            background: currentQuestion === 0 ? '#f1f5f9' : 'white',
+            border: '1px solid #e2e8f0',
+            color: currentQuestion === 0 ? '#9ca3af' : '#374151',
+            padding: '10px 16px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '500',
             cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer'
           }}
-          onClick={() => setCurrentQuestion(prev => Math.max(0, prev - 1))}
-          disabled={currentQuestion === 0}
         >
-          <ArrowLeft size={16} />
-          Previous
+          ← Previous
         </button>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          {!isLastQuestion ? (
+        {currentQuestion === testData.questions.length - 1 ? (
+          <button
+            onClick={submitTest}
+            disabled={submitting}
+            style={{
+              background: submitting ? '#9ca3af' : 'linear-gradient(135deg, #dc2626, #ef4444)',
+              color: 'white',
+              border: 'none',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: submitting ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {submitting ? 'Submitting...' : 'Submit Test'}
+          </button>
+        ) : (
+          <button
+            onClick={nextQuestion}
+            style={{
+              background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
+              color: 'white',
+              border: 'none',
+              padding: '10px 16px',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
+          >
+            Next →
+          </button>
+        )}
+      </div>
+
+      {/* Question Grid (Mobile Hidden) */}
+      <div style={{
+        display: window.innerWidth >= 768 ? 'block' : 'none',
+        background: 'white',
+        padding: '16px',
+        borderRadius: '12px',
+        marginTop: '16px',
+        border: '1px solid #e2e8f0'
+      }}>
+        <h3 style={{
+          fontSize: '14px',
+          fontWeight: '600',
+          color: '#374151',
+          marginBottom: '12px'
+        }}>
+          Question Overview
+        </h3>
+        
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(40px, 1fr))',
+          gap: '8px'
+        }}>
+          {testData.questions.map((_, index) => (
             <button
-              style={styles.navButton}
-              onClick={() => setCurrentQuestion(prev => Math.min(totalQuestions - 1, prev + 1))}
+              key={index}
+              onClick={() => setCurrentQuestion(index)}
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '6px',
+                border: '1px solid #e2e8f0',
+                background: answers[testData.questions[index].id] ? '#dcfce7' :
+                           currentQuestion === index ? '#3b82f6' : 'white',
+                color: currentQuestion === index ? 'white' : 
+                       answers[testData.questions[index].id] ? '#166534' : '#64748b',
+                fontSize: '12px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
             >
-              Next
-              <ArrowRight size={16} />
+              {index + 1}
             </button>
-          ) : (
-            <button
-              style={styles.submitButton}
-              onClick={handleSubmit}
-              disabled={submitTestMutation.isPending}
-            >
-              {submitTestMutation.isPending ? 'Submitting...' : 'Submit Test'}
-              <CheckCircle size={16} />
-            </button>
-          )}
+          ))}
         </div>
       </div>
+
+      {error && (
+        <div style={{
+          background: '#fef2f2',
+          border: '1px solid #fecaca',
+          color: '#dc2626',
+          padding: '12px',
+          borderRadius: '8px',
+          marginTop: '16px',
+          fontSize: '14px'
+        }}>
+          {error}
+        </div>
+      )}
     </div>
   )
 }
