@@ -4,28 +4,31 @@ import { useAuth } from '../../contexts/AuthContext'
 export default function SimpleLogin() {
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const { autoLogin } = useAuth()
+  const [localError, setLocalError] = useState('')
+  const { login, loading, error } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
+    setLocalError('')
+
+    if (!identifier.trim() || !password.trim()) {
+      setLocalError('Please enter both username/registration number and password')
+      return
+    }
 
     try {
-      console.log('Attempting login with:', { identifier, password: '***' })
-      const user = await autoLogin(identifier, password)
-      console.log('Login successful:', user)
+      console.log('Form submitted with:', { identifier, password: '***' })
+      await login(identifier, password)
       
-      // Navigation will be handled by App component once user state is set
+      // Navigation will be handled by App component after user state is updated
+      console.log('Login successful, waiting for navigation...')
     } catch (error: any) {
-      console.error('Login error:', error)
-      setError(error.message)
-    } finally {
-      setLoading(false)
+      console.error('Login failed:', error)
+      setLocalError(error.message)
     }
   }
+
+  const displayError = localError || error
 
   const styles = {
     container: {
@@ -104,39 +107,41 @@ export default function SimpleLogin() {
       transition: 'border-color 0.2s',
       boxSizing: 'border-box' as const
     },
-    inputFocus: {
-      borderColor: '#3b82f6',
-      boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.1)'
-    },
     button: {
       width: '100%',
       padding: '0.875rem',
-      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+      background: loading ? '#9ca3af' : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
       color: 'white',
       border: 'none',
       borderRadius: '8px',
       fontSize: '1rem',
       fontWeight: '600',
-      cursor: 'pointer',
+      cursor: loading ? 'not-allowed' : 'pointer',
       transition: 'all 0.3s ease',
-      boxShadow: '0 4px 14px 0 rgba(79, 70, 229, 0.3)',
+      boxShadow: loading ? 'none' : '0 4px 14px 0 rgba(79, 70, 229, 0.3)',
       textTransform: 'uppercase' as const,
       letterSpacing: '0.025em'
     },
-    buttonHover: {
-      backgroundColor: '#2563eb'
-    },
-    buttonDisabled: {
-      backgroundColor: '#9ca3af',
-      cursor: 'not-allowed'
-    },
     error: {
+      color: '#dc2626',
+      fontSize: '0.875rem',
+      fontWeight: '500',
+      textAlign: 'center' as const,
       padding: '0.75rem',
       backgroundColor: '#fef2f2',
       border: '1px solid #fecaca',
       borderRadius: '6px',
-      color: '#dc2626',
-      fontSize: '0.875rem'
+      marginTop: '1rem'
+    },
+    hint: {
+      color: '#6b7280',
+      fontSize: '0.875rem',
+      textAlign: 'center' as const,
+      marginTop: '1rem',
+      padding: '1rem',
+      backgroundColor: '#f9fafb',
+      borderRadius: '6px',
+      border: '1px solid #e5e7eb'
     }
   }
 
@@ -144,31 +149,34 @@ export default function SimpleLogin() {
     <div style={styles.container}>
       <div style={styles.card}>
         <div style={styles.header}>
-          <svg style={styles.icon} fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10.394 2.08a1 1 0 00-.788 0l-7 3a1 1 0 000 1.84L5.25 8.051a.999.999 0 01.356-.257l4-1.714a1 1 0 11.788 1.838L7.667 9.088l1.94.831a1 1 0 00.787 0l7-3a1 1 0 000-1.838l-7-3zM3.31 9.397L5 10.12v4.102a8.969 8.969 0 00-1.05-.174 1 1 0 01-.89-.89 11.115 11.115 0 01.25-3.762zM9.3 16.573A9.026 9.026 0 007 14.935v-3.957l1.818.78a3 3 0 002.364 0l5.508-2.361a11.026 11.026 0 01.25 3.762 1 1 0 01-.89.89 8.968 8.968 0 00-5.35 2.524 1 1 0 01-1.4 0zM6 18a1 1 0 001-1v-2.065a8.935 8.935 0 00-2-.712V17a1 1 0 001 1z"/>
-          </svg>
-          <h1 style={styles.title}>SFGS CBT Portal</h1>
-          <p style={styles.subtitle}>Sure Foundation Comprehensive School</p>
-          <p style={styles.schoolMotto}>Computer-Based Testing System</p>
+          <div style={styles.icon}>
+            <svg
+              fill="currentColor"
+              viewBox="0 0 20 20"
+              style={{ width: '100%', height: '100%' }}
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <h1 style={styles.title}>CBT Portal</h1>
+          <p style={styles.subtitle}>Saint Francis Grammar School</p>
+          <p style={styles.schoolMotto}>"Excellence in Learning"</p>
         </div>
 
         <form onSubmit={handleSubmit} style={styles.form}>
-          {error && (
-            <div style={styles.error}>
-              {error}
-            </div>
-          )}
-
           <div style={styles.inputGroup}>
-            <label style={styles.label}>
-              Registration Number / Email / Username
-            </label>
+            <label style={styles.label}>Username / Registration Number</label>
             <input
               type="text"
-              style={styles.input}
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="Enter your registration number, email, or username"
+              placeholder="Enter username or registration number"
+              style={styles.input}
+              disabled={loading}
               required
             />
           </div>
@@ -177,41 +185,36 @@ export default function SimpleLogin() {
             <label style={styles.label}>Password</label>
             <input
               type="password"
-              style={styles.input}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
+              style={styles.input}
+              disabled={loading}
               required
             />
           </div>
 
           <button
             type="submit"
-            style={{
-              ...styles.button,
-              ...(loading ? styles.buttonDisabled : {})
-            }}
+            style={styles.button}
             disabled={loading}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Signing In...' : 'Sign In'}
           </button>
-        </form>
 
-        <div style={{ 
-          marginTop: '2rem', 
-          padding: '1rem', 
-          backgroundColor: '#f8fafc', 
-          borderRadius: '8px', 
-          border: '1px solid #e2e8f0',
-          fontSize: '0.75rem', 
-          color: '#64748b', 
-          textAlign: 'center' as const 
-        }}>
-          <p style={{ fontWeight: '600', color: '#475569', marginBottom: '0.5rem' }}>Test Credentials</p>
-          <p style={{ margin: '0.25rem 0' }}>Student: <span style={{ fontWeight: '500', color: '#1e293b' }}>2023001</span> / password123</p>
-          <p style={{ margin: '0.25rem 0' }}>Teacher: <span style={{ fontWeight: '500', color: '#1e293b' }}>teacher1</span> / password123</p>
-          <p style={{ margin: '0.25rem 0' }}>Admin: <span style={{ fontWeight: '500', color: '#1e293b' }}>admin</span> / password123</p>
-        </div>
+          {displayError && (
+            <div style={styles.error}>
+              {displayError}
+            </div>
+          )}
+
+          <div style={styles.hint}>
+            <strong>Test Accounts:</strong><br />
+            Admin: admin / password123<br />
+            Teacher: teacher1 / password123<br />
+            Student: 2023001 / password123
+          </div>
+        </form>
       </div>
     </div>
   )

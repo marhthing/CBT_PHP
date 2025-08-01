@@ -4,10 +4,10 @@ import api from '../lib/api'
 
 interface AuthContextType {
   user: User | null
-  login: (username: string, password: string, role: string) => Promise<void>
-  autoLogin: (identifier: string, password: string) => Promise<any>
+  login: (identifier: string, password: string) => Promise<void>
   logout: () => void
   loading: boolean
+  error: string | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -15,96 +15,105 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
-      checkAuth()
-    } else {
-      setLoading(false)
-    }
+    initializeAuth()
   }, [])
 
-  const checkAuth = async () => {
+  const initializeAuth = async () => {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      setLoading(false)
+      return
+    }
+
     try {
+      console.log('Checking existing token...')
       const response = await api.get('/auth/me')
-      setUser(response.data.data?.user || response.data.user)
-    } catch (error) {
-      localStorage.removeItem('token')
+      const userData = response.data.data?.user || response.data.user
+      
+      if (userData) {
+        console.log('Token valid, user authenticated:', userData)
+        setUser(userData)
+        setError(null)
+      } else {
+        console.log('Invalid response format from /auth/me')
+        handleAuthFailure()
+      }
+    } catch (error: any) {
+      console.error('Token validation failed:', error)
+      handleAuthFailure()
     } finally {
       setLoading(false)
     }
   }
 
-  const login = async (username: string, password: string, role: string) => {
-    try {
-      const response = await api.post('/auth/login', {
-        identifier: username,
-        password,
-        role,
-      })
-
-      const { token, user } = response.data
-      localStorage.setItem('token', token)
-      setUser(user)
-    } catch (error: any) {
-      throw new Error(error.response?.data?.message || 'Login failed')
-    }
+  const handleAuthFailure = () => {
+    localStorage.removeItem('token')
+    setUser(null)
+    setError('Session expired. Please login again.')
   }
 
-  const autoLogin = async (identifier: string, password: string) => {
+  const login = async (identifier: string, password: string) => {
+    setError(null)
+    setLoading(true)
+
     try {
-      console.log('Making API request to:', '/auth/auto-login')
-      console.log('API Base URL:', api.defaults.baseURL)
-      console.log('Request payload:', { identifier, password: '***' })
+      console.log('Attempting login for:', identifier)
       
       const response = await api.post('/auth/auto-login', {
         identifier,
         password,
       })
 
-      console.log('Full API response:', response)
-      console.log('Response data:', response.data)
+      console.log('Login response:', response.data)
       
-      const { token, user } = response.data.data || response.data
+      const responseData = response.data.data || response.data
+      const { token, user: userData } = responseData
       
-      if (!token || !user) {
+      if (!token || !userData) {
         throw new Error('Invalid response from server')
       }
-      
+
+      // Store token and set user
       localStorage.setItem('token', token)
-      setUser(user)
+      setUser(userData)
+      setError(null)
       
-      return user
+      console.log('Login successful:', userData)
     } catch (error: any) {
-      console.error('Full API error:', error)
-      console.error('Error response:', error.response)
-      console.error('Error status:', error.response?.status)
-      console.error('Error data:', error.response?.data)
+      console.error('Login error:', error)
       
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message)
-      } else if (error.message) {
-        throw new Error(error.message)
-      } else {
-        throw new Error('Network error - please check your connection')
-      }
+      const errorMessage = error.response?.data?.message 
+        || error.message 
+        || 'Login failed. Please check your credentials.'
+      
+      setError(errorMessage)
+      handleAuthFailure()
+      throw new Error(errorMessage)
+    } finally {
+      setLoading(false)
     }
   }
 
   const logout = async () => {
+    setLoading(true)
+    
     try {
       await api.post('/auth/logout')
     } catch (error) {
-      // Continue with logout even if API call fails
+      console.log('Logout API call failed, but continuing with local logout')
     } finally {
       localStorage.removeItem('token')
       setUser(null)
+      setError(null)
+      setLoading(false)
     }
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, autoLogin, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, error }}>
       {children}
     </AuthContext.Provider>
   )
