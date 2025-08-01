@@ -24,11 +24,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      // Let React Router handle the redirect naturally
-      window.location.reload()
-    }
+    console.error('API Error:', error.response?.status, error.response?.data)
+    // Don't auto-reload on 401 - let the AuthContext handle it
     return Promise.reject(error)
   }
 )

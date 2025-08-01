@@ -43,16 +43,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       console.error('Token validation failed:', error)
-      handleAuthFailure()
+      // Only clear auth state if it's a real 401 error, not network issues
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        handleAuthFailure()
+      } else {
+        console.log('Network or other error during token validation - keeping user state')
+      }
     } finally {
       setLoading(false)
     }
   }
 
   const handleAuthFailure = () => {
+    console.log('Authentication failed, clearing token and user state')
     localStorage.removeItem('token')
     setUser(null)
-    setError('Session expired. Please login again.')
+    // Don't set error immediately - only set it if it's a real auth failure
   }
 
   const login = async (identifier: string, password: string) => {
