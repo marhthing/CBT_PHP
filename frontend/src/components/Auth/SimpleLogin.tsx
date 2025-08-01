@@ -18,8 +18,7 @@ export default function SimpleLogin() {
       const user = await autoLogin(identifier, password)
       console.log('Login successful:', user)
       
-      // Let the App component handle the redirect based on user state
-      // The user state is now set, so we don't need to force redirect here
+      // Navigation will be handled by App component once user state is set
     } catch (error: any) {
       console.error('Login error:', error)
       setError(error.message)

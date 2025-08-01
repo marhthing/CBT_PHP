@@ -1,7 +1,5 @@
-
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
-import { useEffect } from 'react'
 import Layout from './components/Layout/Layout'
 import SimpleLogin from './components/Auth/SimpleLogin'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
@@ -18,9 +16,6 @@ import AllQuestions from './components/Admin/AllQuestions'
 
 function App() {
   const { user, loading } = useAuth()
-  const location = useLocation()
-
-  // Don't use useEffect for redirects - let routing handle it
 
   if (loading) {
     return (
@@ -49,118 +44,131 @@ function App() {
     )
   }
 
-  // Show login page only if no user
-  if (!user) {
-    return <SimpleLogin />
-  }
-
   return (
-    <Layout>
-      <Routes>
-        {/* Student Routes */}
-        <Route
-          path="/student"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <StudentDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/take-test/:testCode"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <TakeTest />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/student/results"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <TestResults />
-            </ProtectedRoute>
-          }
-        />
+    <Routes>
+      {/* Login route - no layout */}
+      <Route 
+        path="/login" 
+        element={!user ? <SimpleLogin /> : <Navigate to="/" replace />} 
+      />
+      
+      {/* All other routes require authentication and use layout */}
+      <Route
+        path="/*"
+        element={
+          user ? (
+            <Layout>
+              <Routes>
+                {/* Root redirect based on user role */}
+                <Route
+                  path="/"
+                  element={
+                    user.role === 'student' ? <Navigate to="/student" replace /> :
+                    user.role === 'teacher' ? <Navigate to="/teacher" replace /> :
+                    user.role === 'admin' ? <Navigate to="/admin" replace /> :
+                    <Navigate to="/login" replace />
+                  }
+                />
 
-        {/* Teacher Routes */}
-        <Route
-          path="/teacher"
-          element={
-            <ProtectedRoute requiredRole="teacher">
-              <TeacherDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teacher/questions"
-          element={
-            <ProtectedRoute requiredRole="teacher">
-              <QuestionManager />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/teacher/bulk-upload"
-          element={
-            <ProtectedRoute requiredRole="teacher">
-              <BulkUpload />
-            </ProtectedRoute>
-          }
-        />
+                {/* Student Routes */}
+                <Route
+                  path="/student"
+                  element={
+                    <ProtectedRoute requiredRole="student">
+                      <StudentDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/student/take-test/:testCode"
+                  element={
+                    <ProtectedRoute requiredRole="student">
+                      <TakeTest />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/student/results"
+                  element={
+                    <ProtectedRoute requiredRole="student">
+                      <TestResults />
+                    </ProtectedRoute>
+                  }
+                />
 
-        {/* Admin Routes */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/test-codes"
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <TestCodeManager />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/teachers"
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <TeacherAssignment />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/questions"
-          element={
-            <ProtectedRoute requiredRole="admin">
-              <AllQuestions />
-            </ProtectedRoute>
-          }
-        />
+                {/* Teacher Routes */}
+                <Route
+                  path="/teacher"
+                  element={
+                    <ProtectedRoute requiredRole="teacher">
+                      <TeacherDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/teacher/questions"
+                  element={
+                    <ProtectedRoute requiredRole="teacher">
+                      <QuestionManager />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/teacher/upload"
+                  element={
+                    <ProtectedRoute requiredRole="teacher">
+                      <BulkUpload />
+                    </ProtectedRoute>
+                  }
+                />
 
-        {/* Default redirect based on user role */}
-        <Route
-          path="/"
-          element={
-            user?.role === 'student' ? <Navigate to="/student" replace /> :
-            user?.role === 'teacher' ? <Navigate to="/teacher" replace /> :
-            user?.role === 'admin' ? <Navigate to="/admin" replace /> :
-            <Navigate to="/student" replace />
-          }
-        />
-        
-        {/* Login route */}
-        <Route path="/login" element={<SimpleLogin />} />
-        
-        {/* Catch all route */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Layout>
+                {/* Admin Routes */}
+                <Route
+                  path="/admin"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/test-codes"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <TestCodeManager />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/teachers"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <TeacherAssignment />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/questions"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <AllQuestions />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Catch all - redirect to appropriate dashboard */}
+                <Route 
+                  path="*" 
+                  element={<Navigate to="/" replace />} 
+                />
+              </Routes>
+            </Layout>
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+    </Routes>
   )
 }
 
