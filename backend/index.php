@@ -78,6 +78,8 @@ $routes = [
     
     // Student routes
     'student/tests' => 'student/tests.php',
+    'student/available-tests' => 'student/available-tests.php',
+    'student/validate-test-code' => 'student/validate-test-code.php',
     'student/take-test' => 'student/take-test.php',
     'student/submit-test' => 'student/submit-test.php',
     'student/results' => 'student/results.php',
@@ -88,6 +90,7 @@ $routes = [
     'teacher/classes' => 'teacher/classes.php',
     
     // Admin routes
+    'admin/dashboard-stats' => 'admin/dashboard-stats.php',
     'admin/test-codes' => 'admin/test-codes.php',
     'admin/questions' => 'admin/questions.php',
     'admin/teachers' => 'admin/teachers.php',

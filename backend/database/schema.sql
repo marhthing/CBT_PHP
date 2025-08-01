@@ -79,7 +79,7 @@ CREATE TABLE questions (
     correct_answer CHAR(1) NOT NULL CHECK (correct_answer IN ('A', 'B', 'C', 'D')),
     subject_id INTEGER REFERENCES subjects(id) NOT NULL,
     class_level VARCHAR(10) NOT NULL,
-    difficulty VARCHAR(10) NOT NULL DEFAULT 'medium' CHECK (difficulty IN ('easy', 'medium', 'hard')),
+
     term_id INTEGER REFERENCES terms(id) DEFAULT 1,
     session_id INTEGER REFERENCES sessions(id) DEFAULT 1,
     teacher_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -107,6 +107,7 @@ CREATE TABLE test_codes (
     term_id INTEGER REFERENCES terms(id) DEFAULT 1,
     session_id INTEGER REFERENCES sessions(id) DEFAULT 1,
     is_active BOOLEAN DEFAULT true,
+    is_activated BOOLEAN DEFAULT false,
     expires_at TIMESTAMP NOT NULL,
     created_by INTEGER REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

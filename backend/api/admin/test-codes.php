@@ -1,283 +1,243 @@
 <?php
 
 require_once __DIR__ . '/../../config/cors.php';
-require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
 
+// Get the request method and path
+$request_method = $_SERVER['REQUEST_METHOD'];
+$path_info = $_SERVER['PATH_INFO'] ?? '';
+
+// Initialize auth and verify admin role
 $auth = new Auth();
-$user = $auth->requireRole('admin');
+$user = $auth->getCurrentUser();
 
-$database = new Database();
-$db = $database->getConnection();
-
-switch ($_SERVER['REQUEST_METHOD']) {
-    case 'GET':
-        handleGet($db, $user);
-        break;
-    case 'POST':
-        handlePost($db, $user);
-        break;
-    case 'PUT':
-        handlePut($db, $user);
-        break;
-    case 'PATCH':
-        handlePatch($db, $user);
-        break;
-    case 'DELETE':
-        handleDelete($db, $user);
-        break;
-    default:
-        Response::methodNotAllowed();
+if (!$user || $user['role'] !== 'admin') {
+    Response::unauthorized('Admin access required');
 }
 
-function handleGet($db, $user) {
-    try {
-        // Check if requesting recent test codes
-        if (isset($_GET['recent'])) {
-            $stmt = $db->prepare("
-                SELECT id, code, title, subject, class_level, question_count, is_active, created_at
-                FROM test_codes 
-                ORDER BY created_at DESC 
-                LIMIT 10
-            ");
-            $stmt->execute();
-            $test_codes = $stmt->fetchAll();
-            
-            Response::success('Recent test codes retrieved', ['test_codes' => $test_codes]);
-        }
-        
-        // Get all test codes
-        $stmt = $db->prepare("
-            SELECT 
-                tc.id,
-                tc.code,
-                tc.title,
-                tc.subject,
-                tc.class_level,
-                tc.duration_minutes,
-                tc.question_count,
-                tc.is_active,
-                tc.expires_at,
-                tc.created_at,
-                u.full_name as created_by_name,
-                COUNT(tr.id) as submission_count
-            FROM test_codes tc
-            LEFT JOIN users u ON tc.created_by = u.id
-            LEFT JOIN test_results tr ON tc.id = tr.test_code_id
-            GROUP BY tc.id, u.full_name
-            ORDER BY tc.created_at DESC
-        ");
-        
-        $stmt->execute();
-        $test_codes = $stmt->fetchAll();
-        
-        Response::logRequest('admin/test-codes', 'GET', $user['id']);
-        Response::success('Test codes retrieved', ['test_codes' => $test_codes]);
-        
-    } catch (Exception $e) {
-        error_log("Error getting test codes: " . $e->getMessage());
-        Response::serverError('Failed to get test codes');
-    }
-}
+try {
+    // Parse the path to get test code ID if provided
+    $path_parts = explode('/', trim($path_info, '/'));
+    $test_code_id = isset($path_parts[0]) && is_numeric($path_parts[0]) ? (int)$path_parts[0] : null;
+    $action = isset($path_parts[1]) ? $path_parts[1] : null;
 
-function handlePost($db, $user) {
-    try {
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        if (!$input) {
-            Response::validationError('Invalid JSON input');
-        }
-        
-        // Validate required fields
-        $required_fields = ['title', 'subject', 'class_level', 'duration_minutes', 'question_count', 'expires_at'];
-        Response::validateRequired($input, $required_fields);
-        
-        // Validate numeric fields
-        if ($input['duration_minutes'] < 5 || $input['duration_minutes'] > 180) {
-            Response::validationError('Duration must be between 5 and 180 minutes');
-        }
-        
-        if ($input['question_count'] < 1 || $input['question_count'] > 100) {
-            Response::validationError('Question count must be between 1 and 100');
-        }
-        
-        // Validate expiry date
-        $expires_at = $input['expires_at'] . ' 23:59:59'; // End of day
-        if (strtotime($expires_at) <= time()) {
-            Response::validationError('Expiry date must be in the future');
-        }
-        
-        // Check if enough questions are available
-        $count_stmt = $db->prepare("
-            SELECT COUNT(*) as available_questions
-            FROM questions 
-            WHERE subject = ? AND class_level = ?
-        ");
-        $count_stmt->execute([$input['subject'], $input['class_level']]);
-        $available = $count_stmt->fetch();
-        
-        if ($available['available_questions'] < $input['question_count']) {
-            Response::validationError(
-                "Not enough questions available. Found {$available['available_questions']}, need {$input['question_count']}"
-            );
-        }
-        
-        // Generate unique test code
-        do {
-            $code = generateTestCode();
-            $check_stmt = $db->prepare("SELECT id FROM test_codes WHERE code = ?");
-            $check_stmt->execute([$code]);
-        } while ($check_stmt->fetch());
-        
-        // Insert test code
-        $stmt = $db->prepare("
-            INSERT INTO test_codes (
-                code, title, subject, class_level, duration_minutes, 
-                question_count, expires_at, created_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        
-        $stmt->execute([
-            $code,
-            $input['title'],
-            $input['subject'],
-            $input['class_level'],
-            $input['duration_minutes'],
-            $input['question_count'],
-            $expires_at,
-            $user['id']
-        ]);
-        
-        $test_code_id = $db->lastInsertId();
-        
-        Response::logRequest('admin/test-codes', 'POST', $user['id']);
-        Response::created('Test code created successfully', [
-            'id' => $test_code_id,
-            'code' => $code
-        ]);
-        
-    } catch (Exception $e) {
-        error_log("Error creating test code: " . $e->getMessage());
-        Response::serverError('Failed to create test code');
-    }
-}
+    // Get database connection
+    require_once __DIR__ . '/../../config/database.php';
+    $database = new Database();
+    $db = $database->getConnection();
 
-function handlePut($db, $user) {
-    try {
-        $test_code_id = $_GET['id'] ?? null;
-        
-        if (!$test_code_id) {
-            Response::validationError('Test code ID is required');
-        }
-        
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        if (!$input) {
-            Response::validationError('Invalid JSON input');
-        }
-        
-        // Build update query dynamically
-        $update_fields = [];
-        $params = [];
-        
-        $allowed_fields = ['title', 'subject', 'class_level', 'duration_minutes', 'question_count', 'expires_at'];
-        
-        foreach ($allowed_fields as $field) {
-            if (isset($input[$field])) {
-                if ($field === 'expires_at') {
-                    $expires_at = $input[$field] . ' 23:59:59';
-                    if (strtotime($expires_at) <= time()) {
-                        Response::validationError('Expiry date must be in the future');
-                    }
-                    $update_fields[] = "$field = ?";
-                    $params[] = $expires_at;
-                } else {
-                    $update_fields[] = "$field = ?";
-                    $params[] = $input[$field];
+    switch ($request_method) {
+        case 'GET':
+            if ($test_code_id) {
+                // Get specific test code
+                $stmt = $db->prepare("
+                    SELECT tc.*, s.name as subject_name, 
+                           COUNT(tr.id) as usage_count
+                    FROM test_codes tc
+                    LEFT JOIN subjects s ON tc.subject_id = s.id
+                    LEFT JOIN test_results tr ON tc.id = tr.test_code_id
+                    WHERE tc.id = ?
+                    GROUP BY tc.id
+                ");
+                $stmt->execute([$test_code_id]);
+                $test_code = $stmt->fetch();
+                
+                if (!$test_code) {
+                    Response::notFound('Test code not found');
                 }
+                
+                Response::success('Test code retrieved', $test_code);
+            } else {
+                // Get all test codes with filters
+                $limit = $_GET['limit'] ?? 50;
+                $offset = $_GET['offset'] ?? 0;
+                $subject_id = $_GET['subject_id'] ?? null;
+                $class_level = $_GET['class_level'] ?? null;
+                $term_id = $_GET['term_id'] ?? null;
+                $session_id = $_GET['session_id'] ?? null;
+                
+                $where_conditions = [];
+                $params = [];
+                
+                if ($subject_id) {
+                    $where_conditions[] = "tc.subject_id = ?";
+                    $params[] = $subject_id;
+                }
+                
+                if ($class_level) {
+                    $where_conditions[] = "tc.class_level = ?";
+                    $params[] = $class_level;
+                }
+                
+                if ($term_id) {
+                    $where_conditions[] = "tc.term_id = ?";
+                    $params[] = $term_id;
+                }
+                
+                if ($session_id) {
+                    $where_conditions[] = "tc.session_id = ?";
+                    $params[] = $session_id;
+                }
+                
+                $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
+                
+                $stmt = $db->prepare("
+                    SELECT tc.*, s.name as subject_name, t.name as term_name, 
+                           sess.name as session_name, u.full_name as created_by_name,
+                           COUNT(tr.id) as usage_count
+                    FROM test_codes tc
+                    LEFT JOIN subjects s ON tc.subject_id = s.id
+                    LEFT JOIN terms t ON tc.term_id = t.id
+                    LEFT JOIN sessions sess ON tc.session_id = sess.id
+                    LEFT JOIN users u ON tc.created_by = u.id
+                    LEFT JOIN test_results tr ON tc.id = tr.test_code_id
+                    $where_clause
+                    GROUP BY tc.id
+                    ORDER BY tc.created_at DESC
+                    LIMIT ? OFFSET ?
+                ");
+                
+                $params[] = (int)$limit;
+                $params[] = (int)$offset;
+                $stmt->execute($params);
+                $test_codes = $stmt->fetchAll();
+                
+                Response::success('Test codes retrieved', $test_codes);
             }
-        }
-        
-        if (empty($update_fields)) {
-            Response::validationError('No valid fields to update');
-        }
-        
-        $params[] = $test_code_id;
-        
-        $sql = "UPDATE test_codes SET " . implode(', ', $update_fields) . " WHERE id = ?";
-        $stmt = $db->prepare($sql);
-        $stmt->execute($params);
-        
-        Response::logRequest('admin/test-codes', 'PUT', $user['id']);
-        Response::updated('Test code updated successfully');
-        
-    } catch (Exception $e) {
-        error_log("Error updating test code: " . $e->getMessage());
-        Response::serverError('Failed to update test code');
-    }
-}
+            break;
 
-function handlePatch($db, $user) {
-    try {
-        $test_code_id = $_GET['id'] ?? null;
-        
-        if (!$test_code_id) {
-            Response::validationError('Test code ID is required');
-        }
-        
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        if (!$input || !isset($input['is_active'])) {
-            Response::validationError('is_active field is required');
-        }
-        
-        $is_active = $input['is_active'] ? 'true' : 'false';
-        
-        $stmt = $db->prepare("UPDATE test_codes SET is_active = ? WHERE id = ?");
-        $stmt->execute([$is_active, $test_code_id]);
-        
-        Response::logRequest('admin/test-codes', 'PATCH', $user['id']);
-        Response::updated('Test code status updated successfully');
-        
-    } catch (Exception $e) {
-        error_log("Error updating test code status: " . $e->getMessage());
-        Response::serverError('Failed to update test code status');
-    }
-}
+        case 'POST':
+            // Create new test code
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            Response::validateRequired($input, [
+                'title', 'subject_id', 'class_level', 'duration_minutes', 
+                'question_count', 'term_id', 'session_id', 'expires_at'
+            ]);
+            
+            // Generate unique test code
+            do {
+                $code = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6));
+                $check_stmt = $db->prepare("SELECT id FROM test_codes WHERE code = ?");
+                $check_stmt->execute([$code]);
+            } while ($check_stmt->fetch());
+            
+            $stmt = $db->prepare("
+                INSERT INTO test_codes (
+                    code, title, subject_id, class_level, duration_minutes,
+                    question_count, term_id, session_id, expires_at, created_by,
+                    is_active, is_activated
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, false)
+            ");
+            
+            $stmt->execute([
+                $code,
+                $input['title'],
+                $input['subject_id'],
+                $input['class_level'],
+                $input['duration_minutes'],
+                $input['question_count'],
+                $input['term_id'],
+                $input['session_id'],
+                $input['expires_at'],
+                $user['id']
+            ]);
+            
+            $test_code_id = $db->lastInsertId();
+            
+            Response::created('Test code created successfully', [
+                'id' => $test_code_id,
+                'code' => $code
+            ]);
+            break;
 
-function handleDelete($db, $user) {
-    try {
-        $test_code_id = $_GET['id'] ?? null;
-        
-        if (!$test_code_id) {
-            Response::validationError('Test code ID is required');
-        }
-        
-        // Check if test has any submissions
-        $check_stmt = $db->prepare("SELECT COUNT(*) as submission_count FROM test_results WHERE test_code_id = ?");
-        $check_stmt->execute([$test_code_id]);
-        $result = $check_stmt->fetch();
-        
-        if ($result['submission_count'] > 0) {
-            Response::error('Cannot delete test code with existing submissions');
-        }
-        
-        // Delete test code
-        $stmt = $db->prepare("DELETE FROM test_codes WHERE id = ?");
-        $stmt->execute([$test_code_id]);
-        
-        Response::logRequest('admin/test-codes', 'DELETE', $user['id']);
-        Response::deleted('Test code deleted successfully');
-        
-    } catch (Exception $e) {
-        error_log("Error deleting test code: " . $e->getMessage());
-        Response::serverError('Failed to delete test code');
-    }
-}
+        case 'PATCH':
+            if (!$test_code_id) {
+                Response::badRequest('Test code ID required');
+            }
+            
+            if ($action === 'toggle-activation') {
+                // Toggle test code activation
+                $input = json_decode(file_get_contents('php://input'), true);
+                $is_activated = $input['is_activated'] ?? false;
+                
+                $stmt = $db->prepare("
+                    UPDATE test_codes 
+                    SET is_activated = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                ");
+                $stmt->execute([$is_activated, $test_code_id]);
+                
+                Response::success('Test code activation updated', [
+                    'id' => $test_code_id,
+                    'is_activated' => $is_activated
+                ]);
+            } else {
+                // Update test code
+                $input = json_decode(file_get_contents('php://input'), true);
+                
+                $allowed_fields = [
+                    'title', 'subject_id', 'class_level', 'duration_minutes',
+                    'question_count', 'term_id', 'session_id', 'expires_at',
+                    'is_active', 'is_activated'
+                ];
+                
+                $update_fields = [];
+                $params = [];
+                
+                foreach ($allowed_fields as $field) {
+                    if (isset($input[$field])) {
+                        $update_fields[] = "$field = ?";
+                        $params[] = $input[$field];
+                    }
+                }
+                
+                if (empty($update_fields)) {
+                    Response::badRequest('No valid fields to update');
+                }
+                
+                $update_fields[] = "updated_at = CURRENT_TIMESTAMP";
+                $params[] = $test_code_id;
+                
+                $stmt = $db->prepare("
+                    UPDATE test_codes 
+                    SET " . implode(', ', $update_fields) . "
+                    WHERE id = ?
+                ");
+                $stmt->execute($params);
+                
+                Response::success('Test code updated successfully');
+            }
+            break;
 
-function generateTestCode() {
-    return strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6));
+        case 'DELETE':
+            if (!$test_code_id) {
+                Response::badRequest('Test code ID required');
+            }
+            
+            // Check if test code has been used
+            $check_stmt = $db->prepare("SELECT COUNT(*) as usage_count FROM test_results WHERE test_code_id = ?");
+            $check_stmt->execute([$test_code_id]);
+            $usage = $check_stmt->fetch();
+            
+            if ($usage['usage_count'] > 0) {
+                Response::badRequest('Cannot delete test code that has been used');
+            }
+            
+            $stmt = $db->prepare("DELETE FROM test_codes WHERE id = ?");
+            $stmt->execute([$test_code_id]);
+            
+            Response::success('Test code deleted successfully');
+            break;
+
+        default:
+            Response::methodNotAllowed();
+    }
+
+} catch (Exception $e) {
+    error_log("Test codes API error: " . $e->getMessage());
+    Response::serverError('An error occurred while processing the request');
 }
 
 ?>

@@ -4,217 +4,244 @@ import { useAuth } from '../../contexts/AuthContext'
 export default function SimpleLogin() {
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
-  const [localError, setLocalError] = useState('')
-  const { login, loading, error } = useAuth()
+  const [role, setRole] = useState('student')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  
+  const { login } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLocalError('')
-
-    if (!identifier.trim() || !password.trim()) {
-      setLocalError('Please enter both username/registration number and password')
-      return
-    }
+    setLoading(true)
+    setError('')
 
     try {
-      console.log('Form submitted with:', { identifier, password: '***' })
       await login(identifier, password)
-      
-      // Navigation will be handled by App component after user state is updated
-      console.log('Login successful, waiting for navigation...')
-    } catch (error: any) {
-      console.error('Login failed:', error)
-      setLocalError(error.message)
-    }
-  }
-
-  const displayError = localError || error
-
-  const styles = {
-    container: {
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-      padding: '1rem'
-    },
-    card: {
-      width: '100%',
-      maxWidth: '450px',
-      backgroundColor: 'white',
-      borderRadius: '16px',
-      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-      padding: '2.5rem',
-      backdropFilter: 'blur(10px)',
-      border: '1px solid rgba(255, 255, 255, 0.2)'
-    },
-    header: {
-      textAlign: 'center' as const,
-      marginBottom: '2rem'
-    },
-    icon: {
-      width: '64px',
-      height: '64px',
-      margin: '0 auto 1.5rem',
-      color: '#4f46e5',
-      padding: '12px',
-      backgroundColor: '#f0f9ff',
-      borderRadius: '50%',
-      border: '2px solid #e0e7ff'
-    },
-    title: {
-      fontSize: '1.875rem',
-      fontWeight: '700',
-      color: '#1f2937',
-      marginBottom: '0.5rem',
-      letterSpacing: '-0.025em'
-    },
-    subtitle: {
-      color: '#4f46e5',
-      fontSize: '1rem',
-      fontWeight: '600',
-      marginBottom: '0.25rem'
-    },
-    schoolMotto: {
-      color: '#6b7280',
-      fontSize: '0.875rem',
-      fontStyle: 'italic'
-    },
-    form: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '1rem'
-    },
-    inputGroup: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '0.5rem'
-    },
-    label: {
-      fontSize: '0.875rem',
-      fontWeight: '500',
-      color: '#374151'
-    },
-    input: {
-      width: '100%',
-      padding: '0.75rem',
-      border: '1px solid #d1d5db',
-      borderRadius: '6px',
-      fontSize: '0.875rem',
-      outline: 'none',
-      transition: 'border-color 0.2s',
-      boxSizing: 'border-box' as const
-    },
-    button: {
-      width: '100%',
-      padding: '0.875rem',
-      background: loading ? '#9ca3af' : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-      color: 'white',
-      border: 'none',
-      borderRadius: '8px',
-      fontSize: '1rem',
-      fontWeight: '600',
-      cursor: loading ? 'not-allowed' : 'pointer',
-      transition: 'all 0.3s ease',
-      boxShadow: loading ? 'none' : '0 4px 14px 0 rgba(79, 70, 229, 0.3)',
-      textTransform: 'uppercase' as const,
-      letterSpacing: '0.025em'
-    },
-    error: {
-      color: '#dc2626',
-      fontSize: '0.875rem',
-      fontWeight: '500',
-      textAlign: 'center' as const,
-      padding: '0.75rem',
-      backgroundColor: '#fef2f2',
-      border: '1px solid #fecaca',
-      borderRadius: '6px',
-      marginTop: '1rem'
-    },
-    hint: {
-      color: '#6b7280',
-      fontSize: '0.875rem',
-      textAlign: 'center' as const,
-      marginTop: '1rem',
-      padding: '1rem',
-      backgroundColor: '#f9fafb',
-      borderRadius: '6px',
-      border: '1px solid #e5e7eb'
+    } catch (err) {
+      setError('Invalid credentials. Please try again.')
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div style={styles.container}>
-      <div style={styles.card}>
-        <div style={styles.header}>
-          <div style={styles.icon}>
-            <svg
-              fill="currentColor"
-              viewBox="0 0 20 20"
-              style={{ width: '100%', height: '100%' }}
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                clipRule="evenodd"
-              />
-            </svg>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%)',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      padding: '16px'
+    }}>
+      <div style={{
+        background: 'white',
+        padding: '24px',
+        borderRadius: '16px',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        width: '100%',
+        maxWidth: '380px',
+        border: '1px solid rgba(255, 255, 255, 0.2)'
+      }}>
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
+            borderRadius: '50%',
+            margin: '0 auto 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontSize: '20px',
+            fontWeight: 'bold',
+            boxShadow: '0 8px 16px rgba(59, 130, 246, 0.3)'
+          }}>
+            SFCS
           </div>
-          <h1 style={styles.title}>CBT Portal</h1>
-          <p style={styles.subtitle}>Saint Francis Grammar School</p>
-          <p style={styles.schoolMotto}>"Excellence in Learning"</p>
+          <h1 style={{
+            fontSize: '22px',
+            fontWeight: 'bold',
+            color: '#1e293b',
+            margin: '0 0 4px 0'
+          }}>
+            CBT Portal
+          </h1>
+          <p style={{
+            color: '#64748b',
+            margin: '0',
+            fontSize: '13px',
+            fontWeight: '500'
+          }}>
+            Sure Foundation Comprehensive School
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} style={styles.form}>
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Username / Registration Number</label>
+        {/* Error Message */}
+        {error && (
+          <div style={{
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#dc2626',
+            padding: '10px 12px',
+            borderRadius: '8px',
+            marginBottom: '16px',
+            fontSize: '13px',
+            fontWeight: '500'
+          }}>
+            {error}
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          {/* Role Selection */}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '6px'
+            }}>
+              Login as
+            </label>
+            <select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '14px',
+                outline: 'none',
+                transition: 'all 0.2s',
+                background: 'white'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+              onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+            >
+              <option value="student">Student</option>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Administrator</option>
+            </select>
+          </div>
+
+          {/* Identifier Input */}
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '6px'
+            }}>
+              {role === 'student' ? 'Registration Number' : 'Username/Email'}
+            </label>
             <input
               type="text"
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              placeholder="Enter username or registration number"
-              style={styles.input}
-              disabled={loading}
+              placeholder={role === 'student' ? 'e.g. STU001' : 'Enter username or email'}
               required
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '14px',
+                outline: 'none',
+                transition: 'all 0.2s'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+              onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
             />
           </div>
 
-          <div style={styles.inputGroup}>
-            <label style={styles.label}>Password</label>
+          {/* Password Input */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{
+              display: 'block',
+              fontSize: '13px',
+              fontWeight: '600',
+              color: '#374151',
+              marginBottom: '6px'
+            }}>
+              Password
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
-              style={styles.input}
-              disabled={loading}
               required
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '2px solid #e2e8f0',
+                borderRadius: '8px',
+                fontSize: '14px',
+                outline: 'none',
+                transition: 'all 0.2s'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
+              onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
             />
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
-            style={styles.button}
             disabled={loading}
+            style={{
+              width: '100%',
+              background: loading ? '#94a3b8' : 'linear-gradient(135deg, #1e40af, #3b82f6)',
+              color: 'white',
+              padding: '12px',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '600',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s',
+              transform: loading ? 'none' : 'translateY(0)',
+            }}
+            onMouseEnter={(e) => {
+              if (!loading) {
+                const target = e.target as HTMLButtonElement
+                target.style.transform = 'translateY(-1px)'
+                target.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.4)'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!loading) {
+                const target = e.target as HTMLButtonElement
+                target.style.transform = 'translateY(0)'
+                target.style.boxShadow = 'none'
+              }
+            }}
           >
-            {loading ? 'Signing In...' : 'Sign In'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
-
-          {displayError && (
-            <div style={styles.error}>
-              {displayError}
-            </div>
-          )}
-
-          <div style={styles.hint}>
-            <strong>Test Accounts:</strong><br />
-            Admin: admin / password123<br />
-            Teacher: teacher1 / password123<br />
-            Student: 2023001 / password123
-          </div>
         </form>
+
+        {/* Demo Credentials */}
+        <div style={{
+          marginTop: '20px',
+          padding: '12px',
+          background: '#f8fafc',
+          borderRadius: '8px',
+          fontSize: '11px',
+          color: '#64748b',
+          border: '1px solid #e2e8f0'
+        }}>
+          <div style={{ fontWeight: '600', marginBottom: '6px', color: '#475569' }}>Demo Credentials:</div>
+          <div style={{ marginBottom: '2px' }}>• Admin: admin / password123</div>
+          <div>• Student: STU001 / password123</div>
+        </div>
       </div>
     </div>
   )
