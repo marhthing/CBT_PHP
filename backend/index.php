@@ -120,8 +120,9 @@ foreach ($routes as $route => $file) {
         $route_file = __DIR__ . "/api/$file";
         break;
     }
-    // Check for routes with nested paths (e.g., admin/test-codes/123/toggle-activation)
-    if (preg_match("#^/?{$route}/\d+/[a-zA-Z0-9\-_]+$#", $path)) {
+    // Check for routes with nested paths (e.g., admin/test-codes/123/toggle-activation or admin/test-codes/batch/xyz/toggle-activation)
+    if (preg_match("#^/?{$route}/\d+/[a-zA-Z0-9\-_]+$#", $path) || 
+        preg_match("#^/?{$route}/batch/[a-zA-Z0-9\-_.]+/[a-zA-Z0-9\-_]+$#", $path)) {
         $route_file = __DIR__ . "/api/$file";
         break;
     }

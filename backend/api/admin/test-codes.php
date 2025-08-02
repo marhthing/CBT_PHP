@@ -233,26 +233,65 @@ try {
             break;
 
         case 'PATCH':
-            if (!$test_code_id) {
-                Response::badRequest('Test code ID required');
+            // Check if this is a batch activation request
+            $path_segments = explode('/', trim($path_info, '/'));
+            
+            // Remove admin/test-codes prefix if present
+            if (count($path_segments) >= 2 && $path_segments[0] === 'admin' && $path_segments[1] === 'test-codes') {
+                $path_segments = array_slice($path_segments, 2);
             }
             
-            if ($action === 'toggle-activation') {
-                // Toggle test code activation
-                $input = json_decode(file_get_contents('php://input'), true);
-                $is_activated = $input['is_activated'] ?? false;
+            if (count($path_segments) >= 3 && $path_segments[0] === 'batch' && $path_segments[2] === 'toggle-activation') {
+                // Batch activation
+                $batch_id = $path_segments[1];
                 
+                $input = json_decode(file_get_contents('php://input'), true);
+                
+                if (!isset($input['is_activated'])) {
+                    Response::badRequest('is_activated field is required');
+                }
+                
+                // Ensure boolean conversion
+                $is_activated = filter_var($input['is_activated'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                if ($is_activated === null) {
+                    Response::badRequest('is_activated must be a valid boolean value');
+                }
+                
+                // Check if any codes in this batch have been used
+                $check_stmt = $db->prepare("
+                    SELECT COUNT(*) as used_count 
+                    FROM test_codes tc
+                    LEFT JOIN test_results tr ON tc.id = tr.test_code_id
+                    WHERE tc.batch_id = ? AND tr.id IS NOT NULL
+                ");
+                $check_stmt->execute([$batch_id]);
+                $used_check = $check_stmt->fetch();
+                
+                if ($used_check['used_count'] > 0 && $is_activated) {
+                    Response::badRequest('Cannot activate batch with used codes. Once a code is used, the batch cannot be reactivated.');
+                }
+                
+                // Update all codes in the batch
                 $stmt = $db->prepare("
                     UPDATE test_codes 
-                    SET is_activated = ?
-                    WHERE id = ?
+                    SET is_activated = ?, activated_at = ? 
+                    WHERE batch_id = ?
                 ");
-                $stmt->execute([$is_activated, $test_code_id]);
+                $activated_at = $is_activated ? date('Y-m-d H:i:s') : null;
+                $stmt->execute([$is_activated, $activated_at, $batch_id]);
                 
-                Response::success('Test code activation updated', [
-                    'id' => $test_code_id,
-                    'is_activated' => $is_activated
-                ]);
+                if ($stmt->rowCount() > 0) {
+                    Response::success('Test code batch activation updated', [
+                        'batch_id' => $batch_id,
+                        'is_activated' => $is_activated,
+                        'updated_codes' => $stmt->rowCount()
+                    ]);
+                } else {
+                    Response::notFound('Test code batch not found');
+                }
+            } elseif ($test_code_id && $action === 'toggle-activation') {
+                // Individual activation is not allowed
+                Response::badRequest('Individual code activation is not allowed. Use batch activation instead.');
             } else {
                 // Update test code
                 $input = json_decode(file_get_contents('php://input'), true);
