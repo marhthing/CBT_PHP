@@ -49,9 +49,10 @@ function handleGet($db, $user) {
             
             // Get subject statistics
             $subject_stats_stmt = $db->prepare("
-                SELECT subject, COUNT(*) as question_count
-                FROM questions 
-                GROUP BY subject
+                SELECT s.name as subject, COUNT(*) as question_count
+                FROM questions q 
+                JOIN subjects s ON q.subject_id = s.id
+                GROUP BY s.name
                 ORDER BY question_count DESC
             ");
             $subject_stats_stmt->execute();
@@ -76,9 +77,10 @@ function handleGet($db, $user) {
         // Check if requesting subjects only
         if (isset($_GET['subjects'])) {
             $subjects_stmt = $db->prepare("
-                SELECT DISTINCT subject
-                FROM questions 
-                ORDER BY subject
+                SELECT DISTINCT s.name as subject
+                FROM questions q
+                JOIN subjects s ON q.subject_id = s.id 
+                ORDER BY s.name
             ");
             $subjects_stmt->execute();
             $subjects = $subjects_stmt->fetchAll(PDO::FETCH_COLUMN);
@@ -96,7 +98,7 @@ function handleGet($db, $user) {
         }
         
         if (isset($_GET['subject']) && !empty($_GET['subject'])) {
-            $where_conditions[] = 'q.subject = ?';
+            $where_conditions[] = 's.name = ?';
             $params[] = $_GET['subject'];
         }
         
@@ -110,10 +112,11 @@ function handleGet($db, $user) {
             $params[] = $_GET['teacher'];
         }
         
-        if (isset($_GET['difficulty']) && !empty($_GET['difficulty'])) {
-            $where_conditions[] = 'q.difficulty = ?';
-            $params[] = $_GET['difficulty'];
-        }
+        // Remove difficulty filter since column doesn't exist
+        // if (isset($_GET['difficulty']) && !empty($_GET['difficulty'])) {
+        //     $where_conditions[] = 'q.difficulty = ?';
+        //     $params[] = $_GET['difficulty'];
+        // }
         
         // Get all questions with teacher information
         $sql = "
@@ -125,13 +128,17 @@ function handleGet($db, $user) {
                 q.option_c,
                 q.option_d,
                 q.correct_answer,
-                q.subject,
+                s.name as subject,
                 q.class_level,
-                q.difficulty,
+                t.name as term,
+                sess.name as session,
                 q.created_at,
                 u.full_name as teacher_name,
                 u.username as teacher_username
             FROM questions q
+            LEFT JOIN subjects s ON q.subject_id = s.id
+            LEFT JOIN terms t ON q.term_id = t.id
+            LEFT JOIN sessions sess ON q.session_id = sess.id
             LEFT JOIN users u ON q.teacher_id = u.id
             WHERE " . implode(' AND ', $where_conditions) . "
             ORDER BY q.created_at DESC

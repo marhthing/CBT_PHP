@@ -38,9 +38,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const response = await api.get('/auth/me')
       console.log('Auth validation response:', response.data)
       
-      const userData = response.data.data?.user || response.data.user || response.data.data
-      
-      if (userData && userData.id) {
+      if (response.data.success && response.data.data) {
+        const userData = response.data.data.user
         console.log('Token valid, user authenticated:', userData)
         setUser(userData)
         setError(null)
@@ -52,15 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Token validation failed:', error)
       console.error('Error response:', error.response?.data)
       
-      // Only clear auth state if it's a real 401/403 error
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        console.log('Authentication failed (401/403), clearing token')
-        handleAuthFailure()
-      } else {
-        console.log('Network or other error during token validation - retaining session')
-        // For network errors, don't clear the user state
-        setError(null)
-      }
+      // Always clear auth state on any error during token validation
+      console.log('Authentication failed, clearing token')
+      handleAuthFailure()
     } finally {
       setLoading(false)
     }

@@ -53,7 +53,7 @@ try {
     $stmt = $db->prepare("
         SELECT COUNT(*) as total 
         FROM test_results 
-        WHERE completed_at >= NOW() - INTERVAL '7 days'
+        WHERE submitted_at >= NOW() - INTERVAL '7 days'
     ");
     $stmt->execute();
     $stats['recent_tests'] = $stmt->fetch()['total'];
