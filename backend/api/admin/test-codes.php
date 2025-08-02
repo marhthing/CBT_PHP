@@ -382,24 +382,3 @@ try {
 }
 
 ?>
-            
-            if ($usage['usage_count'] > 0) {
-                Response::badRequest('Cannot delete test code that has been used');
-            }
-            
-            $stmt = $db->prepare("DELETE FROM test_codes WHERE id = ?");
-            $stmt->execute([$test_code_id]);
-            
-            Response::success('Test code deleted successfully');
-            break;
-
-        default:
-            Response::methodNotAllowed();
-    }
-
-} catch (Exception $e) {
-    error_log("Test codes API error: " . $e->getMessage());
-    Response::serverError('An error occurred while processing the request');
-}
-
-?>
