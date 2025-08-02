@@ -292,7 +292,7 @@ try {
                 } else {
                     Response::notFound('Test code batch not found');
                 }
-             elseif ($test_code_id && $action === 'toggle-activation') {
+            } elseif ($test_code_id && $action === 'toggle-activation') {
                 // Individual activation is not allowed
                 Response::badRequest('Individual code activation is not allowed. Use batch activation instead.');
             } else {
