@@ -525,7 +525,7 @@ export default function AllQuestions() {
                   try {
                     setLoading(true)
                     for (const question of newQuestions) {
-                      await api.post('/teacher/questions', question)
+                      await api.post('/admin/questions', question)
                     }
                     setSuccessMessage(`Successfully uploaded ${newQuestions.length} questions!`)
                     setNewQuestions([])

@@ -146,16 +146,20 @@ export default function TeacherAssignment() {
 
   const classLevels = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3']
 
-  // Filter assignments
-  const filteredAssignments = assignments.filter(assignment => {
-    if (teacherFilter && assignment.teacher_name !== teacherFilter) return false
+  // Filter assignments - ensure assignments is an array
+  const filteredAssignments = Array.isArray(assignments) ? assignments.filter(assignment => {
+    if (teacherFilter && assignment.full_name !== teacherFilter) return false
     if (subjectFilter && assignment.subject_name !== subjectFilter) return false
     if (classFilter && assignment.class_level !== classFilter) return false
     return true
-  })
+  }) : []
 
-  // Get assignment statistics
+  // Get assignment statistics - ensure assignments is an array
   const getAssignmentStats = () => {
+    if (!Array.isArray(assignments)) {
+      return { total: 0, teachers: 0, subjects: 0, classes: 0 }
+    }
+    
     const teacherCount = new Set(assignments.map(a => a.teacher_id)).size
     const subjectCount = new Set(assignments.map(a => a.subject_id)).size
     const classCount = new Set(assignments.map(a => a.class_level)).size
@@ -530,14 +534,14 @@ export default function TeacherAssignment() {
                   color: '#1e293b',
                   margin: '0 0 4px 0'
                 }}>
-                  {assignment.teacher_name}
+                  {assignment.full_name}
                 </h3>
                 <p style={{
                   fontSize: '14px',
                   color: '#64748b',
                   margin: '0'
                 }}>
-                  {assignment.teacher_email}
+                  {assignment.email}
                 </p>
               </div>
               <button

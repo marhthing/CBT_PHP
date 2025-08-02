@@ -15,6 +15,9 @@ switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
         handleGet($db, $user);
         break;
+    case 'POST':
+        handlePost($db, $user);
+        break;
     case 'DELETE':
         handleDelete($db, $user);
         break;
@@ -29,67 +32,34 @@ function handleGet($db, $user) {
             $stats_stmt = $db->prepare("
                 SELECT 
                     COUNT(*) as total_questions,
-                    COUNT(CASE WHEN q.created_at >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as questions_this_week,
-                    COUNT(DISTINCT q.teacher_id) as active_teachers,
-                    ROUND(COUNT(*)::numeric / NULLIF(COUNT(DISTINCT q.teacher_id), 0), 1) as avg_questions_per_teacher,
-                    COUNT(DISTINCT tc.id) as total_tests,
-                    COUNT(DISTINCT CASE WHEN tc.is_active = true AND tc.expires_at > CURRENT_TIMESTAMP THEN tc.id END) as active_tests,
-                    COUNT(DISTINCT u.id) as total_teachers,
-                    COUNT(DISTINCT ta.teacher_id) as assigned_teachers,
-                    COUNT(DISTINCT tr.id) as total_submissions,
-                    COUNT(CASE WHEN tr.submitted_at >= CURRENT_DATE THEN 1 END) as submissions_today
+                    COUNT(DISTINCT s.name) as subjects_count,
+                    COUNT(CASE WHEN q.created_at >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as this_week
                 FROM questions q
-                LEFT JOIN users u ON u.role = 'teacher'
-                LEFT JOIN teacher_assignments ta ON ta.teacher_id = u.id
-                LEFT JOIN test_codes tc ON 1=1
-                LEFT JOIN test_results tr ON 1=1
+                JOIN subjects s ON q.subject_id = s.id
             ");
             $stats_stmt->execute();
             $stats = $stats_stmt->fetch();
             
-            // Get subject statistics
-            $subject_stats_stmt = $db->prepare("
-                SELECT s.name as subject, COUNT(*) as question_count
-                FROM questions q 
+            // Get questions by subject
+            $subject_stmt = $db->prepare("
+                SELECT s.name as subject_name, COUNT(*) as question_count
+                FROM questions q
                 JOIN subjects s ON q.subject_id = s.id
-                GROUP BY s.name
+                GROUP BY s.id, s.name
                 ORDER BY question_count DESC
             ");
-            $subject_stats_stmt->execute();
-            $subject_stats = $subject_stats_stmt->fetchAll();
+            $subject_stmt->execute();
+            $by_subject = $subject_stmt->fetchAll();
             
-            // Get class statistics
-            $class_stats_stmt = $db->prepare("
-                SELECT class_level, COUNT(*) as question_count
-                FROM questions 
-                GROUP BY class_level
-                ORDER BY class_level
-            ");
-            $class_stats_stmt->execute();
-            $class_stats = $class_stats_stmt->fetchAll();
+            $stats['by_subject'] = array_column($by_subject, 'question_count', 'subject_name');
+            $stats['subjects_count'] = count($by_subject);
             
-            $stats['subject_stats'] = $subject_stats;
-            $stats['class_stats'] = $class_stats;
-            
-            Response::success('Admin stats retrieved', $stats);
+            Response::success('Question stats retrieved', $stats);
+            return;
         }
         
-        // Check if requesting subjects only
-        if (isset($_GET['subjects'])) {
-            $subjects_stmt = $db->prepare("
-                SELECT DISTINCT s.name as subject
-                FROM questions q
-                JOIN subjects s ON q.subject_id = s.id 
-                ORDER BY s.name
-            ");
-            $subjects_stmt->execute();
-            $subjects = $subjects_stmt->fetchAll(PDO::FETCH_COLUMN);
-            
-            Response::success('Subjects retrieved', ['subjects' => $subjects]);
-        }
-        
-        // Build query with filters
-        $where_conditions = ['1=1'];
+        // Build query with filters for getting questions
+        $where_conditions = ['1 = 1'];
         $params = [];
         
         if (isset($_GET['search']) && !empty($_GET['search'])) {
@@ -98,7 +68,7 @@ function handleGet($db, $user) {
         }
         
         if (isset($_GET['subject']) && !empty($_GET['subject'])) {
-            $where_conditions[] = 's.name = ?';
+            $where_conditions[] = 'q.subject_id = ?';
             $params[] = $_GET['subject'];
         }
         
@@ -107,19 +77,17 @@ function handleGet($db, $user) {
             $params[] = $_GET['class'];
         }
         
-        if (isset($_GET['teacher']) && !empty($_GET['teacher'])) {
-            $where_conditions[] = 'q.teacher_id = ?';
-            $params[] = $_GET['teacher'];
+        if (isset($_GET['type']) && !empty($_GET['type'])) {
+            $where_conditions[] = 'q.question_type = ?';
+            $params[] = $_GET['type'];
         }
         
-        // Remove difficulty filter since column doesn't exist
-        // if (isset($_GET['difficulty']) && !empty($_GET['difficulty'])) {
-        //     $where_conditions[] = 'q.difficulty = ?';
-        //     $params[] = $_GET['difficulty'];
-        // }
+        $limit = min(100, max(1, intval($_GET['limit'] ?? 50)));
+        $offset = max(0, intval($_GET['offset'] ?? 0));
         
-        // Get all questions with teacher information
-        $sql = "
+        $where_clause = implode(' AND ', $where_conditions);
+        
+        $stmt = $db->prepare("
             SELECT 
                 q.id,
                 q.question_text,
@@ -128,32 +96,115 @@ function handleGet($db, $user) {
                 q.option_c,
                 q.option_d,
                 q.correct_answer,
-                s.name as subject,
                 q.class_level,
-                t.name as term,
-                sess.name as session,
                 q.created_at,
-                u.full_name as teacher_name,
-                u.username as teacher_username
+                s.name as subject_name,
+                s.id as subject_id,
+                u.full_name as created_by_name,
+                'multiple_choice' as question_type
             FROM questions q
-            LEFT JOIN subjects s ON q.subject_id = s.id
-            LEFT JOIN terms t ON q.term_id = t.id
-            LEFT JOIN sessions sess ON q.session_id = sess.id
-            LEFT JOIN users u ON q.teacher_id = u.id
-            WHERE " . implode(' AND ', $where_conditions) . "
+            JOIN subjects s ON q.subject_id = s.id
+            JOIN users u ON q.teacher_id = u.id
+            WHERE {$where_clause}
             ORDER BY q.created_at DESC
-        ";
+            LIMIT ? OFFSET ?
+        ");
         
-        $stmt = $db->prepare($sql);
+        $params[] = $limit;
+        $params[] = $offset;
+        
         $stmt->execute($params);
         $questions = $stmt->fetchAll();
+        
+        // Format options for each question
+        foreach ($questions as &$question) {
+            $question['options'] = [
+                ['label' => 'A', 'text' => $question['option_a']],
+                ['label' => 'B', 'text' => $question['option_b']],
+                ['label' => 'C', 'text' => $question['option_c']],
+                ['label' => 'D', 'text' => $question['option_d']]
+            ];
+        }
         
         Response::logRequest('admin/questions', 'GET', $user['id']);
         Response::success('Questions retrieved', ['questions' => $questions]);
         
     } catch (Exception $e) {
-        error_log("Error getting admin questions: " . $e->getMessage());
+        error_log("Error getting questions: " . $e->getMessage());
         Response::serverError('Failed to get questions');
+    }
+}
+
+function handlePost($db, $user) {
+    try {
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!$input) {
+            Response::validationError('Invalid JSON input');
+        }
+        
+        // Validate required fields
+        Response::validateRequired($input, [
+            'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
+            'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
+        ]);
+        
+        // Validate correct answer
+        if (!in_array($input['correct_answer'], ['A', 'B', 'C', 'D'])) {
+            Response::validationError('Correct answer must be A, B, C, or D');
+        }
+        
+        // Validate class level
+        $valid_classes = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
+        if (!in_array($input['class_level'], $valid_classes)) {
+            Response::validationError('Invalid class level');
+        }
+        
+        // Validate foreign keys exist
+        $checks = [
+            ['subjects', 'id', $input['subject_id'], 'Subject'],
+            ['terms', 'id', $input['term_id'], 'Term'],
+            ['sessions', 'id', $input['session_id'], 'Session']
+        ];
+        
+        foreach ($checks as [$table, $column, $value, $name]) {
+            $check_stmt = $db->prepare("SELECT id FROM {$table} WHERE {$column} = ? AND is_active = true");
+            $check_stmt->execute([$value]);
+            if (!$check_stmt->fetch()) {
+                Response::validationError("Invalid {$name} selected");
+            }
+        }
+        
+        // Create question (using admin as teacher_id since admin is creating it)
+        $stmt = $db->prepare("
+            INSERT INTO questions (
+                question_text, option_a, option_b, option_c, option_d,
+                correct_answer, subject_id, class_level, term_id, session_id, teacher_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        
+        $stmt->execute([
+            $input['question_text'],
+            $input['option_a'],
+            $input['option_b'],
+            $input['option_c'],
+            $input['option_d'],
+            $input['correct_answer'],
+            $input['subject_id'],
+            $input['class_level'],
+            $input['term_id'],
+            $input['session_id'],
+            $user['id'] // Admin as teacher_id
+        ]);
+        
+        $question_id = $db->lastInsertId();
+        
+        Response::logRequest('admin/questions', 'POST', $user['id']);
+        Response::created('Question created successfully', ['question_id' => $question_id]);
+        
+    } catch (Exception $e) {
+        error_log("Error creating question: " . $e->getMessage());
+        Response::serverError('Failed to create question');
     }
 }
 
@@ -174,17 +225,16 @@ function handleDelete($db, $user) {
         }
         
         // Check if question is used in any test results
-        $usage_stmt = $db->prepare("
+        $usage_check = $db->prepare("
             SELECT COUNT(*) as usage_count 
-            FROM test_answers ta
-            JOIN test_results tr ON ta.result_id = tr.id
-            WHERE ta.question_id = ?
+            FROM test_answers 
+            WHERE question_id = ?
         ");
-        $usage_stmt->execute([$question_id]);
-        $usage = $usage_stmt->fetch();
+        $usage_check->execute([$question_id]);
+        $usage_result = $usage_check->fetch();
         
-        if ($usage['usage_count'] > 0) {
-            Response::error('Cannot delete question that has been used in tests');
+        if ($usage_result['usage_count'] > 0) {
+            Response::error('Cannot delete question. It has been used in tests.');
         }
         
         // Delete question
