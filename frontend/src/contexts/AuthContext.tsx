@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const initializeAuth = async () => {
     const token = localStorage.getItem('token')
     console.log('Initializing auth, token exists:', !!token)
-    
+
     if (!token) {
       console.log('No token found, user not authenticated')
       setLoading(false)
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Validating existing token...')
       const response = await api.get('/auth/me')
       console.log('Auth validation response:', response.data)
-      
+
       if (response.data.success && response.data.data) {
         const userData = response.data.data.user || response.data.data
         console.log('Token valid, user authenticated:', userData)
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error('Token validation failed:', error)
       console.error('Error response:', error.response?.data)
-      
+
       // Always clear auth state on any error during token validation
       console.log('Authentication failed, clearing token')
       handleAuthFailure()
@@ -72,20 +72,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       console.log('Attempting login for:', identifier)
-      
+
       const response = await api.post('/auth/auto-login', {
         identifier,
         password,
       })
 
       console.log('Login response:', response.data)
-      
+
       if (!response.data.success || !response.data.data) {
         throw new Error(response.data.message || 'Login failed')
       }
-      
+
       const { token, user: userData } = response.data.data
-      
+
       if (!token || !userData) {
         console.error('Missing token or user data:', response.data.data)
         throw new Error('Invalid response from server - missing token or user data')
@@ -96,16 +96,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('token', token)
       setUser(userData)
       setError(null)
-      
+
       console.log('Login successful, user set:', userData)
       console.log('Token stored in localStorage:', !!localStorage.getItem('token'))
     } catch (error: any) {
       console.error('Login error:', error)
-      
+
       const errorMessage = error.response?.data?.message 
         || error.message 
         || 'Login failed. Please check your credentials.'
-      
+
       setError(errorMessage)
       handleAuthFailure()
       throw new Error(errorMessage)
@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     setLoading(true)
-    
+
     try {
       await api.post('/auth/logout')
     } catch (error) {

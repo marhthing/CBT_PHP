@@ -47,7 +47,7 @@ export default function OptimizedAdminDashboard() {
         api.get('/admin/dashboard-stats'),
         api.get('/admin/test-codes?limit=8')
       ])
-      
+
       setStats(statsResponse.data.data || statsResponse.data || {})
       setRecentActivities(activitiesResponse.data.data || activitiesResponse.data || [])
     } catch (error: any) {
@@ -67,7 +67,7 @@ export default function OptimizedAdminDashboard() {
       await api.patch(`/admin/test-codes/${testCodeId}/toggle-activation`, {
         is_activated: !isActivated
       })
-      
+
       // Update local state optimistically
       setRecentActivities(prev => prev.map(activity => 
         activity.id === testCodeId 
@@ -180,25 +180,53 @@ export default function OptimizedAdminDashboard() {
       {/* Error Message */}
       {error && <ErrorNotification message={error} onClose={() => setError('')} />}
 
-      {/* Welcome Header */}
-      <div style={{ marginBottom: '32px' }}>
-        <h1 style={{
-          fontSize: '32px',
-          fontWeight: '700',
-          background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          margin: '0 0 8px 0'
-        }}>
-          Welcome back, {user?.username}! 👋
-        </h1>
-        <p style={{
-          fontSize: '16px',
-          color: '#64748b',
-          margin: 0
-        }}>
-          Here's what's happening with your CBT system today.
-        </p>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '32px',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
+        <div>
+          <h1 style={{
+            fontSize: '32px',
+            fontWeight: '700',
+            color: '#1e293b',
+            margin: '0 0 8px 0'
+          }}>
+            Admin Dashboard
+          </h1>
+          <p style={{
+            fontSize: '16px',
+            color: '#64748b',
+            margin: 0
+          }}>
+            Welcome back, {user?.username}! Here's your system overview.
+          </p>
+        </div>
+
+        <button
+          onClick={() => {
+            setLoading(true)
+            fetchDashboardData()
+          }}
+          disabled={loading}
+          style={{
+            background: loading ? '#94a3b8' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            color: 'white',
+            border: 'none',
+            padding: '12px 24px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            transition: 'all 0.2s'
+          }}
+        >
+          {loading ? 'Refreshing...' : '🔄 Refresh Data'}
+        </button>
       </div>
 
       {/* Dashboard Cards */}
@@ -245,7 +273,7 @@ export default function OptimizedAdminDashboard() {
               borderRadius: '50%',
               transform: 'translate(30px, -30px)'
             }} />
-            
+
             <div style={{ position: 'relative', zIndex: 1 }}>
               <div style={{
                 display: 'flex',
@@ -261,7 +289,7 @@ export default function OptimizedAdminDashboard() {
                 }}>
                   {card.icon}
                 </div>
-                
+
                 <div style={{
                   fontSize: '36px',
                   fontWeight: '800',
@@ -271,7 +299,7 @@ export default function OptimizedAdminDashboard() {
                   {card.value.toLocaleString()}
                 </div>
               </div>
-              
+
               <div>
                 <div style={{
                   fontSize: '16px',
@@ -393,7 +421,7 @@ export default function OptimizedAdminDashboard() {
                   }}>
                     {formatDate(activity.created_at)}
                   </span>
-                  
+
                   <button
                     onClick={() => quickToggleActivation(activity.id, activity.is_activated)}
                     style={{
