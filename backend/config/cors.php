@@ -13,9 +13,12 @@ class CORS {
         // Get the origin of the request
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
         
-        // Check if the origin is allowed
-        if (in_array($origin, $origins) || in_array('*', $origins)) {
-            header("Access-Control-Allow-Origin: " . $origin);
+        // For development, allow localhost origins more broadly
+        if (strpos($origin, 'http://localhost:') === 0 || in_array($origin, $origins) || in_array('*', $origins)) {
+            header("Access-Control-Allow-Origin: " . ($origin ?: 'http://localhost:5000'));
+        } else {
+            // Default to localhost:5000 for development
+            header("Access-Control-Allow-Origin: http://localhost:5000");
         }
         
         // Set other CORS headers
