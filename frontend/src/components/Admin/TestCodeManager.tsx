@@ -16,41 +16,59 @@ interface TestCode {
   expires_at: string
   usage_count: number
   created_by_name: string
+  term_name?: string
+  session_name?: string
 }
 
-interface FilterOptions {
+interface LookupData {
+  subjects?: Array<{id: number, name: string}>
+  terms?: Array<{id: number, name: string}>
+  sessions?: Array<{id: number, name: string}>
+}
+
+interface CreateTestCodeForm {
+  title: string
   subject_id: string
   class_level: string
+  duration_minutes: number
+  question_count: number
   term_id: string
   session_id: string
-  is_active: string
-  is_activated: string
+  expires_at: string
 }
 
 export default function TestCodeManager() {
   const { user } = useAuth()
   const [testCodes, setTestCodes] = useState<TestCode[]>([])
-  const [filteredTestCodes, setFilteredTestCodes] = useState<TestCode[]>([])
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState<FilterOptions>({
+  const [creating, setCreating] = useState(false)
+  const [showCreateModal, setShowCreateModal] = useState(false)
+  const [lookupData, setLookupData] = useState<LookupData>({})
+  const [selectedCodes, setSelectedCodes] = useState<number[]>([])
+  
+  // Filters
+  const [subjectFilter, setSubjectFilter] = useState('')
+  const [classFilter, setClassFilter] = useState('')
+  const [termFilter, setTermFilter] = useState('')
+  const [sessionFilter, setSessionFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+
+  // Create form
+  const [createForm, setCreateForm] = useState<CreateTestCodeForm>({
+    title: '',
     subject_id: '',
     class_level: '',
+    duration_minutes: 60,
+    question_count: 20,
     term_id: '',
     session_id: '',
-    is_active: '',
-    is_activated: ''
+    expires_at: ''
   })
-  const [lookupData, setLookupData] = useState<any>({})
-  const [selectedCodes, setSelectedCodes] = useState<number[]>([])
 
   useEffect(() => {
     fetchTestCodes()
     fetchLookupData()
   }, [])
-
-  useEffect(() => {
-    applyFilters()
-  }, [testCodes, filters])
 
   const fetchTestCodes = async () => {
     try {
@@ -72,474 +90,916 @@ export default function TestCodeManager() {
     }
   }
 
-  const applyFilters = () => {
-    let filtered = [...testCodes]
-
-    if (filters.subject_id) {
-      filtered = filtered.filter(tc => tc.subject_name === filters.subject_id)
-    }
-    if (filters.class_level) {
-      filtered = filtered.filter(tc => tc.class_level === filters.class_level)
-    }
-    if (filters.is_active) {
-      filtered = filtered.filter(tc => tc.is_active.toString() === filters.is_active)
-    }
-    if (filters.is_activated) {
-      filtered = filtered.filter(tc => tc.is_activated.toString() === filters.is_activated)
+  const createTestCode = async () => {
+    if (!createForm.title || !createForm.subject_id || !createForm.class_level || !createForm.expires_at) {
+      alert('Please fill in all required fields')
+      return
     }
 
-    setFilteredTestCodes(filtered)
+    setCreating(true)
+    try {
+      const response = await api.post('/admin/test-codes', createForm)
+      if (response.data.success) {
+        await fetchTestCodes()
+        setShowCreateModal(false)
+        setCreateForm({
+          title: '',
+          subject_id: '',
+          class_level: '',
+          duration_minutes: 60,
+          question_count: 20,
+          term_id: '',
+          session_id: '',
+          expires_at: ''
+        })
+        alert('Test code created successfully!')
+      }
+    } catch (error: any) {
+      console.error('Failed to create test code:', error)
+      alert('Failed to create test code: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setCreating(false)
+    }
   }
 
-  const resetFilters = () => {
-    setFilters({
-      subject_id: '',
-      class_level: '',
-      term_id: '',
-      session_id: '',
-      is_active: '',
-      is_activated: ''
+  const toggleActivation = async (testCodeId: number, currentStatus: boolean) => {
+    try {
+      await api.patch(`/admin/test-codes/${testCodeId}/toggle-activation`, {
+        is_activated: !currentStatus
+      })
+      await fetchTestCodes()
+    } catch (error) {
+      console.error('Failed to toggle activation:', error)
+      alert('Failed to toggle activation')
+    }
+  }
+
+  const deleteTestCode = async (testCodeId: number) => {
+    if (!confirm('Are you sure you want to delete this test code?')) return
+    
+    try {
+      await api.delete(`/admin/test-codes/${testCodeId}`)
+      await fetchTestCodes()
+      alert('Test code deleted successfully!')
+    } catch (error: any) {
+      console.error('Failed to delete test code:', error)
+      alert('Failed to delete test code: ' + (error.response?.data?.message || error.message))
+    }
+  }
+
+  // Filter test codes
+  const filteredTestCodes = testCodes.filter(testCode => {
+    if (subjectFilter && testCode.subject_name !== subjectFilter) return false
+    if (classFilter && testCode.class_level !== classFilter) return false
+    if (statusFilter && testCode.is_activated.toString() !== statusFilter) return false
+    return true
+  })
+
+  const classLevels = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3']
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     })
   }
 
-  const toggleTestCodeActivation = async (testCodeId: number, isActivated: boolean) => {
-    try {
-      await api.patch(`/admin/test-codes/${testCodeId}/toggle-activation`, {
-        is_activated: !isActivated
-      })
-      
-      // Update the local state
-      setTestCodes(prev => prev.map(tc => 
-        tc.id === testCodeId ? { ...tc, is_activated: !isActivated } : tc
-      ))
-    } catch (error) {
-      console.error('Failed to toggle test code activation:', error)
-    }
-  }
-
-  const batchToggleActivation = async (activate: boolean) => {
-    if (selectedCodes.length === 0) return
-
-    try {
-      await Promise.all(
-        selectedCodes.map(id => 
-          api.patch(`/admin/test-codes/${id}/toggle-activation`, {
-            is_activated: activate
-          })
-        )
-      )
-      
-      // Update local state
-      setTestCodes(prev => prev.map(tc => 
-        selectedCodes.includes(tc.id) ? { ...tc, is_activated: activate } : tc
-      ))
-      
-      setSelectedCodes([])
-    } catch (error) {
-      console.error('Failed to batch toggle activation:', error)
-    }
-  }
-
-  const toggleSelection = (id: number) => {
-    setSelectedCodes(prev => 
-      prev.includes(id) 
-        ? prev.filter(selectedId => selectedId !== id)
-        : [...prev, id]
-    )
-  }
-
-  const selectAll = () => {
-    if (selectedCodes.length === filteredTestCodes.length) {
-      setSelectedCodes([])
-    } else {
-      setSelectedCodes(filteredTestCodes.map(tc => tc.id))
-    }
+  const getDefaultExpiryDate = () => {
+    const date = new Date()
+    date.setDate(date.getDate() + 30) // 30 days from now
+    return date.toISOString().split('T')[0]
   }
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '200px',
-        color: '#64748b'
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '400px',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
       }}>
-        Loading test codes...
+        <div style={{
+          width: '32px',
+          height: '32px',
+          border: '3px solid #f3f3f3',
+          borderTop: '3px solid #6366f1',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     )
   }
 
   return (
     <div style={{
-      maxWidth: '100%',
-      margin: '0 auto',
-      padding: '0',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
+      padding: '24px',
+      fontFamily: 'system-ui, -apple-system, sans-serif',
+      backgroundColor: '#f8fafc',
+      minHeight: '100vh'
     }}>
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
-        color: 'white',
-        padding: '20px 16px',
-        borderRadius: '12px',
-        marginBottom: '20px'
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '24px',
+        flexWrap: 'wrap',
+        gap: '16px'
       }}>
-        <h1 style={{ 
-          fontSize: '20px', 
-          fontWeight: 'bold',
-          margin: '0 0 4px 0'
-        }}>
-          Test Code Manager
-        </h1>
-        <p style={{ 
-          fontSize: '14px', 
-          opacity: 0.9,
-          margin: '0'
-        }}>
-          Manage and activate test codes for exams
-        </p>
+        <div>
+          <h1 style={{
+            fontSize: '28px',
+            fontWeight: '700',
+            color: '#1e293b',
+            margin: '0',
+            marginBottom: '4px'
+          }}>
+            Test Code Management
+          </h1>
+          <p style={{
+            fontSize: '14px',
+            color: '#64748b',
+            margin: '0'
+          }}>
+            Create and manage test codes for examinations
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          style={{
+            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '600',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'all 0.2s',
+            boxShadow: '0 4px 6px rgba(99, 102, 241, 0.25)'
+          }}
+          onMouseEnter={(e) => {
+            const target = e.target as HTMLButtonElement
+            target.style.transform = 'translateY(-1px)'
+            target.style.boxShadow = '0 8px 20px rgba(99, 102, 241, 0.4)'
+          }}
+          onMouseLeave={(e) => {
+            const target = e.target as HTMLButtonElement
+            target.style.transform = 'translateY(0)'
+            target.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.25)'
+          }}
+        >
+          <span style={{ fontSize: '16px' }}>+</span>
+          Create Test Code
+        </button>
       </div>
 
       {/* Filters */}
       <div style={{
         background: 'white',
-        padding: '16px',
         borderRadius: '12px',
-        marginBottom: '20px',
+        padding: '20px',
+        marginBottom: '24px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         border: '1px solid #e2e8f0'
       }}>
+        <h3 style={{
+          fontSize: '16px',
+          fontWeight: '600',
+          color: '#374151',
+          margin: '0 0 16px 0'
+        }}>
+          Filter Test Codes
+        </h3>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-          gap: '12px',
-          marginBottom: '12px'
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '16px'
         }}>
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '12px',
-              fontWeight: '600',
-              color: '#374151',
-              marginBottom: '4px'
-            }}>
-              Subject
-            </label>
-            <select
-              value={filters.subject_id}
-              onChange={(e) => setFilters(prev => ({ ...prev, subject_id: e.target.value }))}
-              style={{
-                width: '100%',
-                padding: '6px 8px',
-                border: '2px solid #e2e8f0',
-                borderRadius: '6px',
-                fontSize: '12px',
-                outline: 'none'
-              }}
-            >
-              <option value="">All Subjects</option>
-              {lookupData.subjects?.map((subject: any) => (
-                <option key={subject.id} value={subject.name}>
-                  {subject.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <select
+            value={subjectFilter}
+            onChange={(e) => setSubjectFilter(e.target.value)}
+            style={{
+              padding: '10px 12px',
+              border: '2px solid #e2e8f0',
+              borderRadius: '8px',
+              fontSize: '14px',
+              outline: 'none',
+              transition: 'border-color 0.2s'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+          >
+            <option value="">All Subjects</option>
+            {lookupData.subjects?.map((subject) => (
+              <option key={subject.id} value={subject.name}>
+                {subject.name}
+              </option>
+            ))}
+          </select>
 
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '12px',
-              fontWeight: '600',
-              color: '#374151',
-              marginBottom: '4px'
-            }}>
-              Class
-            </label>
-            <select
-              value={filters.class_level}
-              onChange={(e) => setFilters(prev => ({ ...prev, class_level: e.target.value }))}
-              style={{
-                width: '100%',
-                padding: '6px 8px',
-                border: '2px solid #e2e8f0',
-                borderRadius: '6px',
-                fontSize: '12px',
-                outline: 'none'
-              }}
-            >
-              <option value="">All Classes</option>
-              <option value="JSS1">JSS1</option>
-              <option value="JSS2">JSS2</option>
-              <option value="JSS3">JSS3</option>
-              <option value="SS1">SS1</option>
-              <option value="SS2">SS2</option>
-              <option value="SS3">SS3</option>
-            </select>
-          </div>
+          <select
+            value={classFilter}
+            onChange={(e) => setClassFilter(e.target.value)}
+            style={{
+              padding: '10px 12px',
+              border: '2px solid #e2e8f0',
+              borderRadius: '8px',
+              fontSize: '14px',
+              outline: 'none',
+              transition: 'border-color 0.2s'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+          >
+            <option value="">All Classes</option>
+            {classLevels.map(level => (
+              <option key={level} value={level}>{level}</option>
+            ))}
+          </select>
 
-          <div>
-            <label style={{
-              display: 'block',
-              fontSize: '12px',
-              fontWeight: '600',
-              color: '#374151',
-              marginBottom: '4px'
-            }}>
-              Status
-            </label>
-            <select
-              value={filters.is_activated}
-              onChange={(e) => setFilters(prev => ({ ...prev, is_activated: e.target.value }))}
-              style={{
-                width: '100%',
-                padding: '6px 8px',
-                border: '2px solid #e2e8f0',
-                borderRadius: '6px',
-                fontSize: '12px',
-                outline: 'none'
-              }}
-            >
-              <option value="">All Status</option>
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
-            </select>
-          </div>
-        </div>
+          <select
+            value={termFilter}
+            onChange={(e) => setTermFilter(e.target.value)}
+            style={{
+              padding: '10px 12px',
+              border: '2px solid #e2e8f0',
+              borderRadius: '8px',
+              fontSize: '14px',
+              outline: 'none',
+              transition: 'border-color 0.2s'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+          >
+            <option value="">All Terms</option>
+            {lookupData.terms?.map((term) => (
+              <option key={term.id} value={term.name}>
+                {term.name}
+              </option>
+            ))}
+          </select>
 
-        <div style={{
-          display: 'flex',
-          gap: '8px',
-          flexWrap: 'wrap'
-        }}>
+          <select
+            value={sessionFilter}
+            onChange={(e) => setSessionFilter(e.target.value)}
+            style={{
+              padding: '10px 12px',
+              border: '2px solid #e2e8f0',
+              borderRadius: '8px',
+              fontSize: '14px',
+              outline: 'none',
+              transition: 'border-color 0.2s'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+          >
+            <option value="">All Sessions</option>
+            {lookupData.sessions?.map((session) => (
+              <option key={session.id} value={session.name}>
+                {session.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            style={{
+              padding: '10px 12px',
+              border: '2px solid #e2e8f0',
+              borderRadius: '8px',
+              fontSize: '14px',
+              outline: 'none',
+              transition: 'border-color 0.2s'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+          >
+            <option value="">All Status</option>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+
           <button
-            onClick={resetFilters}
+            onClick={() => {
+              setSubjectFilter('')
+              setClassFilter('')
+              setTermFilter('')
+              setSessionFilter('')
+              setStatusFilter('')
+            }}
             style={{
               background: '#f1f5f9',
-              border: '1px solid #e2e8f0',
+              border: '2px solid #e2e8f0',
               color: '#64748b',
-              padding: '6px 10px',
-              borderRadius: '6px',
-              fontSize: '11px',
+              padding: '10px 16px',
+              borderRadius: '8px',
+              fontSize: '14px',
               fontWeight: '500',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              const target = e.target as HTMLButtonElement
+              target.style.background = '#e2e8f0'
+              target.style.borderColor = '#cbd5e1'
+            }}
+            onMouseLeave={(e) => {
+              const target = e.target as HTMLButtonElement
+              target.style.background = '#f1f5f9'
+              target.style.borderColor = '#e2e8f0'
             }}
           >
-            Reset Filters
+            Clear Filters
           </button>
         </div>
       </div>
 
-      {/* Batch Actions */}
-      {selectedCodes.length > 0 && (
-        <div style={{
-          background: '#dbeafe',
-          border: '1px solid #93c5fd',
-          color: '#1e40af',
-          padding: '12px 16px',
-          borderRadius: '8px',
-          marginBottom: '16px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '8px'
-        }}>
-          <span style={{ fontSize: '13px', fontWeight: '500' }}>
-            {selectedCodes.length} test code(s) selected
-          </span>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              onClick={() => batchToggleActivation(true)}
-              style={{
-                background: '#059669',
-                color: 'white',
-                border: 'none',
-                padding: '6px 12px',
+      {/* Test Codes Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+        gap: '16px'
+      }}>
+        {filteredTestCodes.map((testCode) => (
+          <div
+            key={testCode.id}
+            style={{
+              background: 'white',
+              borderRadius: '12px',
+              padding: '20px',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              const target = e.target as HTMLDivElement
+              target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+              target.style.transform = 'translateY(-2px)'
+            }}
+            onMouseLeave={(e) => {
+              const target = e.target as HTMLDivElement
+              target.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+              target.style.transform = 'translateY(0)'
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: '12px'
+            }}>
+              <div>
+                <h3 style={{
+                  fontSize: '18px',
+                  fontWeight: '700',
+                  color: '#1e293b',
+                  margin: '0 0 4px 0'
+                }}>
+                  {testCode.code}
+                </h3>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#64748b',
+                  margin: '0'
+                }}>
+                  {testCode.title}
+                </p>
+              </div>
+              <span style={{
+                background: testCode.is_activated ? '#dcfce7' : '#fef3c7',
+                color: testCode.is_activated ? '#166534' : '#92400e',
+                padding: '4px 8px',
                 borderRadius: '6px',
-                fontSize: '11px',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
-            >
-              Activate All
-            </button>
-            <button
-              onClick={() => batchToggleActivation(false)}
-              style={{
-                background: '#dc2626',
-                color: 'white',
-                border: 'none',
-                padding: '6px 12px',
-                borderRadius: '6px',
-                fontSize: '11px',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
-            >
-              Deactivate All
-            </button>
+                fontSize: '12px',
+                fontWeight: '600'
+              }}>
+                {testCode.is_activated ? 'ACTIVE' : 'INACTIVE'}
+              </span>
+            </div>
+
+            {/* Details */}
+            <div style={{
+              marginBottom: '16px'
+            }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '8px',
+                fontSize: '13px',
+                color: '#64748b'
+              }}>
+                <div>
+                  <span style={{ fontWeight: '600', color: '#374151' }}>Subject:</span><br />
+                  {testCode.subject_name}
+                </div>
+                <div>
+                  <span style={{ fontWeight: '600', color: '#374151' }}>Class:</span><br />
+                  {testCode.class_level}
+                </div>
+                <div>
+                  <span style={{ fontWeight: '600', color: '#374151' }}>Duration:</span><br />
+                  {testCode.duration_minutes} minutes
+                </div>
+                <div>
+                  <span style={{ fontWeight: '600', color: '#374151' }}>Questions:</span><br />
+                  {testCode.question_count}
+                </div>
+                <div>
+                  <span style={{ fontWeight: '600', color: '#374151' }}>Created:</span><br />
+                  {formatDate(testCode.created_at)}
+                </div>
+                <div>
+                  <span style={{ fontWeight: '600', color: '#374151' }}>Expires:</span><br />
+                  {formatDate(testCode.expires_at)}
+                </div>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div style={{
+              background: '#f8fafc',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '16px'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '13px'
+              }}>
+                <span style={{ color: '#64748b' }}>
+                  Used <strong style={{ color: '#374151' }}>{testCode.usage_count}</strong> times
+                </span>
+                <span style={{ color: '#64748b' }}>
+                  By: <strong style={{ color: '#374151' }}>{testCode.created_by_name}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div style={{
+              display: 'flex',
+              gap: '8px',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={() => toggleActivation(testCode.id, testCode.is_activated)}
+                style={{
+                  background: testCode.is_activated ? '#dc2626' : '#059669',
+                  color: 'white',
+                  border: 'none',
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  const target = e.target as HTMLButtonElement
+                  target.style.transform = 'translateY(-1px)'
+                  target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)'
+                }}
+                onMouseLeave={(e) => {
+                  const target = e.target as HTMLButtonElement
+                  target.style.transform = 'translateY(0)'
+                  target.style.boxShadow = 'none'
+                }}
+              >
+                {testCode.is_activated ? 'Deactivate' : 'Activate'}
+              </button>
+              
+              {testCode.usage_count === 0 && (
+                <button
+                  onClick={() => deleteTestCode(testCode.id)}
+                  style={{
+                    background: '#ef4444',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    const target = e.target as HTMLButtonElement
+                    target.style.transform = 'translateY(-1px)'
+                    target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)'
+                  }}
+                  onMouseLeave={(e) => {
+                    const target = e.target as HTMLButtonElement
+                    target.style.transform = 'translateY(0)'
+                    target.style.boxShadow = 'none'
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+            </div>
           </div>
+        ))}
+      </div>
+
+      {/* Empty State */}
+      {filteredTestCodes.length === 0 && (
+        <div style={{
+          textAlign: 'center',
+          padding: '60px 20px',
+          background: 'white',
+          borderRadius: '12px',
+          border: '1px solid #e2e8f0'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔑</div>
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: '600',
+            color: '#374151',
+            margin: '0 0 8px 0'
+          }}>
+            No Test Codes Found
+          </h3>
+          <p style={{
+            fontSize: '14px',
+            color: '#64748b',
+            margin: '0'
+          }}>
+            {testCodes.length === 0 ? 
+              "Create your first test code to get started." :
+              "No test codes match your current filters."
+            }
+          </p>
         </div>
       )}
 
-      {/* Test Codes List */}
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        border: '1px solid #e2e8f0',
-        overflow: 'hidden'
-      }}>
-        {/* Header */}
+      {/* Create Test Code Modal */}
+      {showCreateModal && (
         <div style={{
-          background: '#f8fafc',
-          padding: '12px 16px',
-          borderBottom: '1px solid #e2e8f0',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
           display: 'flex',
           alignItems: 'center',
-          gap: '12px'
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
         }}>
-          <input
-            type="checkbox"
-            checked={selectedCodes.length === filteredTestCodes.length && filteredTestCodes.length > 0}
-            onChange={selectAll}
-            style={{ cursor: 'pointer' }}
-          />
-          <span style={{
-            fontSize: '13px',
-            fontWeight: '600',
-            color: '#374151'
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            width: '100%',
+            maxWidth: '500px',
+            maxHeight: '90vh',
+            overflowY: 'auto'
           }}>
-            Select All ({filteredTestCodes.length} codes)
-          </span>
-        </div>
+            <h2 style={{
+              fontSize: '20px',
+              fontWeight: '700',
+              color: '#1e293b',
+              margin: '0 0 16px 0'
+            }}>
+              Create New Test Code
+            </h2>
 
-        {/* Test Codes */}
-        {filteredTestCodes.length > 0 ? (
-          <div>
-            {filteredTestCodes.map((testCode) => (
-              <div
-                key={testCode.id}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: '6px'
+              }}>
+                Test Title *
+              </label>
+              <input
+                type="text"
+                value={createForm.title}
+                onChange={(e) => setCreateForm({...createForm, title: e.target.value})}
+                placeholder="Enter test title"
                 style={{
-                  padding: '16px',
-                  borderBottom: '1px solid #f1f5f9',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  background: selectedCodes.includes(testCode.id) ? '#f8fafc' : 'white'
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+              />
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px',
+              marginBottom: '16px'
+            }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '6px'
+                }}>
+                  Subject *
+                </label>
+                <select
+                  value={createForm.subject_id}
+                  onChange={(e) => setCreateForm({...createForm, subject_id: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                >
+                  <option value="">Select Subject</option>
+                  {lookupData.subjects?.map((subject) => (
+                    <option key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '6px'
+                }}>
+                  Class Level *
+                </label>
+                <select
+                  value={createForm.class_level}
+                  onChange={(e) => setCreateForm({...createForm, class_level: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                >
+                  <option value="">Select Class</option>
+                  {classLevels.map(level => (
+                    <option key={level} value={level}>{level}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px',
+              marginBottom: '16px'
+            }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '6px'
+                }}>
+                  Duration (minutes)
+                </label>
+                <input
+                  type="number"
+                  value={createForm.duration_minutes}
+                  onChange={(e) => setCreateForm({...createForm, duration_minutes: parseInt(e.target.value) || 0})}
+                  min="1"
+                  max="300"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '6px'
+                }}>
+                  Questions Count
+                </label>
+                <input
+                  type="number"
+                  value={createForm.question_count}
+                  onChange={(e) => setCreateForm({...createForm, question_count: parseInt(e.target.value) || 0})}
+                  min="1"
+                  max="100"
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                />
+              </div>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px',
+              marginBottom: '16px'
+            }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '6px'
+                }}>
+                  Term
+                </label>
+                <select
+                  value={createForm.term_id}
+                  onChange={(e) => setCreateForm({...createForm, term_id: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                >
+                  <option value="">Select Term</option>
+                  {lookupData.terms?.map((term) => (
+                    <option key={term.id} value={term.id}>
+                      {term.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '6px'
+                }}>
+                  Session
+                </label>
+                <select
+                  value={createForm.session_id}
+                  onChange={(e) => setCreateForm({...createForm, session_id: e.target.value})}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                >
+                  <option value="">Select Session</option>
+                  {lookupData.sessions?.map((session) => (
+                    <option key={session.id} value={session.id}>
+                      {session.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: '6px'
+              }}>
+                Expiry Date *
+              </label>
+              <input
+                type="date"
+                value={createForm.expires_at || getDefaultExpiryDate()}
+                onChange={(e) => setCreateForm({...createForm, expires_at: e.target.value})}
+                min={new Date().toISOString().split('T')[0]}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  boxSizing: 'border-box'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+              />
+            </div>
+
+            {/* Modal Actions */}
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'flex-end'
+            }}>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                disabled={creating}
+                style={{
+                  background: '#f1f5f9',
+                  border: '2px solid #e2e8f0',
+                  color: '#64748b',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: creating ? 'not-allowed' : 'pointer',
+                  opacity: creating ? 0.5 : 1
                 }}
               >
-                <input
-                  type="checkbox"
-                  checked={selectedCodes.includes(testCode.id)}
-                  onChange={() => toggleSelection(testCode.id)}
-                  style={{ cursor: 'pointer' }}
-                />
-
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '6px'
-                  }}>
-                    <div>
-                      <h3 style={{
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: '#1e293b',
-                        margin: '0 0 2px 0'
-                      }}>
-                        {testCode.code} - {testCode.title}
-                      </h3>
-                      <div style={{
-                        fontSize: '12px',
-                        color: '#64748b'
-                      }}>
-                        {testCode.subject_name} • {testCode.class_level} • {testCode.duration_minutes} min • {testCode.question_count} questions
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                      <span style={{
-                        background: testCode.is_activated ? '#dcfce7' : '#fef3c7',
-                        color: testCode.is_activated ? '#166534' : '#92400e',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        fontSize: '10px',
-                        fontWeight: '500'
-                      }}>
-                        {testCode.is_activated ? 'ACTIVE' : 'INACTIVE'}
-                      </span>
-                      <button
-                        onClick={() => toggleTestCodeActivation(testCode.id, testCode.is_activated)}
-                        style={{
-                          background: testCode.is_activated ? '#dc2626' : '#059669',
-                          color: 'white',
-                          border: 'none',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          fontSize: '10px',
-                          fontWeight: '500',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {testCode.is_activated ? 'Deactivate' : 'Activate'}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                    gap: '8px',
-                    fontSize: '11px',
-                    color: '#64748b'
-                  }}>
-                    <div>
-                      <span style={{ fontWeight: '500' }}>Created:</span> {new Date(testCode.created_at).toLocaleDateString()}
-                    </div>
-                    <div>
-                      <span style={{ fontWeight: '500' }}>Expires:</span> {new Date(testCode.expires_at).toLocaleDateString()}
-                    </div>
-                    <div>
-                      <span style={{ fontWeight: '500' }}>Used:</span> {testCode.usage_count} times
-                    </div>
-                    <div>
-                      <span style={{ fontWeight: '500' }}>By:</span> {testCode.created_by_name}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+                Cancel
+              </button>
+              <button
+                onClick={createTestCode}
+                disabled={creating}
+                style={{
+                  background: creating ? '#94a3b8' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: creating ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                {creating ? 'Creating...' : 'Create Test Code'}
+              </button>
+            </div>
           </div>
-        ) : (
-          <div style={{
-            textAlign: 'center',
-            padding: '40px 20px',
-            color: '#64748b'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>🔑</div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '600',
-              margin: '0 0 8px 0'
-            }}>
-              No Test Codes Found
-            </h3>
-            <p style={{
-              fontSize: '14px',
-              margin: '0',
-              opacity: 0.8
-            }}>
-              {testCodes.length === 0 ? 
-                "No test codes have been created yet." :
-                "No test codes match your current filters."
-              }
-            </p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
