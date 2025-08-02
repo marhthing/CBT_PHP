@@ -232,12 +232,13 @@ export default function TestCodeManager() {
         session_id: parseInt(createForm.session_id)
       }
 
-      const endpoint = createForm.count > 1 ? '/admin/test-codes/bulk' : '/admin/test-codes'
+      // Always use batch endpoint for consistency and organization
+      const endpoint = '/admin/test-codes/bulk'
       const response = await api.post(endpoint, payload)
       
-      const message = createForm.count > 1 
-        ? `Successfully created batch of ${createForm.count} test codes`
-        : 'Test code created successfully'
+      const message = createForm.count === 1 
+        ? 'Test code batch created successfully (1 code)'
+        : `Successfully created batch of ${createForm.count} test codes`
       
       setSuccessMessage(message)
       setShowCreateModal(false)

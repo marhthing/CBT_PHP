@@ -166,7 +166,8 @@ try {
                 }
                 
                 $created_codes = [];
-                $batch_id = $count > 1 ? uniqid('batch_', true) : null;
+                // Always assign a batch_id for organization, even for single codes
+                $batch_id = uniqid('batch_', true);
                 $db->beginTransaction();
                 
                 try {
@@ -178,6 +179,7 @@ try {
                             $check_stmt->execute([$code]);
                         } while ($check_stmt->fetch());
                         
+                        // For single code, keep original title; for multiple codes, add numbering
                         $title = $count > 1 ? $input['title'] . " (" . ($i + 1) . ")" : $input['title'];
                         
                         $stmt = $db->prepare("
@@ -211,8 +213,13 @@ try {
                     
                     $db->commit();
                     
-                    Response::created("$count test codes created successfully", [
+                    $message = $count === 1 
+                        ? "Test code batch created successfully (1 code)"
+                        : "$count test codes created successfully";
+                    
+                    Response::created($message, [
                         'count' => $count,
+                        'batch_id' => $batch_id,
                         'codes' => $created_codes
                     ]);
                 } catch (Exception $e) {
@@ -220,52 +227,8 @@ try {
                     throw $e;
                 }
             } else {
-                // Single creation
-                $input = json_decode(file_get_contents('php://input'), true);
-                
-                if (!$input) {
-                    Response::badRequest('Invalid JSON data');
-                }
-                
-                Response::validateRequired($input, [
-                    'title', 'subject_id', 'class_level', 'duration_minutes', 
-                    'total_questions', 'term_id', 'session_id'
-                ]);
-                
-                // Generate unique test code
-                do {
-                    $code = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6));
-                    $check_stmt = $db->prepare("SELECT id FROM test_codes WHERE code = ?");
-                    $check_stmt->execute([$code]);
-                } while ($check_stmt->fetch());
-                
-                $stmt = $db->prepare("
-                    INSERT INTO test_codes (
-                        code, title, subject_id, class_level, duration_minutes,
-                        total_questions, term_id, session_id, expires_at, created_by,
-                        is_active, is_activated, batch_id
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, false, NULL)
-                ");
-                
-                $stmt->execute([
-                    $code,
-                    $input['title'],
-                    $input['subject_id'],
-                    $input['class_level'],
-                    $input['duration_minutes'],
-                    $input['total_questions'],
-                    $input['term_id'],
-                    $input['session_id'],
-                    $input['expires_at'] ?: null,
-                    $user['id']
-                ]);
-                
-                $test_code_id = $db->lastInsertId();
-                
-                Response::created('Test code created successfully', [
-                    'id' => $test_code_id,
-                    'code' => $code
-                ]);
+                // Fallback for non-bulk requests - redirect to bulk logic
+                Response::badRequest('Please use the bulk endpoint (/admin/test-codes/bulk) for all test code creation to maintain proper organization');
             }
             break;
 
