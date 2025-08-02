@@ -38,7 +38,11 @@ try {
                     LEFT JOIN subjects s ON tc.subject_id = s.id
                     LEFT JOIN test_results tr ON tc.id = tr.test_code_id
                     WHERE tc.id = ?
-                    GROUP BY tc.id
+                    GROUP BY tc.id, tc.code, tc.title, tc.subject_id, tc.class_level, 
+                             tc.duration_minutes, tc.total_questions, tc.term_id, 
+                             tc.session_id, tc.is_active, tc.is_activated, tc.expires_at,
+                             tc.created_by, tc.created_at, tc.updated_at, tc.description,
+                             tc.pass_score, tc.activated_at, s.name
                 ");
                 $stmt->execute([$test_code_id]);
                 $test_code = $stmt->fetch();
@@ -93,7 +97,12 @@ try {
                     LEFT JOIN users u ON tc.created_by = u.id
                     LEFT JOIN test_results tr ON tc.id = tr.test_code_id
                     $where_clause
-                    GROUP BY tc.id
+                    GROUP BY tc.id, tc.code, tc.title, tc.subject_id, tc.class_level, 
+                             tc.duration_minutes, tc.total_questions, tc.term_id, 
+                             tc.session_id, tc.is_active, tc.is_activated, tc.expires_at,
+                             tc.created_by, tc.created_at, tc.updated_at, tc.description,
+                             tc.pass_score, tc.activated_at,
+                             s.name, t.name, sess.name, u.full_name
                     ORDER BY tc.created_at DESC
                     LIMIT ? OFFSET ?
                 ");
@@ -111,9 +120,13 @@ try {
             // Create new test code
             $input = json_decode(file_get_contents('php://input'), true);
             
+            if (!$input) {
+                Response::badRequest('Invalid JSON data');
+            }
+            
             Response::validateRequired($input, [
                 'title', 'subject_id', 'class_level', 'duration_minutes', 
-                'question_count', 'term_id', 'session_id', 'expires_at'
+                'total_questions', 'term_id', 'session_id', 'expires_at'
             ]);
             
             // Generate unique test code
@@ -126,7 +139,7 @@ try {
             $stmt = $db->prepare("
                 INSERT INTO test_codes (
                     code, title, subject_id, class_level, duration_minutes,
-                    question_count, term_id, session_id, expires_at, created_by,
+                    total_questions, term_id, session_id, expires_at, created_by,
                     is_active, is_activated
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, false)
             ");
@@ -137,7 +150,7 @@ try {
                 $input['subject_id'],
                 $input['class_level'],
                 $input['duration_minutes'],
-                $input['question_count'],
+                $input['total_questions'],
                 $input['term_id'],
                 $input['session_id'],
                 $input['expires_at'],
@@ -179,7 +192,7 @@ try {
                 
                 $allowed_fields = [
                     'title', 'subject_id', 'class_level', 'duration_minutes',
-                    'question_count', 'term_id', 'session_id', 'expires_at',
+                    'total_questions', 'term_id', 'session_id', 'expires_at',
                     'is_active', 'is_activated'
                 ];
                 

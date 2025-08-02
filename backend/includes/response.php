@@ -37,6 +37,10 @@ class Response {
         self::json($response, $status_code);
     }
     
+    public static function badRequest($message = 'Bad request') {
+        self::error($message, 400);
+    }
+    
     public static function unauthorized($message = 'Unauthorized access') {
         self::error($message, 401);
     }
