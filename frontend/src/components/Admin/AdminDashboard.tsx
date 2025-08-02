@@ -233,12 +233,12 @@ export default function AdminDashboard() {
       onClick: () => navigate('/admin/questions')
     },
     {
-      title: 'Database',
-      value: 'Connected',
-      color: '#10b981',
-      icon: Database,
-      description: 'System status',
-      onClick: () => window.open('/health', '_blank')
+      title: 'Total Users',
+      value: stats.total_teachers + stats.total_students + stats.total_admins,
+      color: '#6366f1',
+      icon: Users,
+      description: 'All active users',
+      onClick: () => navigate('/admin/users')
     }
   ], [stats, navigate])
 
