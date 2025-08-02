@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '../../lib/api'
 import ErrorNotification from '../ui/ErrorNotification'
@@ -242,7 +243,7 @@ export default function TestCodeManager() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Test Code Management</h2>
@@ -250,7 +251,7 @@ export default function TestCodeManager() {
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Create Test Codes
@@ -265,7 +266,7 @@ export default function TestCodeManager() {
             <select
               value={subjectFilter}
               onChange={(e) => setSubjectFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All Subjects</option>
               {lookupData.subjects?.map(subject => (
@@ -280,7 +281,7 @@ export default function TestCodeManager() {
               value={classFilter}
               onChange={(e) => setClassFilter(e.target.value)}
               placeholder="Enter class level"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
           <div>
@@ -288,7 +289,7 @@ export default function TestCodeManager() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
@@ -303,7 +304,7 @@ export default function TestCodeManager() {
                 setClassFilter('')
                 setStatusFilter('')
               }}
-              className="w-full px-3 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="w-full px-3 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
             >
               Clear Filters
             </button>
@@ -314,7 +315,7 @@ export default function TestCodeManager() {
       {/* Error/Success Messages */}
       {error && <ErrorNotification message={error} onClose={() => setError('')} />}
       {successMessage && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded transition-all duration-300">
           {successMessage}
         </div>
       )}
@@ -322,7 +323,7 @@ export default function TestCodeManager() {
       {/* Test Codes Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredCodes.map((code) => (
-          <div key={code.id} className="bg-white rounded-lg shadow border hover:shadow-md transition-shadow">
+          <div key={code.id} className="bg-white rounded-lg shadow border hover:shadow-md transition-all duration-200">
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
@@ -330,7 +331,7 @@ export default function TestCodeManager() {
                   <h3 className="text-sm font-medium text-gray-900 truncate">{code.title}</h3>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
                     code.is_used 
                       ? 'bg-red-100 text-red-800' 
                       : code.is_activated 
@@ -349,15 +350,15 @@ export default function TestCodeManager() {
 
               <div className="space-y-2 text-sm text-gray-600 mb-4">
                 <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" />
+                  <BookOpen className="w-4 h-4 text-blue-500" />
                   <span>{code.subject_name} - {code.class_level}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4" />
+                  <Clock className="w-4 h-4 text-green-500" />
                   <span>{code.duration_minutes} min • {code.total_questions} questions</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4" />
+                  <Users className="w-4 h-4 text-purple-500" />
                   <span>{code.term_name} • {code.session_name}</span>
                 </div>
               </div>
@@ -366,7 +367,7 @@ export default function TestCodeManager() {
               <div className="flex gap-2">
                 <button
                   onClick={() => copyToClipboard(code.code)}
-                  className="flex-1 bg-blue-50 text-blue-700 px-3 py-2 rounded text-sm hover:bg-blue-100 flex items-center justify-center gap-1"
+                  className="flex-1 bg-blue-50 text-blue-700 px-3 py-2 rounded text-sm hover:bg-blue-100 flex items-center justify-center gap-1 transition-colors"
                 >
                   <Copy className="w-4 h-4" />
                   Copy
@@ -374,7 +375,7 @@ export default function TestCodeManager() {
                 <button
                   onClick={() => handleToggleActivation(code)}
                   disabled={code.is_used}
-                  className={`px-3 py-2 rounded text-sm flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`px-3 py-2 rounded text-sm flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
                     code.is_activated
                       ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
                       : 'bg-green-50 text-green-700 hover:bg-green-100'
@@ -385,7 +386,7 @@ export default function TestCodeManager() {
                 <button
                   onClick={() => handleDeleteCode(code)}
                   disabled={code.is_used}
-                  className="px-3 py-2 bg-red-50 text-red-700 rounded text-sm hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 bg-red-50 text-red-700 rounded text-sm hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -396,7 +397,7 @@ export default function TestCodeManager() {
       </div>
 
       {filteredCodes.length === 0 && (
-        <div className="text-center py-8">
+        <div className="text-center py-12 bg-white rounded-lg border">
           <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Test Codes Found</h3>
           <p className="text-gray-500">Create your first test codes to get started</p>
@@ -409,10 +410,10 @@ export default function TestCodeManager() {
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold">Create Test Codes</h3>
+                <h3 className="text-xl font-semibold text-gray-900">Create Test Codes</h3>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -425,7 +426,7 @@ export default function TestCodeManager() {
                     type="text"
                     value={createForm.title}
                     onChange={(e) => setCreateForm({...createForm, title: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g., Mathematics Mid-Term Exam"
                   />
                 </div>
@@ -435,7 +436,7 @@ export default function TestCodeManager() {
                   <select
                     value={createForm.subject_id}
                     onChange={(e) => setCreateForm({...createForm, subject_id: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select Subject</option>
                     {lookupData.subjects?.map(subject => (
@@ -450,7 +451,7 @@ export default function TestCodeManager() {
                     type="text"
                     value={createForm.class_level}
                     onChange={(e) => setCreateForm({...createForm, class_level: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="e.g., SS1, JSS2"
                   />
                 </div>
@@ -460,7 +461,7 @@ export default function TestCodeManager() {
                   <select
                     value={createForm.term_id}
                     onChange={(e) => setCreateForm({...createForm, term_id: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select Term</option>
                     {lookupData.terms?.map(term => (
@@ -474,7 +475,7 @@ export default function TestCodeManager() {
                   <select
                     value={createForm.session_id}
                     onChange={(e) => setCreateForm({...createForm, session_id: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">Select Session</option>
                     {lookupData.sessions?.map(session => (
@@ -489,7 +490,7 @@ export default function TestCodeManager() {
                     type="number"
                     value={createForm.duration_minutes}
                     onChange={(e) => setCreateForm({...createForm, duration_minutes: parseInt(e.target.value) || 60})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     min="1"
                   />
                 </div>
@@ -505,7 +506,7 @@ export default function TestCodeManager() {
                     type="number"
                     value={createForm.total_questions}
                     onChange={(e) => setCreateForm({...createForm, total_questions: parseInt(e.target.value) || 20})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     min="1"
                     max={availableQuestions}
                   />
@@ -520,7 +521,7 @@ export default function TestCodeManager() {
                     type="number"
                     value={createForm.count}
                     onChange={(e) => setCreateForm({...createForm, count: parseInt(e.target.value) || 1})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     min="1"
                     max="100"
                   />
@@ -535,7 +536,7 @@ export default function TestCodeManager() {
                     type="datetime-local"
                     value={createForm.expires_at}
                     onChange={(e) => setCreateForm({...createForm, expires_at: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
               </div>
@@ -543,14 +544,14 @@ export default function TestCodeManager() {
               <div className="flex justify-end gap-3 mt-6">
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateCodes}
                   disabled={creating || createForm.total_questions > availableQuestions}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {creating ? 'Creating...' : 
                    createForm.count > 1 ? `Create ${createForm.count} Codes` : 'Create Code'}
