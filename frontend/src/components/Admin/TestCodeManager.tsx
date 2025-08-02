@@ -233,40 +233,137 @@ export default function TestCodeManager() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="text-gray-600">Loading test codes...</p>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '60vh',
+        fontSize: '18px',
+        color: '#6b7280'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px'
+        }}>
+          <div style={{
+            width: '20px',
+            height: '20px',
+            border: '2px solid #e5e7eb',
+            borderTop: '2px solid #3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }}></div>
+          Loading test codes...
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center">
+    <div style={{ 
+      padding: '24px',
+      background: '#ffffff',
+      minHeight: '100vh'
+    }}>
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+      </style>
+
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: '32px'
+      }}>
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Test Code Management</h2>
-          <p className="text-gray-600">Create and manage test codes with bulk generation support</p>
+          <h2 style={{
+            fontSize: '32px',
+            fontWeight: 'bold',
+            color: '#1f2937',
+            margin: 0,
+            marginBottom: '8px'
+          }}>
+            Test Code Management
+          </h2>
+          <p style={{
+            fontSize: '16px',
+            color: '#6b7280',
+            margin: 0
+          }}>
+            Create and manage test codes with bulk generation support
+          </p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
+          style={{
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '12px 20px',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#2563eb'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#3b82f6'
+          }}
         >
-          <Plus className="w-4 h-4" />
+          <Plus size={16} />
           Create Test Codes
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg shadow border">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div style={{
+        background: '#ffffff',
+        padding: '20px',
+        borderRadius: '12px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+        border: '1px solid #e5e7eb',
+        marginBottom: '24px'
+      }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '16px'
+        }}>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Subject</label>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '6px'
+            }}>
+              Filter by Subject
+            </label>
             <select
               value={subjectFilter}
               onChange={(e) => setSubjectFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                backgroundColor: 'white',
+                outline: 'none'
+              }}
             >
               <option value="">All Subjects</option>
               {lookupData.subjects?.map(subject => (
@@ -275,21 +372,52 @@ export default function TestCodeManager() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Class</label>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '6px'
+            }}>
+              Filter by Class
+            </label>
             <input
               type="text"
               value={classFilter}
               onChange={(e) => setClassFilter(e.target.value)}
               placeholder="Enter class level"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                outline: 'none'
+              }}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Filter by Status</label>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '6px'
+            }}>
+              Filter by Status
+            </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                backgroundColor: 'white',
+                outline: 'none'
+              }}
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
@@ -297,14 +425,33 @@ export default function TestCodeManager() {
               <option value="unused">Unused</option>
             </select>
           </div>
-          <div className="flex items-end">
+          <div style={{
+            display: 'flex',
+            alignItems: 'end'
+          }}>
             <button
               onClick={() => {
                 setSubjectFilter('')
                 setClassFilter('')
                 setStatusFilter('')
               }}
-              className="w-full px-3 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                color: '#6b7280',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                backgroundColor: 'white',
+                cursor: 'pointer',
+                fontSize: '14px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#f9fafb'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white'
+              }}
             >
               Clear Filters
             </button>
@@ -315,128 +462,372 @@ export default function TestCodeManager() {
       {/* Error/Success Messages */}
       {error && <ErrorNotification message={error} onClose={() => setError('')} />}
       {successMessage && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded transition-all duration-300">
+        <div style={{
+          background: '#f0fdf4',
+          border: '1px solid #bbf7d0',
+          color: '#166534',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          marginBottom: '24px',
+          fontSize: '14px'
+        }}>
           {successMessage}
         </div>
       )}
 
       {/* Test Codes Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+        gap: '24px',
+        marginBottom: '32px'
+      }}>
         {filteredCodes.map((code) => (
-          <div key={code.id} className="bg-white rounded-lg shadow border hover:shadow-md transition-all duration-200">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <div className="font-mono text-xl font-bold text-blue-600 mb-1">{code.code}</div>
-                  <h3 className="text-sm font-medium text-gray-900 truncate">{code.title}</h3>
+          <div 
+            key={code.id} 
+            style={{
+              background: '#ffffff',
+              borderRadius: '12px',
+              padding: '24px',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+              border: '1px solid #e5e7eb',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+            }}
+          >
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: '16px'
+            }}>
+              <div>
+                <div style={{
+                  fontFamily: 'monospace',
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  color: '#3b82f6',
+                  marginBottom: '4px'
+                }}>
+                  {code.code}
                 </div>
-                <div className="flex flex-col gap-1">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium transition-colors ${
-                    code.is_used 
-                      ? 'bg-red-100 text-red-800' 
-                      : code.is_activated 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {code.is_used ? 'Used' : code.is_activated ? 'Active' : 'Inactive'}
+                <h3 style={{
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#1f2937',
+                  margin: 0,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap'
+                }}>
+                  {code.title}
+                </h3>
+              </div>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px'
+              }}>
+                <span style={{
+                  padding: '4px 8px',
+                  borderRadius: '12px',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s ease',
+                  ...(code.is_used 
+                    ? { background: '#fef2f2', color: '#dc2626' }
+                    : code.is_activated 
+                      ? { background: '#f0fdf4', color: '#166534' }
+                      : { background: '#fef3c7', color: '#d97706' })
+                }}>
+                  {code.is_used ? 'Used' : code.is_activated ? 'Active' : 'Inactive'}
+                </span>
+                {code.is_used && (
+                  <span style={{
+                    fontSize: '11px',
+                    color: '#6b7280'
+                  }}>
+                    {new Date(code.used_at).toLocaleDateString()}
                   </span>
-                  {code.is_used && (
-                    <span className="text-xs text-gray-500">
-                      {new Date(code.used_at).toLocaleDateString()}
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
+            </div>
 
-              <div className="space-y-2 text-sm text-gray-600 mb-4">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-blue-500" />
-                  <span>{code.subject_name} - {code.class_level}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-green-500" />
-                  <span>{code.duration_minutes} min • {code.total_questions} questions</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="w-4 h-4 text-purple-500" />
-                  <span>{code.term_name} • {code.session_name}</span>
-                </div>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              fontSize: '14px',
+              color: '#6b7280',
+              marginBottom: '16px'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <BookOpen size={16} style={{ color: '#3b82f6' }} />
+                <span>{code.subject_name} - {code.class_level}</span>
               </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <Clock size={16} style={{ color: '#10b981' }} />
+                <span>{code.duration_minutes} min • {code.total_questions} questions</span>
+              </div>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <Users size={16} style={{ color: '#8b5cf6' }} />
+                <span>{code.term_name} • {code.session_name}</span>
+              </div>
+            </div>
 
-              {/* Actions */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => copyToClipboard(code.code)}
-                  className="flex-1 bg-blue-50 text-blue-700 px-3 py-2 rounded text-sm hover:bg-blue-100 flex items-center justify-center gap-1 transition-colors"
-                >
-                  <Copy className="w-4 h-4" />
-                  Copy
-                </button>
-                <button
-                  onClick={() => handleToggleActivation(code)}
-                  disabled={code.is_used}
-                  className={`px-3 py-2 rounded text-sm flex items-center justify-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
-                    code.is_activated
-                      ? 'bg-yellow-50 text-yellow-700 hover:bg-yellow-100'
-                      : 'bg-green-50 text-green-700 hover:bg-green-100'
-                  }`}
-                >
-                  {code.is_activated ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </button>
-                <button
-                  onClick={() => handleDeleteCode(code)}
-                  disabled={code.is_used}
-                  className="px-3 py-2 bg-red-50 text-red-700 rounded text-sm hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+            {/* Actions */}
+            <div style={{
+              display: 'flex',
+              gap: '8px'
+            }}>
+              <button
+                onClick={() => copyToClipboard(code.code)}
+                style={{
+                  flex: 1,
+                  background: '#eff6ff',
+                  color: '#1d4ed8',
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#dbeafe'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#eff6ff'
+                }}
+              >
+                <Copy size={14} />
+                Copy
+              </button>
+              <button
+                onClick={() => handleToggleActivation(code)}
+                disabled={code.is_used}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  border: 'none',
+                  cursor: code.is_used ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  opacity: code.is_used ? 0.5 : 1,
+                  transition: 'all 0.2s ease',
+                  ...(code.is_activated
+                    ? { background: '#fef3c7', color: '#d97706' }
+                    : { background: '#f0fdf4', color: '#166534' })
+                }}
+                onMouseEnter={(e) => {
+                  if (!code.is_used) {
+                    e.currentTarget.style.backgroundColor = code.is_activated ? '#fde68a' : '#dcfce7'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!code.is_used) {
+                    e.currentTarget.style.backgroundColor = code.is_activated ? '#fef3c7' : '#f0fdf4'
+                  }
+                }}
+              >
+                {code.is_activated ? <Pause size={14} /> : <Play size={14} />}
+              </button>
+              <button
+                onClick={() => handleDeleteCode(code)}
+                disabled={code.is_used}
+                style={{
+                  padding: '8px 12px',
+                  background: '#fef2f2',
+                  color: '#dc2626',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  border: 'none',
+                  cursor: code.is_used ? 'not-allowed' : 'pointer',
+                  opacity: code.is_used ? 0.5 : 1,
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!code.is_used) {
+                    e.currentTarget.style.backgroundColor = '#fee2e2'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!code.is_used) {
+                    e.currentTarget.style.backgroundColor = '#fef2f2'
+                  }
+                }}
+              >
+                <Trash2 size={14} />
+              </button>
             </div>
           </div>
         ))}
       </div>
 
       {filteredCodes.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-lg border">
-          <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Test Codes Found</h3>
-          <p className="text-gray-500">Create your first test codes to get started</p>
+        <div style={{
+          textAlign: 'center',
+          padding: '48px 24px',
+          background: '#ffffff',
+          borderRadius: '12px',
+          border: '1px solid #e5e7eb'
+        }}>
+          <FileText size={64} style={{ color: '#d1d5db', marginBottom: '16px' }} />
+          <h3 style={{
+            fontSize: '18px',
+            fontWeight: '500',
+            color: '#1f2937',
+            marginBottom: '8px'
+          }}>
+            No Test Codes Found
+          </h3>
+          <p style={{
+            color: '#6b7280',
+            margin: 0
+          }}>
+            Create your first test codes to get started
+          </p>
         </div>
       )}
 
       {/* Create Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-semibold text-gray-900">Create Test Codes</h3>
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 50
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '12px',
+            maxWidth: '600px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            <div style={{ padding: '24px' }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px'
+              }}>
+                <h3 style={{
+                  fontSize: '20px',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  margin: 0
+                }}>
+                  Create Test Codes
+                </h3>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  style={{
+                    color: '#6b7280',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#374151'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#6b7280'
+                  }}
                 >
-                  <X className="w-6 h-6" />
+                  <X size={24} />
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Test Title</label>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '16px'
+              }}>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '6px'
+                  }}>
+                    Test Title
+                  </label>
                   <input
                     type="text"
                     value={createForm.title}
                     onChange={(e) => setCreateForm({...createForm, title: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none'
+                    }}
                     placeholder="e.g., Mathematics Mid-Term Exam"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '6px'
+                  }}>
+                    Subject
+                  </label>
                   <select
                     value={createForm.subject_id}
                     onChange={(e) => setCreateForm({...createForm, subject_id: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      backgroundColor: 'white',
+                      outline: 'none'
+                    }}
                   >
                     <option value="">Select Subject</option>
                     {lookupData.subjects?.map(subject => (
@@ -446,22 +837,53 @@ export default function TestCodeManager() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Class Level</label>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '6px'
+                  }}>
+                    Class Level
+                  </label>
                   <input
                     type="text"
                     value={createForm.class_level}
                     onChange={(e) => setCreateForm({...createForm, class_level: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none'
+                    }}
                     placeholder="e.g., SS1, JSS2"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Term</label>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '6px'
+                  }}>
+                    Term
+                  </label>
                   <select
                     value={createForm.term_id}
                     onChange={(e) => setCreateForm({...createForm, term_id: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      backgroundColor: 'white',
+                      outline: 'none'
+                    }}
                   >
                     <option value="">Select Term</option>
                     {lookupData.terms?.map(term => (
@@ -471,11 +893,27 @@ export default function TestCodeManager() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Session</label>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '6px'
+                  }}>
+                    Session
+                  </label>
                   <select
                     value={createForm.session_id}
                     onChange={(e) => setCreateForm({...createForm, session_id: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      backgroundColor: 'white',
+                      outline: 'none'
+                    }}
                   >
                     <option value="">Select Session</option>
                     {lookupData.sessions?.map(session => (
@@ -485,73 +923,191 @@ export default function TestCodeManager() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '6px'
+                  }}>
+                    Duration (minutes)
+                  </label>
                   <input
                     type="number"
                     value={createForm.duration_minutes}
                     onChange={(e) => setCreateForm({...createForm, duration_minutes: parseInt(e.target.value) || 60})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none'
+                    }}
                     min="1"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '6px'
+                  }}>
                     Total Questions
                     {availableQuestions > 0 && (
-                      <span className="text-sm text-gray-500 ml-2">({availableQuestions} available)</span>
+                      <span style={{
+                        fontSize: '12px',
+                        color: '#6b7280',
+                        marginLeft: '8px'
+                      }}>
+                        ({availableQuestions} available)
+                      </span>
                     )}
                   </label>
                   <input
                     type="number"
                     value={createForm.total_questions}
                     onChange={(e) => setCreateForm({...createForm, total_questions: parseInt(e.target.value) || 20})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none'
+                    }}
                     min="1"
                     max={availableQuestions}
                   />
                   {createForm.total_questions > availableQuestions && availableQuestions > 0 && (
-                    <p className="text-red-500 text-xs mt-1">Not enough questions available</p>
+                    <p style={{
+                      color: '#dc2626',
+                      fontSize: '12px',
+                      marginTop: '4px',
+                      margin: '4px 0 0 0'
+                    }}>
+                      Not enough questions available
+                    </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Number of Codes</label>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '6px'
+                  }}>
+                    Number of Codes
+                  </label>
                   <input
                     type="number"
                     value={createForm.count}
                     onChange={(e) => setCreateForm({...createForm, count: parseInt(e.target.value) || 1})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none'
+                    }}
                     min="1"
                     max="100"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p style={{
+                    fontSize: '12px',
+                    color: '#6b7280',
+                    marginTop: '4px',
+                    margin: '4px 0 0 0'
+                  }}>
                     {createForm.count > 1 ? `Create ${createForm.count} test codes at once` : 'Create a single test code'}
                   </p>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expires At (optional)</label>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '6px'
+                  }}>
+                    Expires At (optional)
+                  </label>
                   <input
                     type="datetime-local"
                     value={createForm.expires_at}
                     onChange={(e) => setCreateForm({...createForm, expires_at: e.target.value})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none'
+                    }}
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 mt-6">
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '12px',
+                marginTop: '24px'
+              }}>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                  style={{
+                    padding: '10px 16px',
+                    color: '#374151',
+                    background: '#f9fafb',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f3f4f6'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f9fafb'
+                  }}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateCodes}
                   disabled={creating || createForm.total_questions > availableQuestions}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  style={{
+                    padding: '10px 16px',
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: creating || createForm.total_questions > availableQuestions ? 'not-allowed' : 'pointer',
+                    opacity: creating || createForm.total_questions > availableQuestions ? 0.6 : 1,
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!creating && createForm.total_questions <= availableQuestions) {
+                      e.currentTarget.style.backgroundColor = '#2563eb'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!creating && createForm.total_questions <= availableQuestions) {
+                      e.currentTarget.style.backgroundColor = '#3b82f6'
+                    }
+                  }}
                 >
                   {creating ? 'Creating...' : 
                    createForm.count > 1 ? `Create ${createForm.count} Codes` : 'Create Code'}
