@@ -221,7 +221,7 @@ export default function AllQuestions() {
   return (
     <div style={{ 
       padding: '24px',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: '#ffffff',
       minHeight: '100vh'
     }}>
       <style>
@@ -235,21 +235,20 @@ export default function AllQuestions() {
 
       {/* Header */}
       <div style={{
-        marginBottom: '32px',
-        textAlign: 'center'
+        marginBottom: '32px'
       }}>
         <h1 style={{
-          fontSize: '36px',
+          fontSize: '32px',
           fontWeight: 'bold',
-          color: 'white',
+          color: '#1f2937',
           margin: 0,
           marginBottom: '8px'
         }}>
           Question Bank
         </h1>
         <p style={{
-          fontSize: '18px',
-          color: 'rgba(255, 255, 255, 0.8)',
+          fontSize: '16px',
+          color: '#6b7280',
           margin: 0
         }}>
           Manage all questions in the system

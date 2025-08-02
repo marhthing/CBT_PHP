@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
 import ErrorNotification from '../ui/ErrorNotification'
-import { BarChart3, FileText, PlayCircle, Users, GraduationCap, Clock, Plus, UserPlus, BookOpen, Activity } from 'lucide-react'
+import { BarChart3, FileText, PlayCircle, Users, GraduationCap, Clock, Plus, UserPlus, BookOpen, Activity, Database, Server, Shield, HardDrive } from 'lucide-react'
 
 interface DashboardStats {
   total_questions: number
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
     {
       title: 'Total Questions',
       value: stats.total_questions,
-      color: '#6366f1',
+      color: '#3b82f6',
       icon: BarChart3,
       description: 'Questions in database',
       onClick: () => navigate('/admin/questions')
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
       description: 'Generate a new test',
       icon: Plus,
       onClick: () => navigate('/admin/testcodes'),
-      color: '#6366f1'
+      color: '#3b82f6'
     },
     {
       title: 'Assign Teachers',
@@ -215,7 +215,7 @@ export default function AdminDashboard() {
             width: '20px',
             height: '20px',
             border: '2px solid #e5e7eb',
-            borderTop: '2px solid #6366f1',
+            borderTop: '2px solid #3b82f6',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }}></div>
@@ -228,7 +228,7 @@ export default function AdminDashboard() {
   return (
     <div style={{ 
       padding: '24px',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      background: '#ffffff',
       minHeight: '100vh'
     }}>
       <style>
@@ -242,22 +242,22 @@ export default function AdminDashboard() {
 
       {error && <ErrorNotification message={error} onClose={() => setError('')} />}
 
+      {/* Header */}
       <div style={{
-        marginBottom: '32px',
-        textAlign: 'center'
+        marginBottom: '32px'
       }}>
         <h1 style={{
-          fontSize: '36px',
+          fontSize: '32px',
           fontWeight: 'bold',
-          color: 'white',
+          color: '#1f2937',
           margin: 0,
           marginBottom: '8px'
         }}>
           Admin Dashboard
         </h1>
         <p style={{
-          fontSize: '18px',
-          color: 'rgba(255, 255, 255, 0.8)',
+          fontSize: '16px',
+          color: '#6b7280',
           margin: 0
         }}>
           Welcome back, {user?.full_name || 'Administrator'}
@@ -266,12 +266,12 @@ export default function AdminDashboard() {
 
       {retrying && (
         <div style={{
-          background: 'rgba(59, 130, 246, 0.1)',
-          border: '1px solid rgba(59, 130, 246, 0.3)',
+          background: '#f0f9ff',
+          border: '1px solid #bfdbfe',
           borderRadius: '8px',
           padding: '12px',
           marginBottom: '24px',
-          color: '#3b82f6',
+          color: '#1e40af',
           display: 'flex',
           alignItems: 'center',
           gap: '8px'
@@ -279,8 +279,8 @@ export default function AdminDashboard() {
           <div style={{
             width: '16px',
             height: '16px',
-            border: '2px solid rgba(59, 130, 246, 0.3)',
-            borderTop: '2px solid #3b82f6',
+            border: '2px solid #bfdbfe',
+            borderTop: '2px solid #1e40af',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }}></div>
@@ -291,7 +291,7 @@ export default function AdminDashboard() {
       {/* Stats Cards Grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: '24px',
         marginBottom: '40px'
       }}>
@@ -302,21 +302,21 @@ export default function AdminDashboard() {
               key={index}
               onClick={card.onClick}
               style={{
-                background: 'white',
-                borderRadius: '16px',
+                background: '#ffffff',
+                borderRadius: '12px',
                 padding: '24px',
-                boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                border: '1px solid #e5e7eb',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                border: '1px solid rgba(255, 255, 255, 0.2)'
+                transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-5px)'
-                e.currentTarget.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15)'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)'
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
               }}
             >
               <div style={{
@@ -329,7 +329,7 @@ export default function AdminDashboard() {
                   width: '48px',
                   height: '48px',
                   backgroundColor: card.color,
-                  borderRadius: '12px',
+                  borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -338,7 +338,7 @@ export default function AdminDashboard() {
                   <IconComponent size={24} />
                 </div>
                 <div style={{
-                  fontSize: '32px',
+                  fontSize: '28px',
                   fontWeight: 'bold',
                   color: card.color
                 }}>
@@ -346,7 +346,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <h3 style={{
-                fontSize: '18px',
+                fontSize: '16px',
                 fontWeight: '600',
                 color: '#1f2937',
                 margin: '0 0 4px 0'
@@ -373,10 +373,11 @@ export default function AdminDashboard() {
       }}>
         {/* Recent Test Codes */}
         <div style={{
-          background: 'white',
-          borderRadius: '16px',
+          background: '#ffffff',
+          borderRadius: '12px',
           padding: '24px',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #e5e7eb'
         }}>
           <div style={{
             display: 'flex',
@@ -385,7 +386,7 @@ export default function AdminDashboard() {
             marginBottom: '24px'
           }}>
             <h2 style={{
-              fontSize: '24px',
+              fontSize: '20px',
               fontWeight: 'bold',
               color: '#1f2937',
               margin: 0
@@ -395,7 +396,7 @@ export default function AdminDashboard() {
             <button
               onClick={() => navigate('/admin/testcodes')}
               style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                background: '#3b82f6',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
@@ -403,15 +404,13 @@ export default function AdminDashboard() {
                 fontSize: '14px',
                 fontWeight: '500',
                 cursor: 'pointer',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = '0 5px 15px rgba(102, 126, 234, 0.4)'
+                e.currentTarget.style.backgroundColor = '#2563eb'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = 'none'
+                e.currentTarget.style.backgroundColor = '#3b82f6'
               }}
             >
               View All
@@ -438,7 +437,7 @@ export default function AdminDashboard() {
                     alignItems: 'center',
                     padding: '16px',
                     background: '#f9fafb',
-                    borderRadius: '12px',
+                    borderRadius: '8px',
                     border: '1px solid #e5e7eb'
                   }}
                 >
@@ -460,8 +459,8 @@ export default function AdminDashboard() {
                       <span style={{
                         fontSize: '14px',
                         fontWeight: '500',
-                        color: '#6366f1',
-                        background: '#f0f9ff',
+                        color: '#3b82f6',
+                        background: '#eff6ff',
                         padding: '2px 8px',
                         borderRadius: '4px'
                       }}>
@@ -497,7 +496,7 @@ export default function AdminDashboard() {
                       fontSize: '12px',
                       fontWeight: '500',
                       cursor: 'pointer',
-                      transition: 'all 0.3s ease'
+                      transition: 'all 0.2s ease'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'scale(1.05)'
@@ -514,85 +513,200 @@ export default function AdminDashboard() {
           )}
         </div>
 
-        {/* Quick Actions */}
-        <div style={{
-          background: 'white',
-          borderRadius: '16px',
-          padding: '24px',
-          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
-        }}>
-          <h2 style={{
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: '#1f2937',
-            margin: '0 0 24px 0'
-          }}>
-            Quick Actions
-          </h2>
+        {/* Right Column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Quick Actions */}
           <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '16px'
+            background: '#ffffff',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #e5e7eb'
           }}>
-            {quickActions.map((action, index) => {
-              const IconComponent = action.icon
-              return (
-                <button
-                  key={index}
-                  onClick={action.onClick}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    padding: '16px',
-                    background: `linear-gradient(135deg, ${action.color}15 0%, ${action.color}25 100%)`,
-                    border: `1px solid ${action.color}30`,
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    textAlign: 'left'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = `0 5px 15px ${action.color}20`
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
-                >
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    backgroundColor: action.color,
-                    borderRadius: '10px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white'
-                  }}>
-                    <IconComponent size={20} />
-                  </div>
-                  <div>
-                    <h4 style={{
-                      fontSize: '16px',
-                      fontWeight: '600',
-                      color: '#1f2937',
-                      margin: '0 0 4px 0'
+            <h2 style={{
+              fontSize: '20px',
+              fontWeight: 'bold',
+              color: '#1f2937',
+              margin: '0 0 20px 0'
+            }}>
+              Quick Actions
+            </h2>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              {quickActions.map((action, index) => {
+                const IconComponent = action.icon
+                return (
+                  <button
+                    key={index}
+                    onClick={action.onClick}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px',
+                      background: '#f9fafb',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      textAlign: 'left'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f3f4f6'
+                      e.currentTarget.style.borderColor = action.color
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#f9fafb'
+                      e.currentTarget.style.borderColor = '#e5e7eb'
+                    }}
+                  >
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      backgroundColor: action.color,
+                      borderRadius: '6px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'white'
                     }}>
-                      {action.title}
-                    </h4>
-                    <p style={{
-                      fontSize: '14px',
-                      color: '#6b7280',
-                      margin: 0
-                    }}>
-                      {action.description}
-                    </p>
-                  </div>
-                </button>
-              )
-            })}
+                      <IconComponent size={16} />
+                    </div>
+                    <div>
+                      <h4 style={{
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        color: '#1f2937',
+                        margin: '0 0 2px 0'
+                      }}>
+                        {action.title}
+                      </h4>
+                      <p style={{
+                        fontSize: '12px',
+                        color: '#6b7280',
+                        margin: 0
+                      }}>
+                        {action.description}
+                      </p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* System Status */}
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            border: '1px solid #e5e7eb'
+          }}>
+            <h2 style={{
+              fontSize: '20px',
+              fontWeight: 'bold',
+              color: '#1f2937',
+              margin: '0 0 20px 0'
+            }}>
+              System Status
+            </h2>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '8px 0'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Database size={16} style={{ color: '#10b981' }} />
+                  <span style={{ fontSize: '14px', color: '#374151' }}>Database</span>
+                </div>
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  color: '#10b981',
+                  background: '#dcfce7',
+                  padding: '2px 8px',
+                  borderRadius: '4px'
+                }}>
+                  Healthy
+                </span>
+              </div>
+              
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '8px 0'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Server size={16} style={{ color: '#10b981' }} />
+                  <span style={{ fontSize: '14px', color: '#374151' }}>API Server</span>
+                </div>
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  color: '#10b981',
+                  background: '#dcfce7',
+                  padding: '2px 8px',
+                  borderRadius: '4px'
+                }}>
+                  Running
+                </span>
+              </div>
+              
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '8px 0'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Shield size={16} style={{ color: '#10b981' }} />
+                  <span style={{ fontSize: '14px', color: '#374151' }}>Authentication</span>
+                </div>
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  color: '#10b981',
+                  background: '#dcfce7',
+                  padding: '2px 8px',
+                  borderRadius: '4px'
+                }}>
+                  Active
+                </span>
+              </div>
+              
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '8px 0'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <HardDrive size={16} style={{ color: '#10b981' }} />
+                  <span style={{ fontSize: '14px', color: '#374151' }}>File Storage</span>
+                </div>
+                <span style={{
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  color: '#10b981',
+                  background: '#dcfce7',
+                  padding: '2px 8px',
+                  borderRadius: '4px'
+                }}>
+                  Available
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
