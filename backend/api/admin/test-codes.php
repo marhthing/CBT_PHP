@@ -41,7 +41,7 @@ try {
                     GROUP BY tc.id, tc.code, tc.title, tc.subject_id, tc.class_level, 
                              tc.duration_minutes, tc.total_questions, tc.term_id, 
                              tc.session_id, tc.is_active, tc.is_activated, tc.expires_at,
-                             tc.created_by, tc.created_at, tc.updated_at, tc.description,
+                             tc.created_by, tc.created_at, tc.description,
                              tc.pass_score, tc.activated_at, s.name
                 ");
                 $stmt->execute([$test_code_id]);
@@ -100,7 +100,7 @@ try {
                     GROUP BY tc.id, tc.code, tc.title, tc.subject_id, tc.class_level, 
                              tc.duration_minutes, tc.total_questions, tc.term_id, 
                              tc.session_id, tc.is_active, tc.is_activated, tc.expires_at,
-                             tc.created_by, tc.created_at, tc.updated_at, tc.description,
+                             tc.created_by, tc.created_at, tc.description,
                              tc.pass_score, tc.activated_at,
                              s.name, t.name, sess.name, u.full_name
                     ORDER BY tc.created_at DESC
