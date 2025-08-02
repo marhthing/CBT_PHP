@@ -29,14 +29,14 @@ interface LookupData {
 }
 
 interface CreateTestCodeForm {
-  title: string
   subject_id: string
   class_level: string
   duration_minutes: number
-  question_count: number
+  total_questions: number
   term_id: string
   session_id: string
   expires_at: string
+  code_count: number
 }
 
 export default function TestCodeManager() {
@@ -57,15 +57,19 @@ export default function TestCodeManager() {
 
   // Create form
   const [createForm, setCreateForm] = useState<CreateTestCodeForm>({
-    title: '',
     subject_id: '',
     class_level: '',
     duration_minutes: 60,
-    question_count: 20,
+    total_questions: 20,
     term_id: '',
     session_id: '',
-    expires_at: ''
+    expires_at: '',
+    code_count: 1
   })
+
+  // Bulk actions
+  const [selectedCodes, setSelectedCodes] = useState<number[]>([])
+  const [bulkActivating, setBulkActivating] = useState(false)
 
   // Memoized fetch functions for performance
   const fetchTestCodes = useCallback(async () => {
@@ -98,37 +102,52 @@ export default function TestCodeManager() {
   }, [fetchTestCodes, fetchLookupData])
 
   const createTestCode = useCallback(async () => {
-    if (!createForm.title || !createForm.subject_id || !createForm.class_level) {
+    if (!createForm.subject_id || !createForm.class_level || !createForm.term_id || !createForm.session_id) {
       setError('Please fill in all required fields')
       return
     }
 
     setCreating(true)
     try {
-      const response = await api.post('/admin/test-codes', createForm)
-      if (response.data.success) {
-        await fetchTestCodes()
-        setShowCreateModal(false)
-        setCreateForm({
-          title: '',
-          subject_id: '',
-          class_level: '',
-          duration_minutes: 60,
-          question_count: 20,
-          term_id: '',
-          session_id: '',
-          expires_at: ''
-        })
-        setSuccessMessage('Test code created successfully!')
-        setTimeout(() => setSuccessMessage(''), 3000)
+      // Generate title based on subject-term-session
+      const subject = lookupData.subjects?.find(s => s.id === parseInt(createForm.subject_id))
+      const term = lookupData.terms?.find(t => t.id === parseInt(createForm.term_id))
+      const session = lookupData.sessions?.find(s => s.id === parseInt(createForm.session_id))
+      
+      const title = `${subject?.name || 'Unknown'} - ${term?.name || 'Unknown'} - ${session?.name || 'Unknown'}`
+
+      // Create multiple codes if specified
+      const promises = []
+      for (let i = 0; i < createForm.code_count; i++) {
+        const codeData = {
+          ...createForm,
+          title: createForm.code_count > 1 ? `${title} (${i + 1})` : title
+        }
+        promises.push(api.post('/admin/test-codes', codeData))
       }
+
+      await Promise.all(promises)
+      await fetchTestCodes()
+      setShowCreateModal(false)
+      setCreateForm({
+        subject_id: '',
+        class_level: '',
+        duration_minutes: 60,
+        total_questions: 20,
+        term_id: '',
+        session_id: '',
+        expires_at: '',
+        code_count: 1
+      })
+      setSuccessMessage(`${createForm.code_count} test code(s) created successfully!`)
+      setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
       console.error('Failed to create test code:', error)
       setError('Failed to create test code: ' + (error.response?.data?.message || error.message))
     } finally {
       setCreating(false)
     }
-  }, [createForm, fetchTestCodes])
+  }, [createForm, fetchTestCodes, lookupData])
 
   const toggleActivation = useCallback(async (testCodeId: number, isActivated: boolean) => {
     try {
@@ -159,6 +178,48 @@ export default function TestCodeManager() {
       setError('Failed to delete test code: ' + (error.response?.data?.message || error.message))
     }
   }, [fetchTestCodes])
+
+  const bulkActivateTestCodes = useCallback(async (activate: boolean) => {
+    if (selectedCodes.length === 0) {
+      setError('Please select test codes to activate/deactivate')
+      return
+    }
+
+    setBulkActivating(true)
+    try {
+      const promises = selectedCodes.map(codeId => 
+        api.patch(`/admin/test-codes/${codeId}/toggle-activation`, {
+          is_activated: activate
+        })
+      )
+      
+      await Promise.all(promises)
+      await fetchTestCodes()
+      setSelectedCodes([])
+      setSuccessMessage(`${selectedCodes.length} test codes ${activate ? 'activated' : 'deactivated'} successfully!`)
+      setTimeout(() => setSuccessMessage(''), 3000)
+    } catch (error: any) {
+      console.error('Failed to bulk activate:', error)
+      setError('Failed to bulk activate: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setBulkActivating(false)
+    }
+  }, [selectedCodes, fetchTestCodes])
+
+  const toggleCodeSelection = useCallback((codeId: number) => {
+    setSelectedCodes(prev => 
+      prev.includes(codeId) 
+        ? prev.filter(id => id !== codeId)
+        : [...prev, codeId]
+    )
+  }, [])
+
+  const selectAllFilteredCodes = useCallback(() => {
+    const filteredIds = filteredTestCodes.map(tc => tc.id)
+    setSelectedCodes(prev => 
+      prev.length === filteredIds.length ? [] : filteredIds
+    )
+  }, [filteredTestCodes])
 
   // Memoized filtered test codes for performance
   const filteredTestCodes = useMemo(() => {
@@ -451,17 +512,84 @@ export default function TestCodeManager() {
           </select>
         </div>
 
-        <button
-          onClick={() => setShowCreateModal(true)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 20px',
-            background: 'rgba(255, 255, 255, 0.2)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center'
+        }}>
+          <button
+            onClick={selectAllFilteredCodes}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer'
+            }}
+          >
+            {selectedCodes.length === filteredTestCodes.length && filteredTestCodes.length > 0 ? 'Deselect All' : 'Select All'}
+          </button>
+          {selectedCodes.length > 0 && (
+            <>
+              <button
+                onClick={() => bulkActivateTestCodes(true)}
+                disabled={bulkActivating}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 16px',
+                  background: 'rgba(16, 185, 129, 0.2)',
+                  color: 'white',
+                  border: '1px solid rgba(16, 185, 129, 0.3)',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: bulkActivating ? 'not-allowed' : 'pointer'
+                }}
+              >
+                <PlayCircle size={16} />
+                Activate {selectedCodes.length}
+              </button>
+              <button
+                onClick={() => bulkActivateTestCodes(false)}
+                disabled={bulkActivating}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 16px',
+                  background: 'rgba(239, 68, 68, 0.2)',
+                  color: 'white',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: bulkActivating ? 'not-allowed' : 'pointer'
+                }}
+              >
+                <PauseCircle size={16} />
+                Deactivate {selectedCodes.length}
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => setShowCreateModal(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '12px 20px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              borderRadius: '8px',
             fontSize: '14px',
             fontWeight: '500',
             cursor: 'pointer',
@@ -512,14 +640,36 @@ export default function TestCodeManager() {
                 borderRadius: '12px',
                 padding: '20px',
                 boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-                border: testCode.is_activated ? '2px solid #10b981' : '2px solid #e5e7eb'
+                border: selectedCodes.includes(testCode.id) 
+                  ? '2px solid #3b82f6' 
+                  : testCode.is_activated 
+                    ? '2px solid #10b981' 
+                    : '2px solid #e5e7eb',
+                position: 'relative'
               }}
             >
+              <div style={{
+                position: 'absolute',
+                top: '12px',
+                left: '12px'
+              }}>
+                <input
+                  type="checkbox"
+                  checked={selectedCodes.includes(testCode.id)}
+                  onChange={() => toggleCodeSelection(testCode.id)}
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    cursor: 'pointer'
+                  }}
+                />
+              </div>
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'flex-start',
-                marginBottom: '12px'
+                marginBottom: '12px',
+                marginLeft: '32px'
               }}>
                 <div style={{ flex: 1 }}>
                   <div style={{
@@ -719,29 +869,14 @@ export default function TestCodeManager() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
-                }}>
-                  Test Title
-                </label>
-                <input
-                  type="text"
-                  value={createForm.title}
-                  onChange={(e) => setCreateForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter test title"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}
-                />
+              <div style={{
+                padding: '12px',
+                backgroundColor: '#f3f4f6',
+                borderRadius: '8px',
+                fontSize: '14px',
+                color: '#6b7280'
+              }}>
+                Test name will be automatically generated as: Subject - Term - Session
               </div>
 
               <div style={{
@@ -858,8 +993,8 @@ export default function TestCodeManager() {
                     type="number"
                     min="1"
                     max="100"
-                    value={createForm.question_count}
-                    onChange={(e) => setCreateForm(prev => ({ ...prev, question_count: parseInt(e.target.value) || 20 }))}
+                    value={createForm.total_questions}
+                    onChange={(e) => setCreateForm(prev => ({ ...prev, total_questions: parseInt(e.target.value) || 20 }))}
                     style={{
                       width: '100%',
                       padding: '12px',
@@ -939,28 +1074,60 @@ export default function TestCodeManager() {
                 </div>
               </div>
 
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
-                }}>
-                  Expires At (Optional)
-                </label>
-                <input
-                  type="datetime-local"
-                  value={createForm.expires_at}
-                  onChange={(e) => setCreateForm(prev => ({ ...prev, expires_at: e.target.value }))}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}
-                />
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '16px'
+              }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '4px'
+                  }}>
+                    Number of Codes
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={createForm.code_count}
+                    onChange={(e) => setCreateForm(prev => ({ ...prev, code_count: parseInt(e.target.value) || 1 }))}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '4px'
+                  }}>
+                    Expires At (Optional)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={createForm.expires_at}
+                    onChange={(e) => setCreateForm(prev => ({ ...prev, expires_at: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px'
+                    }}
+                  />
+                </div>
               </div>
 
               <div style={{
@@ -1016,7 +1183,7 @@ export default function TestCodeManager() {
                   ) : (
                     <>
                       <Save size={16} />
-                      Create Test Code
+                      Create Test Code{createForm.code_count > 1 ? 's' : ''}
                     </>
                   )}
                 </button>
@@ -1025,6 +1192,7 @@ export default function TestCodeManager() {
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
