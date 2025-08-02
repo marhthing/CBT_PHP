@@ -79,7 +79,7 @@ CREATE TABLE questions (
     correct_answer CHAR(1) NOT NULL CHECK (correct_answer IN ('A', 'B', 'C', 'D')),
     subject_id INTEGER REFERENCES subjects(id) NOT NULL,
     class_level VARCHAR(10) NOT NULL,
-
+    difficulty VARCHAR(10) DEFAULT 'medium' CHECK (difficulty IN ('easy', 'medium', 'hard')),
     term_id INTEGER REFERENCES terms(id) DEFAULT 1,
     session_id INTEGER REFERENCES sessions(id) DEFAULT 1,
     teacher_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
