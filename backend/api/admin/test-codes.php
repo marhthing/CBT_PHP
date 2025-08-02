@@ -117,52 +117,141 @@ try {
             break;
 
         case 'POST':
-            // Create new test code
-            $input = json_decode(file_get_contents('php://input'), true);
+            // Handle both single and bulk creation based on path
+            $path_parts = explode('/', trim($path_info, '/'));
+            $is_bulk = isset($path_parts[0]) && $path_parts[0] === 'bulk';
             
-            if (!$input) {
-                Response::badRequest('Invalid JSON data');
+            if ($is_bulk) {
+                // Bulk creation
+                $input = json_decode(file_get_contents('php://input'), true);
+                
+                if (!$input) {
+                    Response::badRequest('Invalid JSON data');
+                }
+                
+                Response::validateRequired($input, [
+                    'title', 'subject_id', 'class_level', 'duration_minutes', 
+                    'total_questions', 'term_id', 'session_id', 'count'
+                ]);
+                
+                $count = (int)($input['count'] ?? 1);
+                if ($count < 1 || $count > 100) {
+                    Response::badRequest('Count must be between 1 and 100');
+                }
+                
+                // First verify there are enough questions
+                $question_check = $db->prepare("
+                    SELECT COUNT(*) as count 
+                    FROM questions 
+                    WHERE subject_id = ?
+                ");
+                $question_check->execute([$input['subject_id']]);
+                $available_questions = $question_check->fetch()['count'];
+                
+                if ($input['total_questions'] > $available_questions) {
+                    Response::badRequest("Not enough questions available. Requested: {$input['total_questions']}, Available: {$available_questions}");
+                }
+                
+                $created_codes = [];
+                $db->beginTransaction();
+                
+                try {
+                    for ($i = 0; $i < $count; $i++) {
+                        // Generate unique test code
+                        do {
+                            $code = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6));
+                            $check_stmt = $db->prepare("SELECT id FROM test_codes WHERE code = ?");
+                            $check_stmt->execute([$code]);
+                        } while ($check_stmt->fetch());
+                        
+                        $title = $count > 1 ? $input['title'] . " (" . ($i + 1) . ")" : $input['title'];
+                        
+                        $stmt = $db->prepare("
+                            INSERT INTO test_codes (
+                                code, title, subject_id, class_level, duration_minutes,
+                                total_questions, term_id, session_id, expires_at, created_by,
+                                is_active, is_activated
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, false)
+                        ");
+                        
+                        $stmt->execute([
+                            $code,
+                            $title,
+                            $input['subject_id'],
+                            $input['class_level'],
+                            $input['duration_minutes'],
+                            $input['total_questions'],
+                            $input['term_id'],
+                            $input['session_id'],
+                            $input['expires_at'] ?: null,
+                            $user['id']
+                        ]);
+                        
+                        $created_codes[] = [
+                            'id' => $db->lastInsertId(),
+                            'code' => $code,
+                            'title' => $title
+                        ];
+                    }
+                    
+                    $db->commit();
+                    
+                    Response::created("$count test codes created successfully", [
+                        'count' => $count,
+                        'codes' => $created_codes
+                    ]);
+                } catch (Exception $e) {
+                    $db->rollback();
+                    throw $e;
+                }
+            } else {
+                // Single creation
+                $input = json_decode(file_get_contents('php://input'), true);
+                
+                if (!$input) {
+                    Response::badRequest('Invalid JSON data');
+                }
+                
+                Response::validateRequired($input, [
+                    'title', 'subject_id', 'class_level', 'duration_minutes', 
+                    'total_questions', 'term_id', 'session_id'
+                ]);
+                
+                // Generate unique test code
+                do {
+                    $code = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6));
+                    $check_stmt = $db->prepare("SELECT id FROM test_codes WHERE code = ?");
+                    $check_stmt->execute([$code]);
+                } while ($check_stmt->fetch());
+                
+                $stmt = $db->prepare("
+                    INSERT INTO test_codes (
+                        code, title, subject_id, class_level, duration_minutes,
+                        total_questions, term_id, session_id, expires_at, created_by,
+                        is_active, is_activated
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, false)
+                ");
+                
+                $stmt->execute([
+                    $code,
+                    $input['title'],
+                    $input['subject_id'],
+                    $input['class_level'],
+                    $input['duration_minutes'],
+                    $input['total_questions'],
+                    $input['term_id'],
+                    $input['session_id'],
+                    $input['expires_at'] ?: null,
+                    $user['id']
+                ]);
+                
+                $test_code_id = $db->lastInsertId();
+                
+                Response::created('Test code created successfully', [
+                    'id' => $test_code_id,
+                    'code' => $code
+                ]);
             }
-            
-            Response::validateRequired($input, [
-                'title', 'subject_id', 'class_level', 'duration_minutes', 
-                'total_questions', 'term_id', 'session_id', 'expires_at'
-            ]);
-            
-            // Generate unique test code
-            do {
-                $code = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6));
-                $check_stmt = $db->prepare("SELECT id FROM test_codes WHERE code = ?");
-                $check_stmt->execute([$code]);
-            } while ($check_stmt->fetch());
-            
-            $stmt = $db->prepare("
-                INSERT INTO test_codes (
-                    code, title, subject_id, class_level, duration_minutes,
-                    total_questions, term_id, session_id, expires_at, created_by,
-                    is_active, is_activated
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, false)
-            ");
-            
-            $stmt->execute([
-                $code,
-                $input['title'],
-                $input['subject_id'],
-                $input['class_level'],
-                $input['duration_minutes'],
-                $input['total_questions'],
-                $input['term_id'],
-                $input['session_id'],
-                $input['expires_at'],
-                $user['id']
-            ]);
-            
-            $test_code_id = $db->lastInsertId();
-            
-            Response::created('Test code created successfully', [
-                'id' => $test_code_id,
-                'code' => $code
-            ]);
             break;
 
         case 'PATCH':

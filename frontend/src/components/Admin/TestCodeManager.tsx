@@ -51,8 +51,6 @@ export default function TestCodeManager() {
   // Filters
   const [subjectFilter, setSubjectFilter] = useState('')
   const [classFilter, setClassFilter] = useState('')
-  const [termFilter, setTermFilter] = useState('')
-  const [sessionFilter, setSessionFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
 
   // Create form
@@ -108,7 +106,18 @@ export default function TestCodeManager() {
     }
 
     setCreating(true)
+    setError('')
+    
     try {
+      // First check if enough questions exist for the subject
+      const questionCheckResponse = await api.get(`/admin/questions/count?subject_id=${createForm.subject_id}`)
+      const availableQuestions = questionCheckResponse.data.data?.count || 0
+      
+      if (createForm.total_questions > availableQuestions) {
+        setError(`Not enough questions available. You requested ${createForm.total_questions} questions but only ${availableQuestions} questions exist for this subject.`)
+        return
+      }
+
       // Generate title based on subject-term-session
       const subject = lookupData.subjects?.find(s => s.id === parseInt(createForm.subject_id))
       const term = lookupData.terms?.find(t => t.id === parseInt(createForm.term_id))
@@ -116,31 +125,31 @@ export default function TestCodeManager() {
       
       const title = `${subject?.name || 'Unknown'} - ${term?.name || 'Unknown'} - ${session?.name || 'Unknown'}`
 
-      // Create multiple codes if specified
-      const promises = []
-      for (let i = 0; i < createForm.code_count; i++) {
-        const codeData = {
-          ...createForm,
-          title: createForm.code_count > 1 ? `${title} (${i + 1})` : title
-        }
-        promises.push(api.post('/admin/test-codes', codeData))
+      // Use bulk creation endpoint instead of multiple individual requests
+      const bulkData = {
+        ...createForm,
+        title,
+        count: createForm.code_count
       }
-
-      await Promise.all(promises)
-      await fetchTestCodes()
-      setShowCreateModal(false)
-      setCreateForm({
-        subject_id: '',
-        class_level: '',
-        duration_minutes: 60,
-        total_questions: 20,
-        term_id: '',
-        session_id: '',
-        expires_at: '',
-        code_count: 1
-      })
-      setSuccessMessage(`${createForm.code_count} test code(s) created successfully!`)
-      setTimeout(() => setSuccessMessage(''), 3000)
+      
+      const response = await api.post('/admin/test-codes/bulk', bulkData)
+      
+      if (response.data.success) {
+        await fetchTestCodes()
+        setShowCreateModal(false)
+        setCreateForm({
+          subject_id: '',
+          class_level: '',
+          duration_minutes: 60,
+          total_questions: 20,
+          term_id: '',
+          session_id: '',
+          expires_at: '',
+          code_count: 1
+        })
+        setSuccessMessage(`${createForm.code_count} test code(s) created successfully!`)
+        setTimeout(() => setSuccessMessage(''), 3000)
+      }
     } catch (error: any) {
       console.error('Failed to create test code:', error)
       setError('Failed to create test code: ' + (error.response?.data?.message || error.message))
@@ -1087,12 +1096,12 @@ export default function TestCodeManager() {
                     color: '#374151',
                     marginBottom: '4px'
                   }}>
-                    Number of Codes (Max 30)
+                    Number of Codes
                   </label>
                   <input
                     type="number"
                     min="1"
-                    max="30"
+                    max="100"
                     value={createForm.code_count}
                     onChange={(e) => setCreateForm(prev => ({ ...prev, code_count: parseInt(e.target.value) || 1 }))}
                     style={{
