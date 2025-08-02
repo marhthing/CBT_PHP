@@ -5,22 +5,18 @@ export default function SimpleLogin() {
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
 
-  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   
-  const { login } = useAuth()
+  const { login, loginLoading } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError('')
 
     try {
       await login(identifier, password)
-    } catch (err) {
-      setError('Invalid credentials. Please try again.')
-    } finally {
-      setLoading(false)
+    } catch (err: any) {
+      setError(err.message || 'Invalid credentials. Please try again.')
     }
   }
 
@@ -164,36 +160,36 @@ export default function SimpleLogin() {
           {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
+            disabled={loginLoading}
             style={{
               width: '100%',
-              background: loading ? '#94a3b8' : 'linear-gradient(135deg, #1e40af, #3b82f6)',
+              background: loginLoading ? '#94a3b8' : 'linear-gradient(135deg, #1e40af, #3b82f6)',
               color: 'white',
               padding: '12px',
               border: 'none',
               borderRadius: '8px',
               fontSize: '14px',
               fontWeight: '600',
-              cursor: loading ? 'not-allowed' : 'pointer',
+              cursor: loginLoading ? 'not-allowed' : 'pointer',
               transition: 'all 0.2s',
-              transform: loading ? 'none' : 'translateY(0)',
+              transform: loginLoading ? 'none' : 'translateY(0)',
             }}
             onMouseEnter={(e) => {
-              if (!loading) {
+              if (!loginLoading) {
                 const target = e.target as HTMLButtonElement
                 target.style.transform = 'translateY(-1px)'
                 target.style.boxShadow = '0 8px 20px rgba(59, 130, 246, 0.4)'
               }
             }}
             onMouseLeave={(e) => {
-              if (!loading) {
+              if (!loginLoading) {
                 const target = e.target as HTMLButtonElement
                 target.style.transform = 'translateY(0)'
                 target.style.boxShadow = 'none'
               }
             }}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loginLoading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
 

@@ -7,6 +7,7 @@ interface AuthContextType {
   login: (identifier: string, password: string) => Promise<void>
   logout: () => void
   loading: boolean
+  loginLoading: boolean
   error: string | null
 }
 
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loginLoading, setLoginLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -68,7 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (identifier: string, password: string) => {
     setError(null)
-    setLoading(true)
+    setLoginLoading(true)
 
     try {
       console.log('Attempting login for:', identifier)
@@ -104,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       handleAuthFailure()
       throw new Error(errorMessage)
     } finally {
-      setLoading(false)
+      setLoginLoading(false)
     }
   }
 
@@ -124,7 +126,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, error }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, loginLoading, error }}>
       {children}
     </AuthContext.Provider>
   )

@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-// Point directly to the backend server
-const API_URL = 'http://localhost:8000'
+// Use the Vite proxy configuration
+const API_URL = '/api'
 
 export const api = axios.create({
   baseURL: API_URL,
