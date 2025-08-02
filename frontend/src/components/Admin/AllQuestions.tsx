@@ -49,8 +49,6 @@ export default function AllQuestions() {
   const [searchTerm, setSearchTerm] = useState('')
   const [subjectFilter, setSubjectFilter] = useState('')
   const [classFilter, setClassFilter] = useState('')
-  const [termFilter, setTermFilter] = useState('')
-  const [sessionFilter, setSessionFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
 
   useEffect(() => {
@@ -60,24 +58,30 @@ export default function AllQuestions() {
   }, [])
 
   useEffect(() => {
-    fetchQuestions()
-  }, [searchTerm, subjectFilter, classFilter, termFilter, sessionFilter, typeFilter])
+    const timeoutId = setTimeout(() => {
+      fetchQuestions()
+    }, 300) // Debounce API calls to prevent rapid requests
+    
+    return () => clearTimeout(timeoutId)
+  }, [searchTerm, subjectFilter, classFilter, typeFilter])
 
   const fetchQuestions = async () => {
     try {
+      setLoading(true)
       const params = new URLSearchParams()
       if (searchTerm) params.append('search', searchTerm)
       if (subjectFilter) params.append('subject', subjectFilter)
       if (classFilter) params.append('class', classFilter)
-      if (termFilter) params.append('term', termFilter)
-      if (sessionFilter) params.append('session', sessionFilter)
       if (typeFilter) params.append('type', typeFilter)
       params.append('limit', '50')
       
       const response = await api.get(`/admin/questions?${params}`)
       setQuestions(response.data.data?.questions || [])
-    } catch (error) {
+      setError('')
+    } catch (error: any) {
       console.error('Failed to fetch questions:', error)
+      setError('Failed to load questions. Please try refreshing the page.')
+      setQuestions([])
     } finally {
       setLoading(false)
     }
@@ -202,6 +206,21 @@ export default function AllQuestions() {
             View and manage all questions in the system
           </p>
         </div>
+
+        {error && (
+          <div style={{
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#dc2626',
+            padding: '12px 16px',
+            borderRadius: '8px',
+            fontSize: '14px',
+            marginBottom: '16px',
+            width: '100%'
+          }}>
+            {error}
+          </div>
+        )}
         <button
           onClick={() => navigate('/teacher/questions')}
           style={{
