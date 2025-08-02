@@ -214,13 +214,6 @@ export default function TestCodeManager() {
     )
   }, [])
 
-  const selectAllFilteredCodes = useCallback(() => {
-    const filteredIds = filteredTestCodes.map(tc => tc.id)
-    setSelectedCodes(prev => 
-      prev.length === filteredIds.length ? [] : filteredIds
-    )
-  }, [filteredTestCodes])
-
   // Memoized filtered test codes for performance
   const filteredTestCodes = useMemo(() => {
     return testCodes.filter(testCode => {
@@ -233,6 +226,13 @@ export default function TestCodeManager() {
       return matchesSubject && matchesClass && matchesStatus
     })
   }, [testCodes, subjectFilter, classFilter, statusFilter])
+
+  const selectAllFilteredCodes = useCallback(() => {
+    const filteredIds = filteredTestCodes.map(tc => tc.id)
+    setSelectedCodes(prev => 
+      prev.length === filteredIds.length ? [] : filteredIds
+    )
+  }, [filteredTestCodes])
 
   // Memoized stats for performance
   const testCodeStats = useMemo(() => {
@@ -1087,12 +1087,12 @@ export default function TestCodeManager() {
                     color: '#374151',
                     marginBottom: '4px'
                   }}>
-                    Number of Codes
+                    Number of Codes (Max 30)
                   </label>
                   <input
                     type="number"
                     min="1"
-                    max="50"
+                    max="30"
                     value={createForm.code_count}
                     onChange={(e) => setCreateForm(prev => ({ ...prev, code_count: parseInt(e.target.value) || 1 }))}
                     style={{
