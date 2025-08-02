@@ -4,10 +4,20 @@ This is a Computer-Based Testing (CBT) Portal application designed for secondary
 
 ## Recent Changes (August 2, 2025)
 
-### Migration Cleanup Complete
+### Backend API Integration Fixed
+- ✓ Fixed authentication system - JWT tokens now working correctly with PHP backend
+- ✓ Fixed API proxy configuration to properly route frontend requests to backend
+- ✓ Fixed database schema mismatches in dashboard-stats and questions APIs
+- ✓ Updated SQL queries to use correct column names (subject_id vs subject, submitted_at vs completed_at) 
+- ✓ Made lookup endpoints public (no authentication required) for dropdown data
+- ✓ All backend endpoints now return proper JSON data with authentication
+- ✓ Updated schema.sql with current database structure (9 tables with proper foreign keys)
+- ✓ Verified all admin functionality: dashboard stats, questions list, lookup data working
+
+### Migration Cleanup Complete  
 - ✓ Removed unnecessary server folder and db.ts (Node.js/Drizzle files)
 - ✓ Removed difficulty column from PostgreSQL database
-- ✓ Updated schema.sql to remove all difficulty references
+- ✓ Updated schema.sql to remove all difficulty references  
 - ✓ Fixed PostCSS configuration with @tailwindcss/postcss dependency
 - ✓ Migration from Replit Agent to Replit environment complete
 

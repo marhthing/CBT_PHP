@@ -11,9 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
-    $auth = new Auth();
-    $user = $auth->requireAuth(); // Any authenticated user can access lookups
-
+    // Lookup data is public - no authentication required
     $database = new Database();
     $conn = $database->getConnection();
 
