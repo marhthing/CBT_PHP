@@ -104,7 +104,8 @@ CREATE TABLE test_codes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP,
     activated_at TIMESTAMP,
-    batch_id VARCHAR(255) NULL
+    batch_id VARCHAR(255) NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Test results table

@@ -19,8 +19,25 @@ if (!$user || $user['role'] !== 'admin') {
 try {
     // Parse the path to get test code ID if provided
     $path_parts = explode('/', trim($path_info, '/'));
-    $test_code_id = isset($path_parts[0]) && is_numeric($path_parts[0]) ? (int)$path_parts[0] : null;
-    $action = isset($path_parts[1]) ? $path_parts[1] : null;
+    
+    // Remove admin/test-codes prefix if present (when called via index.php routing)
+    if (count($path_parts) >= 2 && $path_parts[0] === 'admin' && $path_parts[1] === 'test-codes') {
+        $path_parts = array_slice($path_parts, 2);
+    }
+    
+    // Handle special cases first (bulk, etc.)
+    $is_bulk = isset($path_parts[0]) && $path_parts[0] === 'bulk';
+    $test_code_id = null;
+    $action = null;
+    
+    if ($is_bulk) {
+        // For bulk operations: /admin/test-codes/bulk
+        $action = 'bulk';
+    } elseif (isset($path_parts[0]) && is_numeric($path_parts[0])) {
+        // For ID-based operations: /admin/test-codes/{id} or /admin/test-codes/{id}/action
+        $test_code_id = (int)$path_parts[0];
+        $action = isset($path_parts[1]) ? $path_parts[1] : null;
+    }
 
     // Get database connection
     require_once __DIR__ . '/../../config/database.php';
@@ -117,11 +134,7 @@ try {
             break;
 
         case 'POST':
-            // Handle both single and bulk creation based on path
-            $path_parts = explode('/', trim($path_info, '/'));
-            $is_bulk = isset($path_parts[0]) && $path_parts[0] === 'bulk';
-            
-            if ($is_bulk) {
+            if ($action === 'bulk') {
                 // Bulk creation
                 $input = json_decode(file_get_contents('php://input'), true);
                 
@@ -268,7 +281,7 @@ try {
                 
                 $stmt = $db->prepare("
                     UPDATE test_codes 
-                    SET is_activated = ?, updated_at = CURRENT_TIMESTAMP
+                    SET is_activated = ?
                     WHERE id = ?
                 ");
                 $stmt->execute([$is_activated, $test_code_id]);
@@ -301,7 +314,7 @@ try {
                     Response::badRequest('No valid fields to update');
                 }
                 
-                $update_fields[] = "updated_at = CURRENT_TIMESTAMP";
+                // Remove updated_at since column doesn't exist yet
                 $params[] = $test_code_id;
                 
                 $stmt = $db->prepare("
