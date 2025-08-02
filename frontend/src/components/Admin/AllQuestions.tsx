@@ -75,7 +75,7 @@ export default function AllQuestions() {
       params.append('limit', '50')
       
       const response = await api.get(`/admin/questions?${params}`)
-      setQuestions(response.data.data || [])
+      setQuestions(response.data.data?.questions || [])
     } catch (error) {
       console.error('Failed to fetch questions:', error)
     } finally {
