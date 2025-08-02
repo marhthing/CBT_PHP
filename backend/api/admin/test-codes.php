@@ -292,37 +292,7 @@ try {
                 } else {
                     Response::notFound('Test code batch not found');
                 }
-            } elseif ($action === 'batch' && isset($path_parts[1]) && $path_parts[2] === 'delete') {
-                // Delete entire batch: /admin/test-codes/batch/{batch_id}/delete
-                $batch_id = $path_parts[1];
-                
-                // Check if any codes in the batch have been used
-                $check_stmt = $db->prepare("
-                    SELECT COUNT(*) as used_count 
-                    FROM test_codes tc 
-                    LEFT JOIN test_results tr ON tc.id = tr.test_code_id 
-                    WHERE tc.batch_id = ? AND tr.id IS NOT NULL
-                ");
-                $check_stmt->execute([$batch_id]);
-                $used_check = $check_stmt->fetch();
-                
-                if ($used_check['used_count'] > 0) {
-                    Response::badRequest('Cannot delete batch with used codes');
-                }
-                
-                // Delete all codes in the batch
-                $stmt = $db->prepare("DELETE FROM test_codes WHERE batch_id = ?");
-                $stmt->execute([$batch_id]);
-                
-                if ($stmt->rowCount() > 0) {
-                    Response::success('Test code batch deleted successfully', [
-                        'batch_id' => $batch_id,
-                        'deleted_codes' => $stmt->rowCount()
-                    ]);
-                } else {
-                    Response::notFound('Test code batch not found');
-                }
-            } elseif ($test_code_id && $action === 'toggle-activation') {
+             elseif ($test_code_id && $action === 'toggle-activation') {
                 // Individual activation is not allowed
                 Response::badRequest('Individual code activation is not allowed. Use batch activation instead.');
             } else {
@@ -364,27 +334,41 @@ try {
             break;
 
         case 'DELETE':
-            if (!$test_code_id) {
-                Response::badRequest('Test code ID required');
-            }
-            
-            // Check if test code has been used
-            $check_stmt = $db->prepare("SELECT COUNT(*) as usage_count FROM test_results WHERE test_code_id = ?");
-            $check_stmt->execute([$test_code_id]);
-            $usage = $check_stmt->fetch();
-            
-            if ($usage['usage_count'] > 0) {
-                Response::badRequest('Cannot delete test code that has been used');
-            }
-            
-            // Delete the test code
-            $stmt = $db->prepare("DELETE FROM test_codes WHERE id = ?");
-            $stmt->execute([$test_code_id]);
-            
-            if ($stmt->rowCount() > 0) {
-                Response::success('Test code deleted successfully');
+            if ($action === 'batch' && isset($path_parts[1])) {
+                // Delete entire batch: /admin/test-codes/batch/{batch_id}
+                $batch_id = $path_parts[1];
+                
+                // Check if any codes in the batch have been used
+                $check_stmt = $db->prepare("
+                    SELECT COUNT(*) as used_count 
+                    FROM test_codes tc 
+                    LEFT JOIN test_results tr ON tc.id = tr.test_code_id 
+                    WHERE tc.batch_id = ? AND tr.id IS NOT NULL
+                ");
+                $check_stmt->execute([$batch_id]);
+                $used_check = $check_stmt->fetch();
+                
+                if ($used_check['used_count'] > 0) {
+                    Response::badRequest('Cannot delete batch with used codes');
+                }
+                
+                // Delete all codes in the batch
+                $stmt = $db->prepare("DELETE FROM test_codes WHERE batch_id = ?");
+                $stmt->execute([$batch_id]);
+                
+                if ($stmt->rowCount() > 0) {
+                    Response::success('Test code batch deleted successfully', [
+                        'batch_id' => $batch_id,
+                        'deleted_codes' => $stmt->rowCount()
+                    ]);
+                } else {
+                    Response::notFound('Test code batch not found');
+                }
+            } elseif ($test_code_id) {
+                // Individual code deletion - not allowed per requirements
+                Response::badRequest('Individual code deletion is not allowed. Delete the entire batch instead.');
             } else {
-                Response::notFound('Test code not found');
+                Response::badRequest('Invalid delete request');
             }
             break;
 
