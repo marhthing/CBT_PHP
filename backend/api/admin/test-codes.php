@@ -254,8 +254,13 @@ try {
                     Response::badRequest('is_activated field is required');
                 }
                 
-                // Ensure boolean conversion
-                $is_activated = filter_var($input['is_activated'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                // Ensure boolean conversion - handle string "true"/"false" and actual booleans
+                if (is_string($input['is_activated'])) {
+                    $is_activated = filter_var($input['is_activated'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                } else {
+                    $is_activated = (bool)$input['is_activated'];
+                }
+                
                 if ($is_activated === null) {
                     Response::badRequest('is_activated must be a valid boolean value');
                 }
