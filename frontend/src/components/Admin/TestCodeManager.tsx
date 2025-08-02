@@ -65,6 +65,8 @@ export default function TestCodeManager() {
   // Form states
   const [creating, setCreating] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [selectedBatch, setSelectedBatch] = useState<any>(null)
   const [createForm, setCreateForm] = useState<CreateForm>({
     title: '',
     subject_id: '',
@@ -305,6 +307,37 @@ export default function TestCodeManager() {
     setSuccessMessage('Codes copied to clipboard')
     // Clear success message after 2 seconds to avoid UI clutter
     setTimeout(() => setSuccessMessage(''), 2000)
+  }
+
+  // Handle individual code deletion
+  const handleDeleteCode = async (codeId: number) => {
+    try {
+      await api.delete(`/admin/test-codes/${codeId}`)
+      
+      // Remove code from state locally
+      setTestCodes(prevCodes => prevCodes.filter(code => code.id !== codeId))
+      
+      // Update selected batch if viewing modal
+      if (selectedBatch) {
+        const updatedBatch = {
+          ...selectedBatch,
+          codes: selectedBatch.codes.filter((code: any) => code.id !== codeId)
+        }
+        setSelectedBatch(updatedBatch)
+        
+        // Close modal if no codes left
+        if (updatedBatch.codes.length === 0) {
+          setShowViewModal(false)
+          setSelectedBatch(null)
+        }
+      }
+      
+      setSuccessMessage('Test code deleted successfully')
+      setTimeout(() => setSuccessMessage(''), 3000)
+    } catch (error: any) {
+      console.error('Failed to delete test code:', error)
+      setError(error.response?.data?.message || 'Failed to delete test code')
+    }
   }
 
 
@@ -673,6 +706,26 @@ export default function TestCodeManager() {
                 <button
                   onClick={(e) => {
                     e.preventDefault()
+                    setSelectedBatch(batch)
+                    setShowViewModal(true)
+                  }}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #3b82f6',
+                    backgroundColor: 'white',
+                    color: '#3b82f6',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  View
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
                     const codes = batch.codes.map(c => c.code).join(', ')
                     copyToClipboard(codes)
                   }}
@@ -696,7 +749,7 @@ export default function TestCodeManager() {
                 </button>
               </div>
 
-              {/* Individual Codes Preview */}
+              {/* Brief Codes Preview */}
               <div style={{
                 padding: '12px',
                 background: '#f9fafb',
@@ -709,43 +762,14 @@ export default function TestCodeManager() {
                   color: '#374151',
                   marginBottom: '8px'
                 }}>
-                  Codes in this batch:
+                  Sample codes: {batch.codes.slice(0, 3).map(c => c.code).join(', ')}
+                  {batch.codes.length > 3 && ` ... (+${batch.codes.length - 3} more)`}
                 </div>
                 <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-                  gap: '4px'
+                  fontSize: '11px',
+                  color: '#6b7280'
                 }}>
-                  {batch.codes.map((code) => (
-                    <span
-                      key={code.id}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        copyToClipboard(code.code)
-                      }}
-                      style={{
-                        padding: '4px 6px',
-                        background: '#ffffff',
-                        border: '1px solid #d1d5db',
-                        borderRadius: '4px',
-                        fontSize: '11px',
-                        fontFamily: 'monospace',
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#3b82f6'
-                        e.currentTarget.style.color = 'white'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#ffffff'
-                        e.currentTarget.style.color = 'inherit'
-                      }}
-                    >
-                      {code.code}
-                    </span>
-                  ))}
+                  Click "View" to see all codes and manage individual codes
                 </div>
               </div>
             </div>
@@ -809,6 +833,255 @@ export default function TestCodeManager() {
             <Plus size={16} />
             Create Test Code Batch
           </button>
+        </div>
+      )}
+
+      {/* View Batch Modal */}
+      {showViewModal && selectedBatch && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '800px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflow: 'auto'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              marginBottom: '20px'
+            }}>
+              <div>
+                <h3 style={{
+                  fontSize: '20px',
+                  fontWeight: 'bold',
+                  marginBottom: '8px',
+                  color: '#1f2937'
+                }}>
+                  Batch of {selectedBatch.codes.length} Test Codes
+                </h3>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#6b7280',
+                  margin: 0
+                }}>
+                  {selectedBatch.title}
+                </p>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  setShowViewModal(false)
+                  setSelectedBatch(null)
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '20px',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  padding: '4px'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Batch Info */}
+            <div style={{
+              background: '#f9fafb',
+              padding: '16px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              border: '1px solid #e5e7eb'
+            }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '12px',
+                fontSize: '14px'
+              }}>
+                <div><strong>Subject:</strong> {selectedBatch.codes[0].subject_name}</div>
+                <div><strong>Class:</strong> {selectedBatch.codes[0].class_level}</div>
+                <div><strong>Duration:</strong> {selectedBatch.codes[0].duration_minutes} minutes</div>
+                <div><strong>Questions:</strong> {selectedBatch.codes[0].total_questions}</div>
+                <div><strong>Status:</strong> 
+                  <span style={{
+                    marginLeft: '8px',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: '12px',
+                    background: selectedBatch.isActivated ? '#f0fdf4' : '#fef2f2',
+                    color: selectedBatch.isActivated ? '#166534' : '#dc2626'
+                  }}>
+                    {selectedBatch.isActivated ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Individual Codes */}
+            <div style={{
+              marginBottom: '20px'
+            }}>
+              <h4 style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                marginBottom: '12px',
+                color: '#1f2937'
+              }}>
+                Individual Test Codes
+              </h4>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                gap: '12px',
+                maxHeight: '300px',
+                overflow: 'auto',
+                padding: '8px'
+              }}>
+                {selectedBatch.codes.map((code: any) => (
+                  <div
+                    key={code.id}
+                    style={{
+                      background: '#ffffff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '8px'
+                    }}>
+                      <span style={{
+                        fontFamily: 'monospace',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        color: '#1f2937'
+                      }}>
+                        {code.code}
+                      </span>
+                      <div style={{
+                        display: 'flex',
+                        gap: '4px'
+                      }}>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault()
+                            copyToClipboard(code.code)
+                          }}
+                          style={{
+                            background: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Copy
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault()
+                            if (confirm(`Are you sure you want to delete test code ${code.code}?`)) {
+                              handleDeleteCode(code.id)
+                            }
+                          }}
+                          style={{
+                            background: '#dc2626',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: '11px',
+                      color: '#6b7280'
+                    }}>
+                      Created: {new Date(code.created_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div style={{
+              display: 'flex',
+              gap: '12px',
+              justifyContent: 'flex-end',
+              paddingTop: '16px',
+              borderTop: '1px solid #e5e7eb'
+            }}>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  const codes = selectedBatch.codes.map((c: any) => c.code).join(', ')
+                  copyToClipboard(codes)
+                }}
+                style={{
+                  padding: '10px 16px',
+                  border: '1px solid #3b82f6',
+                  borderRadius: '8px',
+                  backgroundColor: 'white',
+                  color: '#3b82f6',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <Copy size={14} />
+                Copy All Codes
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  setShowViewModal(false)
+                  setSelectedBatch(null)
+                }}
+                style={{
+                  padding: '10px 16px',
+                  backgroundColor: '#6b7280',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
