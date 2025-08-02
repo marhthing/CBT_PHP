@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../../contexts/AuthContext'
 import { api } from '../../lib/api'
 
 interface Teacher {
@@ -36,7 +35,6 @@ interface CreateAssignmentForm {
 }
 
 export default function TeacherAssignment() {
-  const { user } = useAuth()
   const [assignments, setAssignments] = useState<Assignment[]>([])
   const [teachers, setTeachers] = useState<Teacher[]>([])
   const [lookupData, setLookupData] = useState<LookupData>({})
@@ -76,7 +74,7 @@ export default function TeacherAssignment() {
   const fetchTeachers = async () => {
     try {
       const response = await api.get('/admin/teachers')
-      setTeachers(response.data.teachers || [])
+      setTeachers(response.data.data?.teachers || [])
     } catch (error) {
       console.error('Failed to fetch teachers:', error)
     }

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../../contexts/AuthContext'
 import { api } from '../../lib/api'
 import ErrorNotification from '../ui/ErrorNotification'
 
@@ -104,7 +103,14 @@ export default function TestCodeManager() {
 
     setCreating(true)
     try {
-      const response = await api.post('/admin/test-codes', createForm)
+      // Transform the form data to match backend expectations
+      const requestData = {
+        ...createForm,
+        total_questions: createForm.question_count  // Backend expects total_questions
+      }
+      delete (requestData as any).question_count  // Remove the frontend field name
+      
+      const response = await api.post('/admin/test-codes', requestData)
       if (response.data.success) {
         await fetchTestCodes()
         setShowCreateModal(false)
