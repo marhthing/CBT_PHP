@@ -34,6 +34,22 @@ interface TestCode {
   created_at: string
   expires_at: string
   created_by_name: string
+  batch_id?: string
+}
+
+interface TestCodeBatch {
+  batch_id: string
+  title: string
+  subject_name: string
+  class_level: string
+  term_name: string
+  session_name: string
+  duration_minutes: number
+  total_questions: number
+  count: number
+  created_at: string
+  created_by_name: string
+  codes: TestCode[]
 }
 
 interface LookupData {
@@ -57,10 +73,13 @@ interface CreateForm {
 
 export default function TestCodeManager() {
   const [testCodes, setTestCodes] = useState<TestCode[]>([])
+  const [testCodeBatches, setTestCodeBatches] = useState<TestCodeBatch[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showViewModal, setShowViewModal] = useState(false)
+  const [showBatchModal, setShowBatchModal] = useState(false)
+  const [selectedBatch, setSelectedBatch] = useState<TestCodeBatch | null>(null)
   const [lookupData, setLookupData] = useState<LookupData>({})
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -97,7 +116,42 @@ export default function TestCodeManager() {
       params.append('limit', '100')
       
       const response = await api.get(`/admin/test-codes?${params.toString()}`)
-      setTestCodes(response.data.data || [])
+      const codes = response.data.data || []
+      setTestCodes(codes)
+      
+      // Group codes by batch_id for bulk created codes
+      const batches = new Map<string, TestCodeBatch>()
+      const individualCodes: TestCode[] = []
+      
+      codes.forEach((code: TestCode) => {
+        if (code.batch_id) {
+          if (!batches.has(code.batch_id)) {
+            // Extract base title (remove the numbering)
+            const baseTitle = code.title.replace(/\s*\(\d+\)\s*$/, '')
+            batches.set(code.batch_id, {
+              batch_id: code.batch_id,
+              title: baseTitle,
+              subject_name: code.subject_name,
+              class_level: code.class_level,
+              term_name: code.term_name,
+              session_name: code.session_name,
+              duration_minutes: code.duration_minutes,
+              total_questions: code.total_questions,
+              count: 0,
+              created_at: code.created_at,
+              created_by_name: code.created_by_name,
+              codes: []
+            })
+          }
+          const batch = batches.get(code.batch_id)!
+          batch.codes.push(code)
+          batch.count = batch.codes.length
+        } else {
+          individualCodes.push(code)
+        }
+      })
+      
+      setTestCodeBatches(Array.from(batches.values()))
     } catch (error) {
       console.error('Failed to fetch test codes:', error)
       setError('Failed to load test codes')
@@ -182,7 +236,7 @@ export default function TestCodeManager() {
       const response = await api.post(endpoint, payload)
       
       const message = createForm.count > 1 
-        ? `Successfully created ${createForm.count} test codes`
+        ? `Successfully created batch of ${createForm.count} test codes`
         : 'Test code created successfully'
       
       setSuccessMessage(message)
@@ -249,6 +303,9 @@ export default function TestCodeManager() {
   }
 
   const filteredCodes = testCodes.filter(code => {
+    // Only show individual codes (not batched codes)
+    if (code.batch_id) return false
+    
     const matchesSubject = !subjectFilter || code.subject_name.toLowerCase().includes(subjectFilter.toLowerCase())
     const matchesClass = !classFilter || code.class_level.toLowerCase().includes(classFilter.toLowerCase())
     const matchesTerm = !termFilter || code.term_name.toLowerCase().includes(termFilter.toLowerCase())
@@ -258,6 +315,20 @@ export default function TestCodeManager() {
     if (statusFilter === 'active') matchesStatus = code.is_active && code.is_activated
     else if (statusFilter === 'used') matchesStatus = code.is_used
     else if (statusFilter === 'unused') matchesStatus = !code.is_used
+    
+    return matchesSubject && matchesClass && matchesTerm && matchesSession && matchesStatus
+  })
+
+  const filteredBatches = testCodeBatches.filter(batch => {
+    const matchesSubject = !subjectFilter || batch.subject_name.toLowerCase().includes(subjectFilter.toLowerCase())
+    const matchesClass = !classFilter || batch.class_level.toLowerCase().includes(classFilter.toLowerCase())
+    const matchesTerm = !termFilter || batch.term_name.toLowerCase().includes(termFilter.toLowerCase())
+    const matchesSession = !sessionFilter || batch.session_name.toLowerCase().includes(sessionFilter.toLowerCase())
+    
+    let matchesStatus = true
+    if (statusFilter === 'active') matchesStatus = batch.codes.some(code => code.is_active && code.is_activated)
+    else if (statusFilter === 'used') matchesStatus = batch.codes.some(code => code.is_used)
+    else if (statusFilter === 'unused') matchesStatus = batch.codes.some(code => !code.is_used)
     
     return matchesSubject && matchesClass && matchesTerm && matchesSession && matchesStatus
   })
@@ -594,14 +665,181 @@ export default function TestCodeManager() {
         </div>
       )}
 
-      {/* Test Codes Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-        gap: '24px',
-        marginBottom: '32px'
-      }}>
-        {filteredCodes.map((code) => (
+      {/* Test Code Batches */}
+      {filteredBatches.length > 0 && (
+        <div style={{ marginBottom: '32px' }}>
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: '600',
+            color: '#1f2937',
+            marginBottom: '16px'
+          }}>
+            Test Code Batches
+          </h3>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+            gap: '24px'
+          }}>
+            {filteredBatches.map((batch) => (
+              <div 
+                key={batch.batch_id} 
+                style={{
+                  background: '#ffffff',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  border: '1px solid #e5e7eb',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                  marginBottom: '16px'
+                }}>
+                  <div>
+                    <div style={{
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      color: '#3b82f6',
+                      marginBottom: '4px'
+                    }}>
+                      Batch of {batch.count} Codes
+                    </div>
+                    <h3 style={{
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#1f2937',
+                      margin: 0,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {batch.title}
+                    </h3>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px'
+                  }}>
+                    <span style={{
+                      padding: '4px 8px',
+                      borderRadius: '12px',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      background: '#f0fdf4',
+                      color: '#166534'
+                    }}>
+                      {batch.count} Codes
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  fontSize: '14px',
+                  color: '#6b7280',
+                  marginBottom: '16px'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <BookOpen size={16} style={{ color: '#3b82f6' }} />
+                    <span>{batch.subject_name} - {batch.class_level}</span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <Clock size={16} style={{ color: '#10b981' }} />
+                    <span>{batch.duration_minutes} min • {batch.total_questions} questions</span>
+                  </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <Users size={16} style={{ color: '#8b5cf6' }} />
+                    <span>{batch.term_name} • {batch.session_name}</span>
+                  </div>
+                </div>
+
+                {/* Batch Actions */}
+                <div style={{
+                  display: 'flex',
+                  gap: '8px'
+                }}>
+                  <button
+                    onClick={() => {
+                      setSelectedBatch(batch)
+                      setShowBatchModal(true)
+                    }}
+                    style={{
+                      flex: 1,
+                      background: '#10b981',
+                      color: 'white',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = '#059669'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = '#10b981'
+                    }}
+                  >
+                    <FileText size={14} />
+                    View Codes
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Individual Test Codes */}
+      {filteredCodes.length > 0 && (
+        <div style={{ marginBottom: '32px' }}>
+          <h3 style={{
+            fontSize: '20px',
+            fontWeight: '600',
+            color: '#1f2937',
+            marginBottom: '16px'
+          }}>
+            Individual Test Codes
+          </h3>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+            gap: '24px'
+          }}>
+            {filteredCodes.map((code) => (
           <div 
             key={code.id} 
             style={{
@@ -809,10 +1047,12 @@ export default function TestCodeManager() {
               </button>
             </div>
           </div>
-        ))}
-      </div>
+          ))}
+          </div>
+        </div>
+      )}
 
-      {filteredCodes.length === 0 && (
+      {filteredCodes.length === 0 && filteredBatches.length === 0 && (
         <div style={{
           textAlign: 'center',
           padding: '48px 24px',
@@ -835,6 +1075,158 @@ export default function TestCodeManager() {
           }}>
             Create your first test codes to get started
           </p>
+        </div>
+      )}
+
+      {/* Batch View Modal */}
+      {showBatchModal && selectedBatch && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 50
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '12px',
+            maxWidth: '90vw',
+            width: '100%',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            <div style={{ padding: '24px' }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px'
+              }}>
+                <div>
+                  <h3 style={{
+                    fontSize: '20px',
+                    fontWeight: '600',
+                    color: '#1f2937',
+                    margin: 0
+                  }}>
+                    {selectedBatch.title} - Batch Codes ({selectedBatch.count})
+                  </h3>
+                  <p style={{
+                    fontSize: '14px',
+                    color: '#6b7280',
+                    margin: '4px 0 0 0'
+                  }}>
+                    {selectedBatch.subject_name} - {selectedBatch.class_level} • {selectedBatch.term_name} • {selectedBatch.session_name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowBatchModal(false)}
+                  style={{
+                    color: '#6b7280',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#374151'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#6b7280'
+                  }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div style={{
+                maxHeight: '60vh',
+                overflowY: 'auto',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px'
+              }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead style={{ background: '#f9fafb', position: 'sticky', top: 0 }}>
+                    <tr>
+                      <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Code</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Status</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Used At</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedBatch.codes.map((code) => (
+                      <tr key={code.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                        <td style={{ padding: '12px', fontSize: '14px', fontFamily: 'monospace', fontWeight: '600', color: '#3b82f6' }}>
+                          {code.code}
+                        </td>
+                        <td style={{ padding: '12px' }}>
+                          <span style={{
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            ...(code.is_used 
+                              ? { background: '#fef2f2', color: '#dc2626' }
+                              : code.is_activated 
+                                ? { background: '#f0fdf4', color: '#166534' }
+                                : { background: '#fef3c7', color: '#d97706' })
+                          }}>
+                            {code.is_used ? 'Used' : code.is_activated ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px', fontSize: '13px', color: '#374151' }}>
+                          {code.is_used ? new Date(code.used_at).toLocaleDateString() : '-'}
+                        </td>
+                        <td style={{ padding: '12px' }}>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => copyToClipboard(code.code)}
+                              style={{
+                                background: '#eff6ff',
+                                color: '#1d4ed8',
+                                padding: '6px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              <Copy size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleToggleActivation(code)}
+                              disabled={code.is_used}
+                              style={{
+                                padding: '6px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                border: 'none',
+                                cursor: code.is_used ? 'not-allowed' : 'pointer',
+                                opacity: code.is_used ? 0.5 : 1,
+                                ...(code.is_activated
+                                  ? { background: '#fef3c7', color: '#d97706' }
+                                  : { background: '#f0fdf4', color: '#166534' })
+                              }}
+                            >
+                              {code.is_activated ? <Pause size={12} /> : <Play size={12} />}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

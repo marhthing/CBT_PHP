@@ -42,7 +42,7 @@ try {
                              tc.duration_minutes, tc.total_questions, tc.term_id, 
                              tc.session_id, tc.is_active, tc.is_activated, tc.expires_at,
                              tc.created_by, tc.created_at, tc.description,
-                             tc.pass_score, tc.activated_at, s.name
+                             tc.pass_score, tc.activated_at, tc.batch_id, s.name
                 ");
                 $stmt->execute([$test_code_id]);
                 $test_code = $stmt->fetch();
@@ -101,7 +101,7 @@ try {
                              tc.duration_minutes, tc.total_questions, tc.term_id, 
                              tc.session_id, tc.is_active, tc.is_activated, tc.expires_at,
                              tc.created_by, tc.created_at, tc.description,
-                             tc.pass_score, tc.activated_at,
+                             tc.pass_score, tc.activated_at, tc.batch_id,
                              s.name, t.name, sess.name, u.full_name
                     ORDER BY tc.created_at DESC
                     LIMIT ? OFFSET ?
@@ -153,6 +153,7 @@ try {
                 }
                 
                 $created_codes = [];
+                $batch_id = $count > 1 ? uniqid('batch_', true) : null;
                 $db->beginTransaction();
                 
                 try {
@@ -170,8 +171,8 @@ try {
                             INSERT INTO test_codes (
                                 code, title, subject_id, class_level, duration_minutes,
                                 total_questions, term_id, session_id, expires_at, created_by,
-                                is_active, is_activated
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, false)
+                                is_active, is_activated, batch_id
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, false, ?)
                         ");
                         
                         $stmt->execute([
@@ -184,7 +185,8 @@ try {
                             $input['term_id'],
                             $input['session_id'],
                             $input['expires_at'] ?: null,
-                            $user['id']
+                            $user['id'],
+                            $batch_id
                         ]);
                         
                         $created_codes[] = [
@@ -228,8 +230,8 @@ try {
                     INSERT INTO test_codes (
                         code, title, subject_id, class_level, duration_minutes,
                         total_questions, term_id, session_id, expires_at, created_by,
-                        is_active, is_activated
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, false)
+                        is_active, is_activated, batch_id
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, false, NULL)
                 ");
                 
                 $stmt->execute([
