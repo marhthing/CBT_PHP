@@ -254,15 +254,21 @@ try {
                     Response::badRequest('is_activated field is required');
                 }
                 
-                // Ensure boolean conversion - handle string "true"/"false" and actual booleans
-                if (is_string($input['is_activated'])) {
-                    $is_activated = filter_var($input['is_activated'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                } else {
-                    $is_activated = (bool)$input['is_activated'];
+                // Ensure boolean conversion - handle various input types
+                if ($input['is_activated'] === '' || $input['is_activated'] === null) {
+                    Response::badRequest('is_activated cannot be empty');
                 }
                 
-                if ($is_activated === null) {
-                    Response::badRequest('is_activated must be a valid boolean value');
+                if (is_string($input['is_activated'])) {
+                    if (strtolower($input['is_activated']) === 'true' || $input['is_activated'] === '1') {
+                        $is_activated = true;
+                    } elseif (strtolower($input['is_activated']) === 'false' || $input['is_activated'] === '0') {
+                        $is_activated = false;
+                    } else {
+                        Response::badRequest('is_activated must be a valid boolean value (true/false)');
+                    }
+                } else {
+                    $is_activated = (bool)$input['is_activated'];
                 }
                 
                 // Check if any codes in this batch have been used
@@ -339,7 +345,13 @@ try {
             break;
 
         case 'DELETE':
-            if ($action === 'batch' && isset($path_parts[1])) {
+            if ($action === 'bulk' && isset($_GET['empty_table'])) {
+                // Empty the entire test_codes table
+                $stmt = $db->prepare("TRUNCATE TABLE test_codes RESTART IDENTITY CASCADE");
+                $stmt->execute();
+                
+                Response::success('All test codes have been deleted successfully');
+            } elseif ($action === 'batch' && isset($path_parts[1])) {
                 // Delete entire batch: /admin/test-codes/batch/{batch_id}
                 $batch_id = $path_parts[1];
                 
