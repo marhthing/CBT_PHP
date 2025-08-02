@@ -637,12 +637,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: '2fr 1fr',
-        gap: '32px',
-        alignItems: 'start'
-      }}>
+      <div className="dashboard-main-grid">
         {/* Recent Test Codes */}
         <div style={{
           background: '#ffffff',
@@ -870,115 +865,127 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* System Status */}
+
+        </div>
+      </div>
+
+      {/* System Status Footer */}
+      <div style={{
+        marginTop: '48px',
+        background: '#ffffff',
+        borderRadius: '12px',
+        padding: '24px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+        border: '1px solid #e5e7eb'
+      }}>
+        <h2 style={{
+          fontSize: '20px',
+          fontWeight: 'bold',
+          color: '#1f2937',
+          margin: '0 0 20px 0',
+          textAlign: 'center'
+        }}>
+          System Status
+        </h2>
+        <div className="system-status-grid">
           <div style={{
-            background: '#ffffff',
-            borderRadius: '12px',
-            padding: '24px',
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px 16px',
+            background: '#f9fafb',
+            borderRadius: '8px',
             border: '1px solid #e5e7eb'
           }}>
-            <h2 style={{
-              fontSize: '20px',
-              fontWeight: 'bold',
-              color: '#1f2937',
-              margin: '0 0 20px 0'
-            }}>
-              System Status
-            </h2>
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '8px 0'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Database size={16} style={{ color: '#10b981' }} />
-                  <span style={{ fontSize: '14px', color: '#374151' }}>Database</span>
-                </div>
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  color: '#10b981',
-                  background: '#dcfce7',
-                  padding: '2px 8px',
-                  borderRadius: '4px'
-                }}>
-                  Healthy
-                </span>
-              </div>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '8px 0'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Server size={16} style={{ color: '#10b981' }} />
-                  <span style={{ fontSize: '14px', color: '#374151' }}>API Server</span>
-                </div>
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  color: '#10b981',
-                  background: '#dcfce7',
-                  padding: '2px 8px',
-                  borderRadius: '4px'
-                }}>
-                  Running
-                </span>
-              </div>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '8px 0'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Shield size={16} style={{ color: '#10b981' }} />
-                  <span style={{ fontSize: '14px', color: '#374151' }}>Authentication</span>
-                </div>
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  color: '#10b981',
-                  background: '#dcfce7',
-                  padding: '2px 8px',
-                  borderRadius: '4px'
-                }}>
-                  Active
-                </span>
-              </div>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '8px 0'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <HardDrive size={16} style={{ color: '#10b981' }} />
-                  <span style={{ fontSize: '14px', color: '#374151' }}>File Storage</span>
-                </div>
-                <span style={{
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  color: '#10b981',
-                  background: '#dcfce7',
-                  padding: '2px 8px',
-                  borderRadius: '4px'
-                }}>
-                  Available
-                </span>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Database size={18} style={{ color: '#10b981' }} />
+              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>Database</span>
             </div>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: '600',
+              color: '#10b981',
+              background: '#dcfce7',
+              padding: '4px 8px',
+              borderRadius: '6px'
+            }}>
+              Healthy
+            </span>
+          </div>
+          
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px 16px',
+            background: '#f9fafb',
+            borderRadius: '8px',
+            border: '1px solid #e5e7eb'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Server size={18} style={{ color: '#10b981' }} />
+              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>API Server</span>
+            </div>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: '600',
+              color: '#10b981',
+              background: '#dcfce7',
+              padding: '4px 8px',
+              borderRadius: '6px'
+            }}>
+              Running
+            </span>
+          </div>
+          
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px 16px',
+            background: '#f9fafb',
+            borderRadius: '8px',
+            border: '1px solid #e5e7eb'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Shield size={18} style={{ color: '#10b981' }} />
+              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>Authentication</span>
+            </div>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: '600',
+              color: '#10b981',
+              background: '#dcfce7',
+              padding: '4px 8px',
+              borderRadius: '6px'
+            }}>
+              Active
+            </span>
+          </div>
+          
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '12px 16px',
+            background: '#f9fafb',
+            borderRadius: '8px',
+            border: '1px solid #e5e7eb'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <HardDrive size={18} style={{ color: '#10b981' }} />
+              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>File Storage</span>
+            </div>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: '600',
+              color: '#10b981',
+              background: '#dcfce7',
+              padding: '4px 8px',
+              borderRadius: '6px'
+            }}>
+              Available
+            </span>
           </div>
         </div>
       </div>

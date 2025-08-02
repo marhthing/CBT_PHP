@@ -2,6 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Admin Dashboard Responsive Styles */
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.system-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .system-status-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Tablet Responsive */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .system-status-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
