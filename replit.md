@@ -2,6 +2,9 @@
 
 This project is a Computer-Based Testing (CBT) Portal designed for secondary schools. Its primary purpose is to provide a comprehensive platform for administering online tests. Key capabilities include secure test management, a robust question bank, detailed result tracking, and real-time test administration. The system features role-based access for students, teachers, and administrators, aiming to streamline the testing process in an educational setting.
 
+## Migration Status: COMPLETED (August 2, 2025)
+Successfully migrated from Replit Agent to standard Replit environment with PostgreSQL database integration. All authentication and core functionality verified working.
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -84,8 +87,9 @@ Preferred communication style: Simple, everyday language.
 ## Backend Integration
 - **API Communication**: RESTful API endpoints for all data operations.
 - **Authentication**: JWT token-based authentication with role-based login (reg_number for students, email/username for teachers/admins).
-- **Database**: PostgreSQL with schema including users, questions, test_codes, test_results, and test_answers.
-- **Security**: CORS configuration.
-- **Academic Features**: Term and Session tracking.
+- **Database**: PostgreSQL with comprehensive schema including users, questions, test_codes, test_results, test_answers, subjects, terms, and sessions.
+- **Security**: CORS configuration with SSL support for Neon database.
+- **Academic Features**: Term and Session tracking with 15 predefined subjects.
 - **File Upload**: Support for bulk question uploads via CSV/Excel.
 - **Real-time Features**: Timed tests with automatic submission capabilities.
+- **Test Credentials**: Admin (admin/password123), Teacher (teacher1/password123), Student (2023001/password123).
