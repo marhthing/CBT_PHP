@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
-import { Users, UserPlus, BookOpen, GraduationCap, Search, Filter, Plus, X, Save, Trash2 } from 'lucide-react'
+import { Users, UserPlus, BookOpen, GraduationCap, Search, Plus, X, Save, Trash2 } from 'lucide-react'
 
 interface Teacher {
   id: number
@@ -42,6 +42,8 @@ export default function TeacherAssignment() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   
   // Filters
   const [teacherFilter, setTeacherFilter] = useState('')
@@ -59,9 +61,12 @@ export default function TeacherAssignment() {
   const fetchAssignments = useCallback(async () => {
     try {
       const response = await api.get('/admin/assignments')
-      setAssignments(response.data.data || [])
+      const assignmentsData = response.data.data || response.data || []
+      setAssignments(Array.isArray(assignmentsData) ? assignmentsData : [])
     } catch (error) {
       console.error('Failed to fetch assignments:', error)
+      setAssignments([]) // Set empty array on error
+      setError('Failed to load assignments')
     } finally {
       setLoading(false)
     }
@@ -228,24 +233,49 @@ export default function TeacherAssignment() {
 
       {/* Header */}
       <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: '32px'
       }}>
-        <h1 style={{
-          fontSize: '32px',
-          fontWeight: 'bold',
-          color: '#1f2937',
-          margin: 0,
-          marginBottom: '8px'
-        }}>
-          Teacher Assignments
-        </h1>
-        <p style={{
-          fontSize: '16px',
-          color: '#6b7280',
-          margin: 0
-        }}>
-          Manage teacher subject and class assignments
-        </p>
+        <div>
+          <h1 style={{
+            fontSize: '32px',
+            fontWeight: 'bold',
+            color: '#1f2937',
+            margin: 0,
+            marginBottom: '8px'
+          }}>
+            Teacher Assignments
+          </h1>
+          <p style={{
+            fontSize: '16px',
+            color: '#6b7280',
+            margin: 0
+          }}>
+            Manage teacher subject and class assignments
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '12px 20px',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <Plus size={16} />
+          Create Assignment
+        </button>
       </div>
 
       {/* Stats Cards */}

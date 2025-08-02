@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
-import { Search, Filter, BookOpen, Eye, Edit, Trash2, BarChart3, FileText, Users, GraduationCap, X, Save } from 'lucide-react'
+import { Search, BookOpen, Edit, Trash2, BarChart3, FileText, Users, GraduationCap, X, Save, Plus } from 'lucide-react'
 
 interface Question {
   id: number
@@ -39,6 +39,7 @@ export default function AllQuestions() {
   const [loading, setLoading] = useState(true)
 
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
+  const [showCreateModal, setShowCreateModal] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   
@@ -235,24 +236,49 @@ export default function AllQuestions() {
 
       {/* Header */}
       <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: '32px'
       }}>
-        <h1 style={{
-          fontSize: '32px',
-          fontWeight: 'bold',
-          color: '#1f2937',
-          margin: 0,
-          marginBottom: '8px'
-        }}>
-          Question Bank
-        </h1>
-        <p style={{
-          fontSize: '16px',
-          color: '#6b7280',
-          margin: 0
-        }}>
-          Manage all questions in the system
-        </p>
+        <div>
+          <h1 style={{
+            fontSize: '32px',
+            fontWeight: 'bold',
+            color: '#1f2937',
+            margin: 0,
+            marginBottom: '8px'
+          }}>
+            Question Bank
+          </h1>
+          <p style={{
+            fontSize: '16px',
+            color: '#6b7280',
+            margin: 0
+          }}>
+            Manage all questions in the system
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '12px 20px',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <Plus size={16} />
+          Add Question
+        </button>
       </div>
 
       {/* Error/Success Messages */}

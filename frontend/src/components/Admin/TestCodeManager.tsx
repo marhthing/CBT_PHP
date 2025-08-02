@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
 import ErrorNotification from '../ui/ErrorNotification'
-import { FileText, PlayCircle, PauseCircle, Plus, X, Save, Trash2, Clock, BookOpen, Users, Filter } from 'lucide-react'
+import { FileText, PlayCircle, PauseCircle, Plus, X, Save, Trash2, Clock, BookOpen, Users } from 'lucide-react'
 
 interface TestCode {
   id: number
@@ -259,24 +259,49 @@ export default function TestCodeManager() {
 
       {/* Header */}
       <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: '32px'
       }}>
-        <h1 style={{
-          fontSize: '32px',
-          fontWeight: 'bold',
-          color: '#1f2937',
-          margin: 0,
-          marginBottom: '8px'
-        }}>
-          Test Code Manager
-        </h1>
-        <p style={{
-          fontSize: '16px',
-          color: '#6b7280',
-          margin: 0
-        }}>
-          Create and manage test codes for assessments
-        </p>
+        <div>
+          <h1 style={{
+            fontSize: '32px',
+            fontWeight: 'bold',
+            color: '#1f2937',
+            margin: 0,
+            marginBottom: '8px'
+          }}>
+            Test Code Manager
+          </h1>
+          <p style={{
+            fontSize: '16px',
+            color: '#6b7280',
+            margin: 0
+          }}>
+            Create and manage test codes for assessments
+          </p>
+        </div>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            padding: '12px 20px',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease'
+          }}
+        >
+          <Plus size={16} />
+          Create Test Code
+        </button>
       </div>
 
       {/* Error/Success Messages */}
