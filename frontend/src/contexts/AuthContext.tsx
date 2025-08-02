@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Auth validation response:', response.data)
       
       if (response.data.success && response.data.data) {
-        const userData = response.data.data.user
+        const userData = response.data.data.user || response.data.data
         console.log('Token valid, user authenticated:', userData)
         setUser(userData)
         setError(null)

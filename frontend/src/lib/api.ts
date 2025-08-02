@@ -29,7 +29,17 @@ api.interceptors.response.use(
   },
   (error) => {
     console.error('API Error:', error.response?.status, error.response?.data, error.config?.url)
-    // Don't auto-reload on 401 - let the AuthContext handle it
+    
+    // If 401 unauthorized, clear token and redirect to login
+    if (error.response?.status === 401) {
+      console.log('401 Unauthorized - clearing token')
+      localStorage.removeItem('token')
+      // Only redirect if not already on login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login'
+      }
+    }
+    
     return Promise.reject(error)
   }
 )
