@@ -58,7 +58,33 @@ try {
             break;
 
         default:
-            Response::validationError('Invalid lookup type. Supported types: terms, sessions, subjects, class_levels, difficulties');
+            // Return all lookup data if no type specified
+            $data = [];
+            
+            // Get subjects
+            $stmt = $conn->prepare("SELECT id, name, code, description FROM subjects WHERE is_active = true ORDER BY name");
+            $stmt->execute();
+            $data['subjects'] = $stmt->fetchAll();
+            
+            // Get terms
+            $stmt = $conn->prepare("SELECT id, name, display_order FROM terms WHERE is_active = true ORDER BY display_order");
+            $stmt->execute();
+            $data['terms'] = $stmt->fetchAll();
+            
+            // Get sessions
+            $stmt = $conn->prepare("SELECT id, name, start_date, end_date, is_current FROM sessions WHERE is_active = true ORDER BY name DESC");
+            $stmt->execute();
+            $data['sessions'] = $stmt->fetchAll();
+            
+            // Get class levels
+            $data['class_levels'] = [
+                ['id' => 'JSS1', 'name' => 'JSS 1'],
+                ['id' => 'JSS2', 'name' => 'JSS 2'],
+                ['id' => 'JSS3', 'name' => 'JSS 3'],
+                ['id' => 'SS1', 'name' => 'SS 1'],
+                ['id' => 'SS2', 'name' => 'SS 2'],
+                ['id' => 'SS3', 'name' => 'SS 3']
+            ];
     }
 
     Response::success("$lookup_type retrieved successfully", $data);

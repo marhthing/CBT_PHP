@@ -278,43 +278,45 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
           {children}
         </main>
 
-        {/* Bottom Navigation for Mobile */}
-        <nav style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          background: 'white',
-          borderTop: '1px solid #e2e8f0',
-          padding: '8px 0',
-          display: 'flex',
-          justifyContent: 'space-around',
-          boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)',
-          zIndex: 40
-        }}>
-          {navigationItems.slice(0, 4).map((item) => (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: '4px',
-                background: 'none',
-                border: 'none',
-                padding: '8px 12px',
-                cursor: 'pointer',
-                color: location.pathname === item.path ? '#1e40af' : '#64748b',
-                fontSize: '10px',
-                fontWeight: '500'
-              }}
-            >
-              <span style={{ fontSize: '18px' }}>{item.icon}</span>
-              <span>{item.name.split(' ')[0]}</span>
-            </button>
-          ))}
-        </nav>
+        {/* Bottom Navigation for Mobile - Only show for students */}
+        {user?.role === 'student' && (
+          <nav style={{
+            position: 'fixed',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            background: 'white',
+            borderTop: '1px solid #e2e8f0',
+            padding: '8px 0',
+            display: 'flex',
+            justifyContent: 'space-around',
+            boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)',
+            zIndex: 40
+          }}>
+            {navigationItems.slice(0, 3).map((item) => (
+              <button
+                key={item.path}
+                onClick={() => navigate(item.path)}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: 'none',
+                  border: 'none',
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  color: location.pathname === item.path ? '#1e40af' : '#64748b',
+                  fontSize: '10px',
+                  fontWeight: '500'
+                }}
+              >
+                <span style={{ fontSize: '18px' }}>{item.icon}</span>
+                <span>{item.name.split(' ')[0]}</span>
+              </button>
+            ))}
+          </nav>
+        )}
       </div>
     )
   }

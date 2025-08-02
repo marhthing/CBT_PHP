@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { api } from '../../lib/api'
+import ErrorNotification from '../ui/ErrorNotification'
 
 interface TestCode {
   id: number
@@ -24,6 +25,7 @@ interface LookupData {
   subjects?: Array<{id: number, name: string}>
   terms?: Array<{id: number, name: string}>
   sessions?: Array<{id: number, name: string}>
+  class_levels?: Array<{id: string, name: string}>
 }
 
 interface CreateTestCodeForm {
@@ -43,6 +45,8 @@ export default function TestCodeManager() {
   const [creating, setCreating] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [lookupData, setLookupData] = useState<LookupData>({})
+  const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   
   // Filters
   const [subjectFilter, setSubjectFilter] = useState('')
@@ -90,7 +94,7 @@ export default function TestCodeManager() {
 
   const createTestCode = async () => {
     if (!createForm.title || !createForm.subject_id || !createForm.class_level || !createForm.expires_at) {
-      alert('Please fill in all required fields')
+      setError('Please fill in all required fields')
       return
     }
 
@@ -110,11 +114,11 @@ export default function TestCodeManager() {
           session_id: '',
           expires_at: ''
         })
-        alert('Test code created successfully!')
+        setSuccessMessage('Test code created successfully!')
       }
     } catch (error: any) {
       console.error('Failed to create test code:', error)
-      alert('Failed to create test code: ' + (error.response?.data?.message || error.message))
+      setError('Failed to create test code: ' + (error.response?.data?.message || error.message))
     } finally {
       setCreating(false)
     }
@@ -126,22 +130,20 @@ export default function TestCodeManager() {
         is_activated: !currentStatus
       })
       await fetchTestCodes()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to toggle activation:', error)
-      alert('Failed to toggle activation')
+      setError('Failed to toggle activation: ' + (error.response?.data?.message || error.message))
     }
   }
 
   const deleteTestCode = async (testCodeId: number) => {
-    if (!confirm('Are you sure you want to delete this test code?')) return
-    
     try {
       await api.delete(`/admin/test-codes/${testCodeId}`)
       await fetchTestCodes()
-      alert('Test code deleted successfully!')
+      setSuccessMessage('Test code deleted successfully!')
     } catch (error: any) {
       console.error('Failed to delete test code:', error)
-      alert('Failed to delete test code: ' + (error.response?.data?.message || error.message))
+      setError('Failed to delete test code: ' + (error.response?.data?.message || error.message))
     }
   }
 
@@ -997,6 +999,23 @@ export default function TestCodeManager() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Error Notifications */}
+      {error && (
+        <ErrorNotification
+          message={error}
+          onClose={() => setError('')}
+          type="error"
+        />
+      )}
+      
+      {successMessage && (
+        <ErrorNotification
+          message={successMessage}
+          onClose={() => setSuccessMessage('')}
+          type="success"
+        />
       )}
     </div>
   )

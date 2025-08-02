@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
+import ErrorNotification from '../ui/ErrorNotification'
 
 interface Question {
   id: number
@@ -34,17 +36,21 @@ interface LookupData {
 
 export default function AllQuestions() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [questions, setQuestions] = useState<Question[]>([])
   const [stats, setStats] = useState<QuestionStats | null>(null)
   const [lookupData, setLookupData] = useState<LookupData>({})
   const [loading, setLoading] = useState(true)
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
+  const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('')
   const [subjectFilter, setSubjectFilter] = useState('')
   const [classFilter, setClassFilter] = useState('')
-  const [difficultyFilter, setDifficultyFilter] = useState('')
+  const [termFilter, setTermFilter] = useState('')
+  const [sessionFilter, setSessionFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
 
   useEffect(() => {
@@ -55,7 +61,7 @@ export default function AllQuestions() {
 
   useEffect(() => {
     fetchQuestions()
-  }, [searchTerm, subjectFilter, classFilter, difficultyFilter, typeFilter])
+  }, [searchTerm, subjectFilter, classFilter, termFilter, sessionFilter, typeFilter])
 
   const fetchQuestions = async () => {
     try {
@@ -63,7 +69,8 @@ export default function AllQuestions() {
       if (searchTerm) params.append('search', searchTerm)
       if (subjectFilter) params.append('subject', subjectFilter)
       if (classFilter) params.append('class', classFilter)
-      if (difficultyFilter) params.append('difficulty', difficultyFilter)
+      if (termFilter) params.append('term', termFilter)
+      if (sessionFilter) params.append('session', sessionFilter)
       if (typeFilter) params.append('type', typeFilter)
       params.append('limit', '50')
       
@@ -205,12 +212,12 @@ export default function AllQuestions() {
             View and manage all questions in the system
           </p>
         </div>
-        <a
-          href="/teacher/questions"
+        <button
+          onClick={() => navigate('/teacher/questions')}
           style={{
             background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
             color: 'white',
-            textDecoration: 'none',
+            border: 'none',
             borderRadius: '8px',
             padding: '12px 24px',
             fontSize: '14px',
@@ -219,22 +226,23 @@ export default function AllQuestions() {
             alignItems: 'center',
             gap: '8px',
             transition: 'all 0.2s',
-            boxShadow: '0 4px 6px rgba(99, 102, 241, 0.25)'
+            boxShadow: '0 4px 6px rgba(99, 102, 241, 0.25)',
+            cursor: 'pointer'
           }}
           onMouseEnter={(e) => {
-            const target = e.target as HTMLAnchorElement
+            const target = e.target as HTMLButtonElement
             target.style.transform = 'translateY(-1px)'
             target.style.boxShadow = '0 8px 20px rgba(99, 102, 241, 0.4)'
           }}
           onMouseLeave={(e) => {
-            const target = e.target as HTMLAnchorElement
+            const target = e.target as HTMLButtonElement
             target.style.transform = 'translateY(0)'
             target.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.25)'
           }}
         >
           <span style={{ fontSize: '16px' }}>+</span>
           Add New Question
-        </a>
+        </button>
       </div>
 
       {/* Stats Cards */}

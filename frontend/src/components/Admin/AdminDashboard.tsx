@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
+import ErrorNotification from '../ui/ErrorNotification'
 
 interface DashboardStats {
   total_questions: number
@@ -25,6 +27,7 @@ interface RecentActivity {
 
 export default function AdminDashboard() {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [stats, setStats] = useState<DashboardStats>({
     total_questions: 0,
     total_test_codes: 0,
@@ -35,6 +38,7 @@ export default function AdminDashboard() {
   })
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     fetchDashboardData()
@@ -49,8 +53,9 @@ export default function AdminDashboard() {
       
       setStats(statsResponse.data.data || {})
       setRecentActivities(activitiesResponse.data.data || [])
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch dashboard data:', error)
+      setError('Failed to load dashboard data. Please try refreshing the page.')
     } finally {
       setLoading(false)
     }
@@ -68,8 +73,9 @@ export default function AdminDashboard() {
           ? { ...activity, is_activated: !isActivated }
           : activity
       ))
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to toggle activation:', error)
+      setError('Failed to toggle test code activation. Please try again.')
     }
   }
 
@@ -305,14 +311,20 @@ export default function AdminDashboard() {
             }}>
               Recent Test Codes
             </h2>
-            <a href="/admin/test-codes" style={{
-              fontSize: '14px',
-              color: '#6366f1',
-              textDecoration: 'none',
-              fontWeight: '600'
-            }}>
+            <button
+              onClick={() => navigate('/admin/test-codes')}
+              style={{
+                fontSize: '14px',
+                color: '#6366f1',
+                background: 'transparent',
+                border: 'none',
+                fontWeight: '600',
+                cursor: 'pointer',
+                textDecoration: 'none'
+              }}
+            >
               View All →
-            </a>
+            </button>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -433,8 +445,8 @@ export default function AdminDashboard() {
           </h2>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            <a
-              href="/admin/test-codes"
+            <button
+              onClick={() => navigate('/admin/test-codes')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -442,29 +454,30 @@ export default function AdminDashboard() {
                 padding: '12px 16px',
                 background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
                 color: 'white',
-                textDecoration: 'none',
+                border: 'none',
                 borderRadius: '10px',
                 fontSize: '14px',
                 fontWeight: '600',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                cursor: 'pointer'
               }}
               onMouseEnter={(e) => {
-                const target = e.target as HTMLAnchorElement
+                const target = e.target as HTMLButtonElement
                 target.style.transform = 'translateY(-2px)'
                 target.style.boxShadow = '0 8px 20px rgba(99, 102, 241, 0.4)'
               }}
               onMouseLeave={(e) => {
-                const target = e.target as HTMLAnchorElement
+                const target = e.target as HTMLButtonElement
                 target.style.transform = 'translateY(0)'
                 target.style.boxShadow = 'none'
               }}
             >
               <span style={{ fontSize: '18px' }}>🔑</span>
               Create Test Code
-            </a>
+            </button>
 
-            <a
-              href="/admin/questions"
+            <button
+              onClick={() => navigate('/admin/questions')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -472,29 +485,30 @@ export default function AdminDashboard() {
                 padding: '12px 16px',
                 background: 'linear-gradient(135deg, #059669, #10b981)',
                 color: 'white',
-                textDecoration: 'none',
+                border: 'none',
                 borderRadius: '10px',
                 fontSize: '14px',
                 fontWeight: '600',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                cursor: 'pointer'
               }}
               onMouseEnter={(e) => {
-                const target = e.target as HTMLAnchorElement
+                const target = e.target as HTMLButtonElement
                 target.style.transform = 'translateY(-2px)'
                 target.style.boxShadow = '0 8px 20px rgba(5, 150, 105, 0.4)'
               }}
               onMouseLeave={(e) => {
-                const target = e.target as HTMLAnchorElement
+                const target = e.target as HTMLButtonElement
                 target.style.transform = 'translateY(0)'
                 target.style.boxShadow = 'none'
               }}
             >
               <span style={{ fontSize: '18px' }}>📝</span>
               Manage Questions
-            </a>
+            </button>
 
-            <a
-              href="/admin/teachers"
+            <button
+              onClick={() => navigate('/admin/teachers')}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -502,26 +516,27 @@ export default function AdminDashboard() {
                 padding: '12px 16px',
                 background: 'linear-gradient(135deg, #dc2626, #ef4444)',
                 color: 'white',
-                textDecoration: 'none',
+                border: 'none',
                 borderRadius: '10px',
                 fontSize: '14px',
                 fontWeight: '600',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                cursor: 'pointer'
               }}
               onMouseEnter={(e) => {
-                const target = e.target as HTMLAnchorElement
+                const target = e.target as HTMLButtonElement
                 target.style.transform = 'translateY(-2px)'
                 target.style.boxShadow = '0 8px 20px rgba(220, 38, 38, 0.4)'
               }}
               onMouseLeave={(e) => {
-                const target = e.target as HTMLAnchorElement
+                const target = e.target as HTMLButtonElement
                 target.style.transform = 'translateY(0)'
                 target.style.boxShadow = 'none'
               }}
             >
               <span style={{ fontSize: '18px' }}>👨‍🏫</span>
               Teacher Assignments
-            </a>
+            </button>
 
             <div style={{
               padding: '16px',
@@ -557,6 +572,15 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Error Notification */}
+      {error && (
+        <ErrorNotification
+          message={error}
+          onClose={() => setError('')}
+          type="error"
+        />
+      )}
     </div>
   )
 }
