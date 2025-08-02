@@ -74,6 +74,13 @@
   border-radius: 3px;
 }
 
+/* Responsive grid for admin dashboard */
+@media (max-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary));
 }

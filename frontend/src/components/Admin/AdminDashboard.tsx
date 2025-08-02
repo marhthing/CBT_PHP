@@ -289,11 +289,8 @@ export default function AdminDashboard() {
       <div style={{
         display: 'grid',
         gridTemplateColumns: '2fr 1fr',
-        gap: '24px',
-        '@media (max-width: 1024px)': {
-          gridTemplateColumns: '1fr'
-        }
-      }}>
+        gap: '24px'
+      }} className="responsive-grid">
         {/* Recent Test Codes */}
         <div style={{
           background: 'white',
