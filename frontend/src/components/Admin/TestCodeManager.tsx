@@ -38,13 +38,11 @@ interface CreateTestCodeForm {
 }
 
 export default function TestCodeManager() {
-  const { user } = useAuth()
   const [testCodes, setTestCodes] = useState<TestCode[]>([])
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [lookupData, setLookupData] = useState<LookupData>({})
-  const [selectedCodes, setSelectedCodes] = useState<number[]>([])
   
   // Filters
   const [subjectFilter, setSubjectFilter] = useState('')
