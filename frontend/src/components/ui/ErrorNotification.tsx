@@ -124,3 +124,54 @@ export default function ErrorNotification({ message, onClose, type = 'error' }: 
     </div>
   )
 }
+import React from 'react'
+
+interface ErrorNotificationProps {
+  message: string
+  onClose?: () => void
+}
+
+export default function ErrorNotification({ message, onClose }: ErrorNotificationProps) {
+  return (
+    <div style={{
+      position: 'fixed',
+      top: '20px',
+      right: '20px',
+      background: 'linear-gradient(135deg, #ef4444, #dc2626)',
+      color: 'white',
+      padding: '12px 16px',
+      borderRadius: '8px',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      zIndex: 1000,
+      maxWidth: '400px',
+      fontSize: '14px',
+      fontWeight: '500',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        gap: '12px'
+      }}>
+        <span>{message}</span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'white',
+              cursor: 'pointer',
+              fontSize: '16px',
+              padding: '0',
+              lineHeight: '1'
+            }}
+          >
+            ×
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
