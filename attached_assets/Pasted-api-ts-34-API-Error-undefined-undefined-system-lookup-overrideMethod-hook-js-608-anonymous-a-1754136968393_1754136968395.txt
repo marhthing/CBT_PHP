@@ -1,0 +1,66 @@
+api.ts:34 API Error: undefined undefined /system/lookup
+overrideMethod @ hook.js:608
+(anonymous) @ api.ts:34
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Axios.<computed> @ Axios.js:213
+wrap @ bind.js:5
+(anonymous) @ TestCodeManager.tsx:111
+(anonymous) @ TestCodeManager.tsx:132
+react_stack_bottom_frame @ react-dom-client.development.js:23953
+runWithFiberInDEV @ react-dom-client.development.js:1519
+commitHookEffectListMount @ react-dom-client.development.js:11905
+commitHookPassiveMountEffects @ react-dom-client.development.js:12026
+reconnectPassiveEffects @ react-dom-client.development.js:14004
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+doubleInvokeEffectsOnFiber @ react-dom-client.development.js:15968
+runWithFiberInDEV @ react-dom-client.development.js:1519
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15928
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+commitDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15977
+flushPassiveEffects @ react-dom-client.development.js:15747
+(anonymous) @ react-dom-client.development.js:15379
+performWorkUntilDeadline @ scheduler.development.js:45
+<TestCodeManager>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+App @ App.tsx:146
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<App>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anonymous) @ main.tsx:23Understand this error
+TestCodeManager.tsx:114 Failed to fetch lookup data: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}

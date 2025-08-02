@@ -3,7 +3,6 @@ import { api } from '../../lib/api'
 import ErrorNotification from '../ui/ErrorNotification'
 import { 
   Plus, 
-  Eye, 
   Play, 
   Pause, 
   Trash2, 
@@ -11,11 +10,8 @@ import {
   Clock, 
   BookOpen, 
   Users,
-  CheckCircle,
-  XCircle,
   Copy,
-  X,
-  Settings
+  X
 } from 'lucide-react'
 
 interface TestCode {
@@ -63,8 +59,6 @@ export default function TestCodeManager() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showViewModal, setShowViewModal] = useState(false)
-  const [selectedCode, setSelectedCode] = useState<TestCode | null>(null)
   const [lookupData, setLookupData] = useState<LookupData>({})
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -112,6 +106,7 @@ export default function TestCodeManager() {
       setLookupData(response.data.data || {})
     } catch (error) {
       console.error('Failed to fetch lookup data:', error)
+      setError('Failed to load system data')
     }
   }, [])
 
@@ -238,7 +233,10 @@ export default function TestCodeManager() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <p className="text-gray-600">Loading test codes...</p>
+        </div>
       </div>
     )
   }
