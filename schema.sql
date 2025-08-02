@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 16.6
--- Dumped by pg_dump version 16.6
+-- Dumped from database version 16.9
+-- Dumped by pg_dump version 16.9
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -16,6 +16,67 @@ SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
 
+ALTER TABLE IF EXISTS ONLY public.test_results DROP CONSTRAINT IF EXISTS test_results_test_code_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.test_results DROP CONSTRAINT IF EXISTS test_results_student_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_term_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_subject_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_session_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_created_by_fkey;
+ALTER TABLE IF EXISTS ONLY public.test_answers DROP CONSTRAINT IF EXISTS test_answers_result_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.test_answers DROP CONSTRAINT IF EXISTS test_answers_question_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.teacher_assignments DROP CONSTRAINT IF EXISTS teacher_assignments_term_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.teacher_assignments DROP CONSTRAINT IF EXISTS teacher_assignments_teacher_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.teacher_assignments DROP CONSTRAINT IF EXISTS teacher_assignments_subject_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.teacher_assignments DROP CONSTRAINT IF EXISTS teacher_assignments_session_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_term_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_teacher_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_subject_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_session_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_username_key;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_reg_number_key;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
+ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_email_key;
+ALTER TABLE IF EXISTS ONLY public.test_results DROP CONSTRAINT IF EXISTS test_results_pkey;
+ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_pkey;
+ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_code_key;
+ALTER TABLE IF EXISTS ONLY public.test_answers DROP CONSTRAINT IF EXISTS test_answers_pkey;
+ALTER TABLE IF EXISTS ONLY public.terms DROP CONSTRAINT IF EXISTS terms_pkey;
+ALTER TABLE IF EXISTS ONLY public.terms DROP CONSTRAINT IF EXISTS terms_name_key;
+ALTER TABLE IF EXISTS ONLY public.teacher_assignments DROP CONSTRAINT IF EXISTS teacher_assignments_teacher_id_subject_id_class_level_ter_key;
+ALTER TABLE IF EXISTS ONLY public.teacher_assignments DROP CONSTRAINT IF EXISTS teacher_assignments_pkey;
+ALTER TABLE IF EXISTS ONLY public.subjects DROP CONSTRAINT IF EXISTS subjects_pkey;
+ALTER TABLE IF EXISTS ONLY public.subjects DROP CONSTRAINT IF EXISTS subjects_name_key;
+ALTER TABLE IF EXISTS ONLY public.subjects DROP CONSTRAINT IF EXISTS subjects_code_key;
+ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_pkey;
+ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_name_key;
+ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_pkey;
+ALTER TABLE IF EXISTS public.users ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.test_results ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.test_codes ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.test_answers ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.terms ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.teacher_assignments ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.subjects ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.sessions ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.questions ALTER COLUMN id DROP DEFAULT;
+DROP SEQUENCE IF EXISTS public.users_id_seq;
+DROP TABLE IF EXISTS public.users;
+DROP SEQUENCE IF EXISTS public.test_results_id_seq;
+DROP TABLE IF EXISTS public.test_results;
+DROP SEQUENCE IF EXISTS public.test_codes_id_seq;
+DROP TABLE IF EXISTS public.test_codes;
+DROP SEQUENCE IF EXISTS public.test_answers_id_seq;
+DROP TABLE IF EXISTS public.test_answers;
+DROP SEQUENCE IF EXISTS public.terms_id_seq;
+DROP TABLE IF EXISTS public.terms;
+DROP SEQUENCE IF EXISTS public.teacher_assignments_id_seq;
+DROP TABLE IF EXISTS public.teacher_assignments;
+DROP SEQUENCE IF EXISTS public.subjects_id_seq;
+DROP TABLE IF EXISTS public.subjects;
+DROP SEQUENCE IF EXISTS public.sessions_id_seq;
+DROP TABLE IF EXISTS public.sessions;
+DROP SEQUENCE IF EXISTS public.questions_id_seq;
+DROP TABLE IF EXISTS public.questions;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
@@ -417,6 +478,153 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 
 --
+-- Data for Name: questions; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.questions (id, question_text, option_a, option_b, option_c, option_d, correct_answer, subject_id, class_level, term_id, session_id, teacher_id, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: sessions; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.sessions (id, name, start_date, end_date, is_current, is_active, created_at) FROM stdin;
+1	2024/2025	2024-09-01	2025-07-31	t	t	2025-08-02 08:16:34.277153
+\.
+
+
+--
+-- Data for Name: subjects; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.subjects (id, name, code, description, is_active, created_at) FROM stdin;
+1	Mathematics	MATH	Mathematics subject	t	2025-08-02 08:16:34.277153
+2	English Language	ENG	English Language	t	2025-08-02 08:16:34.277153
+3	Physics	PHY	Physics subject	t	2025-08-02 08:16:34.277153
+4	Chemistry	CHEM	Chemistry subject	t	2025-08-02 08:16:34.277153
+5	Biology	BIO	Biology subject	t	2025-08-02 08:16:34.277153
+\.
+
+
+--
+-- Data for Name: teacher_assignments; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.teacher_assignments (id, teacher_id, subject_id, class_level, term_id, session_id, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: terms; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.terms (id, name, display_order, is_active, created_at) FROM stdin;
+1	First	1	t	2025-08-02 08:16:34.277153
+2	Second	2	t	2025-08-02 08:16:34.277153
+3	Third	3	t	2025-08-02 08:16:34.277153
+\.
+
+
+--
+-- Data for Name: test_answers; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.test_answers (id, result_id, question_id, selected_answer, is_correct, created_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: test_codes; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.test_codes (id, code, title, description, subject_id, class_level, term_id, session_id, duration_minutes, total_questions, pass_score, is_active, is_activated, created_by, created_at, expires_at, activated_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: test_results; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.test_results (id, test_code_id, student_id, score, total_questions, time_taken, submitted_at) FROM stdin;
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.users (id, username, email, reg_number, password, role, full_name, is_active, created_at, last_login, current_term, current_session) FROM stdin;
+1	admin	admin@sfgs.com	\N	$2y$10$it84t6IMCgaZ71JHZryiZOiuttWo87xcCsFME0sXdwRL7pQu99oBG	admin	System Administrator	t	2025-08-02 08:16:44.764844	\N	First	2024/2025
+2	teacher1	teacher1@sfgs.com	\N	$2y$10$it84t6IMCgaZ71JHZryiZOiuttWo87xcCsFME0sXdwRL7pQu99oBG	teacher	John Teacher	t	2025-08-02 08:16:44.764844	\N	First	2024/2025
+3	student1	student1@sfgs.com	2023001	$2y$10$it84t6IMCgaZ71JHZryiZOiuttWo87xcCsFME0sXdwRL7pQu99oBG	student	Jane Student	t	2025-08-02 08:16:44.764844	\N	First	2024/2025
+\.
+
+
+--
+-- Name: questions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.questions_id_seq', 1, false);
+
+
+--
+-- Name: sessions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.sessions_id_seq', 1, true);
+
+
+--
+-- Name: subjects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.subjects_id_seq', 5, true);
+
+
+--
+-- Name: teacher_assignments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.teacher_assignments_id_seq', 1, false);
+
+
+--
+-- Name: terms_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.terms_id_seq', 3, true);
+
+
+--
+-- Name: test_answers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.test_answers_id_seq', 1, false);
+
+
+--
+-- Name: test_codes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.test_codes_id_seq', 1, false);
+
+
+--
+-- Name: test_results_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.test_results_id_seq', 1, false);
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 3, true);
+
+
+--
 -- Name: questions questions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -691,3 +899,4 @@ ALTER TABLE ONLY public.test_results
 --
 -- PostgreSQL database dump complete
 --
+
