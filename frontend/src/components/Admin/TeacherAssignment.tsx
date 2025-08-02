@@ -76,7 +76,7 @@ export default function TeacherAssignment() {
   const fetchTeachers = async () => {
     try {
       const response = await api.get('/admin/teachers')
-      setTeachers(response.data.data || [])
+      setTeachers(response.data.teachers || [])
     } catch (error) {
       console.error('Failed to fetch teachers:', error)
     }
@@ -148,7 +148,7 @@ export default function TeacherAssignment() {
 
   // Filter assignments - ensure assignments is an array
   const filteredAssignments = Array.isArray(assignments) ? assignments.filter(assignment => {
-    if (teacherFilter && assignment.full_name !== teacherFilter) return false
+    if (teacherFilter && assignment.teacher_name !== teacherFilter) return false
     if (subjectFilter && assignment.subject_name !== subjectFilter) return false
     if (classFilter && assignment.class_level !== classFilter) return false
     return true
@@ -534,14 +534,14 @@ export default function TeacherAssignment() {
                   color: '#1e293b',
                   margin: '0 0 4px 0'
                 }}>
-                  {assignment.full_name}
+                  {assignment.teacher_name}
                 </h3>
                 <p style={{
                   fontSize: '14px',
                   color: '#64748b',
                   margin: '0'
                 }}>
-                  {assignment.email}
+                  {assignment.teacher_email}
                 </p>
               </div>
               <button
