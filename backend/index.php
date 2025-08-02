@@ -92,7 +92,6 @@ $routes = [
     // Admin routes
     'admin/dashboard-stats' => 'admin/dashboard-stats.php',
     'admin/test-codes' => 'admin/test-codes.php',
-    'admin/test-code-batches' => 'admin/test-code-batches.php',
     'admin/questions' => 'admin/questions.php',
     'admin/teachers' => 'admin/teachers.php',
     'admin/assignments' => 'admin/assignments.php',
