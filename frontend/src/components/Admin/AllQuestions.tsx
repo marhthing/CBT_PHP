@@ -40,8 +40,22 @@ export default function AllQuestions() {
 
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  
+  // Create form state
+  const [createForm, setCreateForm] = useState({
+    question_text: '',
+    question_type: 'multiple_choice',
+    subject_id: '',
+    class_level: '',
+    option_a: '',
+    option_b: '',
+    option_c: '',
+    option_d: '',
+    correct_answer: 'A'
+  })
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('')
@@ -147,6 +161,44 @@ export default function AllQuestions() {
       setError('Failed to update question: ' + (error.response?.data?.message || error.message))
     }
   }, [fetchQuestions])
+
+  const createQuestion = useCallback(async () => {
+    if (!createForm.question_text || !createForm.subject_id || !createForm.class_level || 
+        !createForm.option_a || !createForm.option_b || !createForm.option_c || !createForm.option_d) {
+      setError('Please fill in all required fields')
+      return
+    }
+
+    setCreating(true)
+    setError('')
+    
+    try {
+      const response = await api.post('/admin/questions', createForm)
+      if (response.data.success) {
+        await fetchQuestions()
+        await fetchQuestionStats()
+        setShowCreateModal(false)
+        setCreateForm({
+          question_text: '',
+          question_type: 'multiple_choice',
+          subject_id: '',
+          class_level: '',
+          option_a: '',
+          option_b: '',
+          option_c: '',
+          option_d: '',
+          correct_answer: 'A'
+        })
+        setSuccessMessage('Question created successfully!')
+        setTimeout(() => setSuccessMessage(''), 3000)
+      }
+    } catch (error: any) {
+      console.error('Failed to create question:', error)
+      setError('Failed to create question: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setCreating(false)
+    }
+  }, [createForm, fetchQuestions, fetchQuestionStats])
 
   // Memoized filtered questions for performance
   const filteredQuestions = useMemo(() => {
@@ -827,6 +879,338 @@ export default function AllQuestions() {
                 >
                   <Save size={16} />
                   Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Question Modal */}
+      {showCreateModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '600px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px'
+            }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                color: '#1f2937',
+                margin: 0
+              }}>
+                Create New Question
+              </h3>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                style={{
+                  padding: '8px',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  borderRadius: '4px',
+                  color: '#6b7280'
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Question Text *
+                </label>
+                <textarea
+                  value={createForm.question_text}
+                  onChange={(e) => setCreateForm(prev => ({...prev, question_text: e.target.value}))}
+                  rows={3}
+                  placeholder="Enter the question text here..."
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    resize: 'vertical'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '4px'
+                  }}>
+                    Subject *
+                  </label>
+                  <select
+                    value={createForm.subject_id}
+                    onChange={(e) => setCreateForm(prev => ({...prev, subject_id: e.target.value}))}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <option value="">Select Subject</option>
+                    {lookupData.subjects?.map(subject => (
+                      <option key={subject.id} value={subject.id}>{subject.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '4px'
+                  }}>
+                    Class Level *
+                  </label>
+                  <select
+                    value={createForm.class_level}
+                    onChange={(e) => setCreateForm(prev => ({...prev, class_level: e.target.value}))}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <option value="">Select Class</option>
+                    <option value="JSS1">JSS1</option>
+                    <option value="JSS2">JSS2</option>
+                    <option value="JSS3">JSS3</option>
+                    <option value="SS1">SS1</option>
+                    <option value="SS2">SS2</option>
+                    <option value="SS3">SS3</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Option A *
+                </label>
+                <input
+                  type="text"
+                  value={createForm.option_a}
+                  onChange={(e) => setCreateForm(prev => ({...prev, option_a: e.target.value}))}
+                  placeholder="Enter option A"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Option B *
+                </label>
+                <input
+                  type="text"
+                  value={createForm.option_b}
+                  onChange={(e) => setCreateForm(prev => ({...prev, option_b: e.target.value}))}
+                  placeholder="Enter option B"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Option C *
+                </label>
+                <input
+                  type="text"
+                  value={createForm.option_c}
+                  onChange={(e) => setCreateForm(prev => ({...prev, option_c: e.target.value}))}
+                  placeholder="Enter option C"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Option D *
+                </label>
+                <input
+                  type="text"
+                  value={createForm.option_d}
+                  onChange={(e) => setCreateForm(prev => ({...prev, option_d: e.target.value}))}
+                  placeholder="Enter option D"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Correct Answer *
+                </label>
+                <select
+                  value={createForm.correct_answer}
+                  onChange={(e) => setCreateForm(prev => ({...prev, correct_answer: e.target.value}))}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}
+                >
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                  <option value="D">D</option>
+                </select>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'flex-end',
+                marginTop: '20px'
+              }}>
+                <button
+                  onClick={() => setShowCreateModal(false)}
+                  style={{
+                    padding: '12px 20px',
+                    background: '#f3f4f6',
+                    color: '#374151',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={createQuestion}
+                  disabled={creating}
+                  style={{
+                    padding: '12px 20px',
+                    background: creating ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: creating ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  {creating ? (
+                    <>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid white',
+                        borderTop: '2px solid transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }}></div>
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      Create Question
+                    </>
+                  )}
                 </button>
               </div>
             </div>
