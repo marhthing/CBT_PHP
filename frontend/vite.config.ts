@@ -20,6 +20,7 @@ export default defineConfig({
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
             proxyReq.setHeader('Origin', 'http://localhost:5000');
+            console.log('Proxy request:', req.method, req.url, 'Headers:', req.headers);
           });
         }
       }
