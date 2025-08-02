@@ -1,902 +1,174 @@
---
--- PostgreSQL database dump
---
+-- PostgreSQL Database Schema for CBT Portal
+-- Generated: August 2, 2025
 
--- Dumped from database version 16.9
--- Dumped by pg_dump version 16.9
+-- Drop existing tables with CASCADE
+DROP TABLE IF EXISTS test_answers CASCADE;
+DROP TABLE IF EXISTS test_results CASCADE;
+DROP TABLE IF EXISTS test_codes CASCADE;
+DROP TABLE IF EXISTS questions CASCADE;
+DROP TABLE IF EXISTS teacher_assignments CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS subjects CASCADE;
+DROP TABLE IF EXISTS terms CASCADE;
+DROP TABLE IF EXISTS sessions CASCADE;
 
-SET statement_timeout = 0;
-SET lock_timeout = 0;
-SET idle_in_transaction_session_timeout = 0;
-SET client_encoding = 'UTF8';
-SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
-SET xmloption = content;
-SET client_min_messages = warning;
-SET row_security = off;
-
-ALTER TABLE IF EXISTS ONLY public.test_results DROP CONSTRAINT IF EXISTS test_results_test_code_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.test_results DROP CONSTRAINT IF EXISTS test_results_student_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_term_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_subject_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_session_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_created_by_fkey;
-ALTER TABLE IF EXISTS ONLY public.test_answers DROP CONSTRAINT IF EXISTS test_answers_result_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.test_answers DROP CONSTRAINT IF EXISTS test_answers_question_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.teacher_assignments DROP CONSTRAINT IF EXISTS teacher_assignments_term_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.teacher_assignments DROP CONSTRAINT IF EXISTS teacher_assignments_teacher_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.teacher_assignments DROP CONSTRAINT IF EXISTS teacher_assignments_subject_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.teacher_assignments DROP CONSTRAINT IF EXISTS teacher_assignments_session_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_term_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_teacher_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_subject_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_session_id_fkey;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_username_key;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_reg_number_key;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_pkey;
-ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_email_key;
-ALTER TABLE IF EXISTS ONLY public.test_results DROP CONSTRAINT IF EXISTS test_results_pkey;
-ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_pkey;
-ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_code_key;
-ALTER TABLE IF EXISTS ONLY public.test_answers DROP CONSTRAINT IF EXISTS test_answers_pkey;
-ALTER TABLE IF EXISTS ONLY public.terms DROP CONSTRAINT IF EXISTS terms_pkey;
-ALTER TABLE IF EXISTS ONLY public.terms DROP CONSTRAINT IF EXISTS terms_name_key;
-ALTER TABLE IF EXISTS ONLY public.teacher_assignments DROP CONSTRAINT IF EXISTS teacher_assignments_teacher_id_subject_id_class_level_ter_key;
-ALTER TABLE IF EXISTS ONLY public.teacher_assignments DROP CONSTRAINT IF EXISTS teacher_assignments_pkey;
-ALTER TABLE IF EXISTS ONLY public.subjects DROP CONSTRAINT IF EXISTS subjects_pkey;
-ALTER TABLE IF EXISTS ONLY public.subjects DROP CONSTRAINT IF EXISTS subjects_name_key;
-ALTER TABLE IF EXISTS ONLY public.subjects DROP CONSTRAINT IF EXISTS subjects_code_key;
-ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_pkey;
-ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_name_key;
-ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_pkey;
-ALTER TABLE IF EXISTS public.users ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.test_results ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.test_codes ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.test_answers ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.terms ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.teacher_assignments ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.subjects ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.sessions ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.questions ALTER COLUMN id DROP DEFAULT;
-DROP SEQUENCE IF EXISTS public.users_id_seq;
-DROP TABLE IF EXISTS public.users;
-DROP SEQUENCE IF EXISTS public.test_results_id_seq;
-DROP TABLE IF EXISTS public.test_results;
-DROP SEQUENCE IF EXISTS public.test_codes_id_seq;
-DROP TABLE IF EXISTS public.test_codes;
-DROP SEQUENCE IF EXISTS public.test_answers_id_seq;
-DROP TABLE IF EXISTS public.test_answers;
-DROP SEQUENCE IF EXISTS public.terms_id_seq;
-DROP TABLE IF EXISTS public.terms;
-DROP SEQUENCE IF EXISTS public.teacher_assignments_id_seq;
-DROP TABLE IF EXISTS public.teacher_assignments;
-DROP SEQUENCE IF EXISTS public.subjects_id_seq;
-DROP TABLE IF EXISTS public.subjects;
-DROP SEQUENCE IF EXISTS public.sessions_id_seq;
-DROP TABLE IF EXISTS public.sessions;
-DROP SEQUENCE IF EXISTS public.questions_id_seq;
-DROP TABLE IF EXISTS public.questions;
-SET default_tablespace = '';
-
-SET default_table_access_method = heap;
-
---
--- Name: questions; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.questions (
-    id integer NOT NULL,
-    question_text text NOT NULL,
-    option_a text NOT NULL,
-    option_b text NOT NULL,
-    option_c text NOT NULL,
-    option_d text NOT NULL,
-    correct_answer character(1) NOT NULL,
-    subject_id integer NOT NULL,
-    class_level character varying(10) NOT NULL,
-    term_id integer NOT NULL,
-    session_id integer NOT NULL,
-    teacher_id integer NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+-- Create lookup tables first
+CREATE TABLE subjects (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE,
+    code VARCHAR(10) NOT NULL UNIQUE,
+    description TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
---
--- Name: questions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.questions_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: questions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.questions_id_seq OWNED BY public.questions.id;
-
-
---
--- Name: sessions; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.sessions (
-    id integer NOT NULL,
-    name character varying(20) NOT NULL,
-    start_date date NOT NULL,
-    end_date date NOT NULL,
-    is_current boolean DEFAULT false,
-    is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE terms (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(20) NOT NULL UNIQUE,
+    display_order INTEGER NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
---
--- Name: sessions_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.sessions_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: sessions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.sessions_id_seq OWNED BY public.sessions.id;
-
-
---
--- Name: subjects; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.subjects (
-    id integer NOT NULL,
-    name character varying(100) NOT NULL,
-    code character varying(10) NOT NULL,
-    description text,
-    is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE sessions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(20) NOT NULL UNIQUE,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    is_current BOOLEAN DEFAULT false,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
---
--- Name: subjects_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.subjects_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: subjects_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.subjects_id_seq OWNED BY public.subjects.id;
-
-
---
--- Name: teacher_assignments; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.teacher_assignments (
-    id integer NOT NULL,
-    teacher_id integer NOT NULL,
-    subject_id integer NOT NULL,
-    class_level character varying(10) NOT NULL,
-    term_id integer NOT NULL,
-    session_id integer NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+-- Users table
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE,
+    email VARCHAR(100) UNIQUE,
+    reg_number VARCHAR(20) UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL CHECK (role IN ('admin', 'teacher', 'student')),
+    full_name VARCHAR(100) NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_login TIMESTAMP,
+    current_term VARCHAR(20) DEFAULT 'First',
+    current_session VARCHAR(20) DEFAULT '2024/2025'
 );
 
-
---
--- Name: teacher_assignments_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.teacher_assignments_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: teacher_assignments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.teacher_assignments_id_seq OWNED BY public.teacher_assignments.id;
-
-
---
--- Name: terms; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.terms (
-    id integer NOT NULL,
-    name character varying(20) NOT NULL,
-    display_order integer NOT NULL,
-    is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+-- Teacher assignments table (fixed structure)
+CREATE TABLE teacher_assignments (
+    id SERIAL PRIMARY KEY,
+    teacher_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+    class_level VARCHAR(10) NOT NULL,
+    term_id INTEGER NOT NULL REFERENCES terms(id) ON DELETE CASCADE,
+    session_id INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
---
--- Name: terms_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.terms_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: terms_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.terms_id_seq OWNED BY public.terms.id;
-
-
---
--- Name: test_answers; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.test_answers (
-    id integer NOT NULL,
-    result_id integer NOT NULL,
-    question_id integer NOT NULL,
-    selected_answer character(1),
-    is_correct boolean NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+-- Questions table
+CREATE TABLE questions (
+    id SERIAL PRIMARY KEY,
+    question_text TEXT NOT NULL,
+    option_a TEXT NOT NULL,
+    option_b TEXT NOT NULL,
+    option_c TEXT NOT NULL,
+    option_d TEXT NOT NULL,
+    correct_answer CHAR(1) NOT NULL CHECK (correct_answer IN ('A', 'B', 'C', 'D')),
+    subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+    class_level VARCHAR(10) NOT NULL,
+    term_id INTEGER NOT NULL REFERENCES terms(id) ON DELETE CASCADE,
+    session_id INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    teacher_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
---
--- Name: test_answers_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.test_answers_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: test_answers_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.test_answers_id_seq OWNED BY public.test_answers.id;
-
-
---
--- Name: test_codes; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.test_codes (
-    id integer NOT NULL,
-    code character varying(10) NOT NULL,
-    title character varying(200) NOT NULL,
-    description text,
-    subject_id integer NOT NULL,
-    class_level character varying(10) NOT NULL,
-    term_id integer NOT NULL,
-    session_id integer NOT NULL,
-    duration_minutes integer NOT NULL,
-    total_questions integer NOT NULL,
-    pass_score integer DEFAULT 50,
-    is_active boolean DEFAULT false,
-    is_activated boolean DEFAULT false,
-    created_by integer NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    expires_at timestamp without time zone,
-    activated_at timestamp without time zone
+-- Test codes table
+CREATE TABLE test_codes (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    subject_id INTEGER NOT NULL REFERENCES subjects(id) ON DELETE CASCADE,
+    class_level VARCHAR(10) NOT NULL,
+    term_id INTEGER NOT NULL REFERENCES terms(id) ON DELETE CASCADE,
+    session_id INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    duration_minutes INTEGER NOT NULL,
+    total_questions INTEGER NOT NULL,
+    pass_score INTEGER DEFAULT 50,
+    is_active BOOLEAN DEFAULT false,
+    is_activated BOOLEAN DEFAULT false,
+    created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP,
+    activated_at TIMESTAMP
 );
 
-
---
--- Name: test_codes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.test_codes_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: test_codes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.test_codes_id_seq OWNED BY public.test_codes.id;
-
-
---
--- Name: test_results; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.test_results (
-    id integer NOT NULL,
-    test_code_id integer NOT NULL,
-    student_id integer NOT NULL,
-    score integer NOT NULL,
-    total_questions integer NOT NULL,
-    time_taken integer NOT NULL,
-    submitted_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+-- Test results table
+CREATE TABLE test_results (
+    id SERIAL PRIMARY KEY,
+    test_code_id INTEGER NOT NULL REFERENCES test_codes(id) ON DELETE CASCADE,
+    student_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    score INTEGER NOT NULL,
+    total_questions INTEGER NOT NULL,
+    time_taken INTEGER NOT NULL, -- in seconds
+    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
---
--- Name: test_results_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.test_results_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: test_results_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.test_results_id_seq OWNED BY public.test_results.id;
-
-
---
--- Name: users; Type: TABLE; Schema: public; Owner: -
---
-
-CREATE TABLE public.users (
-    id integer NOT NULL,
-    username character varying(50),
-    email character varying(100),
-    reg_number character varying(20),
-    password character varying(255) NOT NULL,
-    role character varying(20) NOT NULL,
-    full_name character varying(100) NOT NULL,
-    is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    last_login timestamp without time zone,
-    current_term character varying(20) DEFAULT 'First'::character varying,
-    current_session character varying(20) DEFAULT '2024/2025'::character varying
+-- Test answers table
+CREATE TABLE test_answers (
+    id SERIAL PRIMARY KEY,
+    result_id INTEGER NOT NULL REFERENCES test_results(id) ON DELETE CASCADE,
+    question_id INTEGER NOT NULL REFERENCES questions(id) ON DELETE CASCADE,
+    selected_answer CHAR(1) CHECK (selected_answer IN ('A', 'B', 'C', 'D')),
+    is_correct BOOLEAN NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
---
--- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: -
---
-
-CREATE SEQUENCE public.users_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
---
--- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
---
-
-ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
-
-
---
--- Name: questions id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.questions ALTER COLUMN id SET DEFAULT nextval('public.questions_id_seq'::regclass);
-
-
---
--- Name: sessions id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.sessions ALTER COLUMN id SET DEFAULT nextval('public.sessions_id_seq'::regclass);
-
-
---
--- Name: subjects id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.subjects ALTER COLUMN id SET DEFAULT nextval('public.subjects_id_seq'::regclass);
-
-
---
--- Name: teacher_assignments id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.teacher_assignments ALTER COLUMN id SET DEFAULT nextval('public.teacher_assignments_id_seq'::regclass);
-
-
---
--- Name: terms id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.terms ALTER COLUMN id SET DEFAULT nextval('public.terms_id_seq'::regclass);
-
-
---
--- Name: test_answers id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_answers ALTER COLUMN id SET DEFAULT nextval('public.test_answers_id_seq'::regclass);
-
-
---
--- Name: test_codes id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_codes ALTER COLUMN id SET DEFAULT nextval('public.test_codes_id_seq'::regclass);
-
-
---
--- Name: test_results id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_results ALTER COLUMN id SET DEFAULT nextval('public.test_results_id_seq'::regclass);
-
-
---
--- Name: users id; Type: DEFAULT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
-
-
---
--- Data for Name: questions; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.questions (id, question_text, option_a, option_b, option_c, option_d, correct_answer, subject_id, class_level, term_id, session_id, teacher_id, created_at, updated_at) FROM stdin;
-\.
-
-
---
--- Data for Name: sessions; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.sessions (id, name, start_date, end_date, is_current, is_active, created_at) FROM stdin;
-1	2024/2025	2024-09-01	2025-07-31	t	t	2025-08-02 08:16:34.277153
-\.
-
-
---
--- Data for Name: subjects; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.subjects (id, name, code, description, is_active, created_at) FROM stdin;
-1	Mathematics	MATH	Mathematics subject	t	2025-08-02 08:16:34.277153
-2	English Language	ENG	English Language	t	2025-08-02 08:16:34.277153
-3	Physics	PHY	Physics subject	t	2025-08-02 08:16:34.277153
-4	Chemistry	CHEM	Chemistry subject	t	2025-08-02 08:16:34.277153
-5	Biology	BIO	Biology subject	t	2025-08-02 08:16:34.277153
-\.
-
-
---
--- Data for Name: teacher_assignments; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.teacher_assignments (id, teacher_id, subject_id, class_level, term_id, session_id, created_at) FROM stdin;
-\.
-
-
---
--- Data for Name: terms; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.terms (id, name, display_order, is_active, created_at) FROM stdin;
-1	First	1	t	2025-08-02 08:16:34.277153
-2	Second	2	t	2025-08-02 08:16:34.277153
-3	Third	3	t	2025-08-02 08:16:34.277153
-\.
-
-
---
--- Data for Name: test_answers; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.test_answers (id, result_id, question_id, selected_answer, is_correct, created_at) FROM stdin;
-\.
-
-
---
--- Data for Name: test_codes; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.test_codes (id, code, title, description, subject_id, class_level, term_id, session_id, duration_minutes, total_questions, pass_score, is_active, is_activated, created_by, created_at, expires_at, activated_at) FROM stdin;
-\.
-
-
---
--- Data for Name: test_results; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.test_results (id, test_code_id, student_id, score, total_questions, time_taken, submitted_at) FROM stdin;
-\.
-
-
---
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
---
-
-COPY public.users (id, username, email, reg_number, password, role, full_name, is_active, created_at, last_login, current_term, current_session) FROM stdin;
-1	admin	admin@sfgs.com	\N	$2y$10$it84t6IMCgaZ71JHZryiZOiuttWo87xcCsFME0sXdwRL7pQu99oBG	admin	System Administrator	t	2025-08-02 08:16:44.764844	\N	First	2024/2025
-2	teacher1	teacher1@sfgs.com	\N	$2y$10$it84t6IMCgaZ71JHZryiZOiuttWo87xcCsFME0sXdwRL7pQu99oBG	teacher	John Teacher	t	2025-08-02 08:16:44.764844	\N	First	2024/2025
-3	student1	student1@sfgs.com	2023001	$2y$10$it84t6IMCgaZ71JHZryiZOiuttWo87xcCsFME0sXdwRL7pQu99oBG	student	Jane Student	t	2025-08-02 08:16:44.764844	\N	First	2024/2025
-\.
-
-
---
--- Name: questions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.questions_id_seq', 1, false);
-
-
---
--- Name: sessions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.sessions_id_seq', 1, true);
-
-
---
--- Name: subjects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.subjects_id_seq', 5, true);
-
-
---
--- Name: teacher_assignments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.teacher_assignments_id_seq', 1, false);
-
-
---
--- Name: terms_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.terms_id_seq', 3, true);
-
-
---
--- Name: test_answers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.test_answers_id_seq', 1, false);
-
-
---
--- Name: test_codes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.test_codes_id_seq', 1, false);
-
-
---
--- Name: test_results_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.test_results_id_seq', 1, false);
-
-
---
--- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.users_id_seq', 3, true);
-
-
---
--- Name: questions questions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.questions
-    ADD CONSTRAINT questions_pkey PRIMARY KEY (id);
-
-
---
--- Name: sessions sessions_name_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.sessions
-    ADD CONSTRAINT sessions_name_key UNIQUE (name);
-
-
---
--- Name: sessions sessions_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.sessions
-    ADD CONSTRAINT sessions_pkey PRIMARY KEY (id);
-
-
---
--- Name: subjects subjects_code_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.subjects
-    ADD CONSTRAINT subjects_code_key UNIQUE (code);
-
-
---
--- Name: subjects subjects_name_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.subjects
-    ADD CONSTRAINT subjects_name_key UNIQUE (name);
-
-
---
--- Name: subjects subjects_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.subjects
-    ADD CONSTRAINT subjects_pkey PRIMARY KEY (id);
-
-
---
--- Name: teacher_assignments teacher_assignments_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.teacher_assignments
-    ADD CONSTRAINT teacher_assignments_pkey PRIMARY KEY (id);
-
-
---
--- Name: teacher_assignments teacher_assignments_teacher_id_subject_id_class_level_ter_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.teacher_assignments
-    ADD CONSTRAINT teacher_assignments_teacher_id_subject_id_class_level_ter_key UNIQUE (teacher_id, subject_id, class_level, term_id, session_id);
-
-
---
--- Name: terms terms_name_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.terms
-    ADD CONSTRAINT terms_name_key UNIQUE (name);
-
-
---
--- Name: terms terms_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.terms
-    ADD CONSTRAINT terms_pkey PRIMARY KEY (id);
-
-
---
--- Name: test_answers test_answers_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_answers
-    ADD CONSTRAINT test_answers_pkey PRIMARY KEY (id);
-
-
---
--- Name: test_codes test_codes_code_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_codes
-    ADD CONSTRAINT test_codes_code_key UNIQUE (code);
-
-
---
--- Name: test_codes test_codes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_codes
-    ADD CONSTRAINT test_codes_pkey PRIMARY KEY (id);
-
-
---
--- Name: test_results test_results_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_results
-    ADD CONSTRAINT test_results_pkey PRIMARY KEY (id);
-
-
---
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_email_key UNIQUE (email);
-
-
---
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
-
-
---
--- Name: users users_reg_number_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_reg_number_key UNIQUE (reg_number);
-
-
---
--- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.users
-    ADD CONSTRAINT users_username_key UNIQUE (username);
-
-
---
--- Name: questions questions_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.questions
-    ADD CONSTRAINT questions_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id);
-
-
---
--- Name: questions questions_subject_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.questions
-    ADD CONSTRAINT questions_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES public.subjects(id);
-
-
---
--- Name: questions questions_teacher_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.questions
-    ADD CONSTRAINT questions_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES public.users(id);
-
-
---
--- Name: questions questions_term_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.questions
-    ADD CONSTRAINT questions_term_id_fkey FOREIGN KEY (term_id) REFERENCES public.terms(id);
-
-
---
--- Name: teacher_assignments teacher_assignments_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.teacher_assignments
-    ADD CONSTRAINT teacher_assignments_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id);
-
-
---
--- Name: teacher_assignments teacher_assignments_subject_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.teacher_assignments
-    ADD CONSTRAINT teacher_assignments_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES public.subjects(id);
-
-
---
--- Name: teacher_assignments teacher_assignments_teacher_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.teacher_assignments
-    ADD CONSTRAINT teacher_assignments_teacher_id_fkey FOREIGN KEY (teacher_id) REFERENCES public.users(id);
-
-
---
--- Name: teacher_assignments teacher_assignments_term_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.teacher_assignments
-    ADD CONSTRAINT teacher_assignments_term_id_fkey FOREIGN KEY (term_id) REFERENCES public.terms(id);
-
-
---
--- Name: test_answers test_answers_question_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_answers
-    ADD CONSTRAINT test_answers_question_id_fkey FOREIGN KEY (question_id) REFERENCES public.questions(id);
-
-
---
--- Name: test_answers test_answers_result_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_answers
-    ADD CONSTRAINT test_answers_result_id_fkey FOREIGN KEY (result_id) REFERENCES public.test_results(id);
-
-
---
--- Name: test_codes test_codes_created_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_codes
-    ADD CONSTRAINT test_codes_created_by_fkey FOREIGN KEY (created_by) REFERENCES public.users(id);
-
-
---
--- Name: test_codes test_codes_session_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_codes
-    ADD CONSTRAINT test_codes_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.sessions(id);
-
-
---
--- Name: test_codes test_codes_subject_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_codes
-    ADD CONSTRAINT test_codes_subject_id_fkey FOREIGN KEY (subject_id) REFERENCES public.subjects(id);
-
-
---
--- Name: test_codes test_codes_term_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_codes
-    ADD CONSTRAINT test_codes_term_id_fkey FOREIGN KEY (term_id) REFERENCES public.terms(id);
-
-
---
--- Name: test_results test_results_student_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_results
-    ADD CONSTRAINT test_results_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.users(id);
-
-
---
--- Name: test_results test_results_test_code_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.test_results
-    ADD CONSTRAINT test_results_test_code_id_fkey FOREIGN KEY (test_code_id) REFERENCES public.test_codes(id);
-
-
---
--- PostgreSQL database dump complete
---
-
+-- Insert lookup data
+INSERT INTO subjects (name, code, description) VALUES
+('Mathematics', 'MATH', 'General Mathematics'),
+('English Language', 'ENG', 'English Language and Literature'),
+('Physics', 'PHY', 'Applied Physics'),
+('Chemistry', 'CHEM', 'General Chemistry'),
+('Biology', 'BIO', 'General Biology'),
+('Geography', 'GEO', 'Physical and Human Geography'),
+('History', 'HIST', 'Nigerian and World History'),
+('Economics', 'ECON', 'Applied Economics'),
+('Government', 'GOVT', 'Government and Civics'),
+('Literature', 'LIT', 'Literature in English'),
+('Agricultural Science', 'AGRIC', 'Agricultural Science'),
+('Computer Science', 'CS', 'Computer Science and ICT'),
+('Further Mathematics', 'FMATH', 'Advanced Mathematics'),
+('Civic Education', 'CIVIC', 'Civic Education'),
+('Trade/Business Studies', 'BUS', 'Business Studies');
+
+INSERT INTO terms (name, display_order) VALUES
+('First', 1),
+('Second', 2),
+('Third', 3);
+
+INSERT INTO sessions (name, start_date, end_date, is_current) VALUES
+('2024/2025', '2024-09-01', '2025-07-31', true),
+('2023/2024', '2023-09-01', '2024-07-31', false),
+('2025/2026', '2025-09-01', '2026-07-31', false);
+
+-- Insert sample users with hashed passwords for 'password123'
+INSERT INTO users (username, email, reg_number, password, role, full_name) VALUES
+('admin', 'admin@sfgs.edu.ng', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'System Administrator'),
+('teacher1', 'teacher1@sfgs.edu.ng', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'teacher', 'John Doe'),
+(NULL, NULL, '2023001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'Jane Smith');
+
+-- Create indexes for better performance
+CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX idx_users_username ON users(username);
+CREATE INDEX idx_users_reg_number ON users(reg_number);
+CREATE INDEX idx_questions_subject_class ON questions(subject_id, class_level);
+CREATE INDEX idx_questions_teacher ON questions(teacher_id);
+CREATE INDEX idx_test_codes_subject_class ON test_codes(subject_id, class_level);
+CREATE INDEX idx_test_results_student ON test_results(student_id);
+CREATE INDEX idx_test_results_test_code ON test_results(test_code_id);
+CREATE INDEX idx_teacher_assignments_teacher ON teacher_assignments(teacher_id);
+CREATE INDEX idx_teacher_assignments_subject_class ON teacher_assignments(subject_id, class_level);

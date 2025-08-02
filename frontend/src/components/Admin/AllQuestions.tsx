@@ -44,6 +44,20 @@ export default function AllQuestions() {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newQuestions, setNewQuestions] = useState<any[]>([])
+  const [currentQuestion, setCurrentQuestion] = useState({
+    question_text: '',
+    option_a: '',
+    option_b: '',
+    option_c: '',
+    option_d: '',
+    correct_answer: 'A',
+    subject_id: '',
+    class_level: '',
+    term_id: '',
+    session_id: ''
+  })
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('')
@@ -222,7 +236,7 @@ export default function AllQuestions() {
           </div>
         )}
         <button
-          onClick={() => navigate('/teacher/questions')}
+          onClick={() => setShowAddForm(!showAddForm)}
           style={{
             background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
             color: 'white',
@@ -249,10 +263,407 @@ export default function AllQuestions() {
             target.style.boxShadow = '0 4px 6px rgba(99, 102, 241, 0.25)'
           }}
         >
-          <span style={{ fontSize: '16px' }}>+</span>
-          Add New Question
+          <span style={{ fontSize: '16px' }}>{showAddForm ? '−' : '+'}</span>
+          {showAddForm ? 'Hide Form' : 'Add Questions'}
         </button>
       </div>
+
+      {/* Add Question Form */}
+      {showAddForm && (
+        <div style={{
+          background: 'white',
+          borderRadius: '16px',
+          padding: '24px',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+          marginBottom: '24px'
+        }}>
+          <h2 style={{
+            fontSize: '20px',
+            fontWeight: '700',
+            color: '#1e293b',
+            margin: '0 0 24px 0'
+          }}>
+            Add New Questions
+          </h2>
+
+          {/* Current Question Form */}
+          <div style={{
+            background: '#f8fafc',
+            borderRadius: '12px',
+            padding: '24px',
+            marginBottom: '24px',
+            border: '1px solid #e2e8f0'
+          }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '16px',
+              marginBottom: '20px'
+            }}>
+              <select
+                value={currentQuestion.subject_id}
+                onChange={(e) => setCurrentQuestion({...currentQuestion, subject_id: e.target.value})}
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px',
+                  background: 'white'
+                }}
+              >
+                <option value="">Select Subject</option>
+                {lookupData.subjects?.map(subject => (
+                  <option key={subject.id} value={subject.id}>{subject.name}</option>
+                ))}
+              </select>
+
+              <select
+                value={currentQuestion.class_level}
+                onChange={(e) => setCurrentQuestion({...currentQuestion, class_level: e.target.value})}
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px',
+                  background: 'white'
+                }}
+              >
+                <option value="">Select Class</option>
+                {['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].map(level => (
+                  <option key={level} value={level}>{level}</option>
+                ))}
+              </select>
+
+              <select
+                value={currentQuestion.term_id}
+                onChange={(e) => setCurrentQuestion({...currentQuestion, term_id: e.target.value})}
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px',
+                  background: 'white'
+                }}
+              >
+                <option value="">Select Term</option>
+                {lookupData.terms?.map(term => (
+                  <option key={term.id} value={term.id}>{term.name}</option>
+                ))}
+              </select>
+
+              <select
+                value={currentQuestion.session_id}
+                onChange={(e) => setCurrentQuestion({...currentQuestion, session_id: e.target.value})}
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px',
+                  background: 'white'
+                }}
+              >
+                <option value="">Select Session</option>
+                {lookupData.sessions?.map(session => (
+                  <option key={session.id} value={session.id}>{session.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <textarea
+              placeholder="Enter question text..."
+              value={currentQuestion.question_text}
+              onChange={(e) => setCurrentQuestion({...currentQuestion, question_text: e.target.value})}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                border: '1px solid #d1d5db',
+                fontSize: '14px',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                minHeight: '80px',
+                marginBottom: '16px',
+                resize: 'vertical'
+              }}
+            />
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '12px',
+              marginBottom: '16px'
+            }}>
+              <input
+                type="text"
+                placeholder="Option A"
+                value={currentQuestion.option_a}
+                onChange={(e) => setCurrentQuestion({...currentQuestion, option_a: e.target.value})}
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px'
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Option B"
+                value={currentQuestion.option_b}
+                onChange={(e) => setCurrentQuestion({...currentQuestion, option_b: e.target.value})}
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px'
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Option C"
+                value={currentQuestion.option_c}
+                onChange={(e) => setCurrentQuestion({...currentQuestion, option_c: e.target.value})}
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px'
+                }}
+              />
+              <input
+                type="text"
+                placeholder="Option D"
+                value={currentQuestion.option_d}
+                onChange={(e) => setCurrentQuestion({...currentQuestion, option_d: e.target.value})}
+                style={{
+                  padding: '12px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '16px',
+              marginBottom: '20px'
+            }}>
+              <label style={{
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#374151'
+              }}>
+                Correct Answer:
+              </label>
+              <select
+                value={currentQuestion.correct_answer}
+                onChange={(e) => setCurrentQuestion({...currentQuestion, correct_answer: e.target.value})}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #d1d5db',
+                  fontSize: '14px',
+                  background: 'white'
+                }}
+              >
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+                <option value="D">D</option>
+              </select>
+            </div>
+
+            <div style={{
+              display: 'flex',
+              gap: '12px'
+            }}>
+              <button
+                onClick={() => {
+                  if (currentQuestion.question_text && currentQuestion.option_a && currentQuestion.option_b && 
+                      currentQuestion.option_c && currentQuestion.option_d && currentQuestion.subject_id && 
+                      currentQuestion.class_level && currentQuestion.term_id && currentQuestion.session_id) {
+                    setNewQuestions([...newQuestions, {...currentQuestion}])
+                    setCurrentQuestion({
+                      question_text: '',
+                      option_a: '',
+                      option_b: '',
+                      option_c: '',
+                      option_d: '',
+                      correct_answer: 'A',
+                      subject_id: currentQuestion.subject_id, // Keep same subject
+                      class_level: currentQuestion.class_level, // Keep same class
+                      term_id: currentQuestion.term_id, // Keep same term
+                      session_id: currentQuestion.session_id // Keep same session
+                    })
+                    setSuccessMessage('Question added! Add more or click Upload Questions.')
+                  } else {
+                    setError('Please fill in all fields')
+                  }
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #059669, #065f46)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '12px 20px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Add Question ({newQuestions.length})
+              </button>
+
+              <button
+                onClick={async () => {
+                  if (newQuestions.length === 0) {
+                    setError('Please add at least one question')
+                    return
+                  }
+                  
+                  try {
+                    setLoading(true)
+                    for (const question of newQuestions) {
+                      await api.post('/teacher/questions', question)
+                    }
+                    setSuccessMessage(`Successfully uploaded ${newQuestions.length} questions!`)
+                    setNewQuestions([])
+                    setCurrentQuestion({
+                      question_text: '',
+                      option_a: '',
+                      option_b: '',
+                      option_c: '',
+                      option_d: '',
+                      correct_answer: 'A',
+                      subject_id: '',
+                      class_level: '',
+                      term_id: '',
+                      session_id: ''
+                    })
+                    setShowAddForm(false)
+                    fetchQuestions()
+                    fetchQuestionStats()
+                  } catch (error) {
+                    setError('Failed to upload questions. Please try again.')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+                disabled={newQuestions.length === 0}
+                style={{
+                  background: newQuestions.length > 0 ? 'linear-gradient(135deg, #6366f1, #8b5cf6)' : '#9ca3af',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '12px 20px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: newQuestions.length > 0 ? 'pointer' : 'not-allowed'
+                }}
+              >
+                Upload Questions ({newQuestions.length})
+              </button>
+
+              {newQuestions.length > 0 && (
+                <button
+                  onClick={() => {
+                    setNewQuestions([])
+                    setSuccessMessage('All questions cleared')
+                  }}
+                  style={{
+                    background: '#dc2626',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '12px 20px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Clear All
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Questions Queue */}
+          {newQuestions.length > 0 && (
+            <div>
+              <h3 style={{
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#374151',
+                margin: '0 0 16px 0'
+              }}>
+                Questions Ready for Upload ({newQuestions.length})
+              </h3>
+              <div style={{
+                maxHeight: '300px',
+                overflowY: 'auto',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px'
+              }}>
+                {newQuestions.map((q, index) => (
+                  <div key={index} style={{
+                    padding: '16px',
+                    borderBottom: index < newQuestions.length - 1 ? '1px solid #e2e8f0' : 'none',
+                    background: index % 2 === 0 ? '#f9fafb' : 'white'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '8px'
+                    }}>
+                      <strong style={{ fontSize: '14px', color: '#1e293b' }}>
+                        Q{index + 1}: {q.question_text.substring(0, 80)}...
+                      </strong>
+                      <button
+                        onClick={() => {
+                          const updated = newQuestions.filter((_, i) => i !== index)
+                          setNewQuestions(updated)
+                        }}
+                        style={{
+                          background: '#ef4444',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '4px 8px',
+                          fontSize: '12px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#64748b' }}>
+                      Subject: {lookupData.subjects?.find(s => s.id == q.subject_id)?.name} | 
+                      Class: {q.class_level} | 
+                      Answer: {q.correct_answer}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {successMessage && (
+            <div style={{
+              background: '#f0fdf4',
+              border: '1px solid #bbf7d0',
+              color: '#166534',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              fontSize: '14px',
+              marginTop: '16px'
+            }}>
+              {successMessage}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Stats Cards */}
       {stats && (

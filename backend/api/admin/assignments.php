@@ -32,16 +32,20 @@ function handleGet($db, $user) {
             SELECT 
                 ta.id,
                 ta.teacher_id,
-                ta.subject,
+                ta.subject_id,
                 ta.class_level,
                 ta.created_at,
                 u.username,
                 u.email,
                 u.full_name,
-                admin_user.full_name as assigned_by_name
+                s.name as subject_name,
+                t.name as term_name,
+                sess.name as session_name
             FROM teacher_assignments ta
             JOIN users u ON ta.teacher_id = u.id
-            LEFT JOIN users admin_user ON ta.assigned_by = admin_user.id
+            JOIN subjects s ON ta.subject_id = s.id
+            JOIN terms t ON ta.term_id = t.id
+            JOIN sessions sess ON ta.session_id = sess.id
             ORDER BY ta.created_at DESC
         ");
         
@@ -83,7 +87,7 @@ function handlePost($db, $user) {
         }
         
         // Validate required fields
-        Response::validateRequired($input, ['teacher_id', 'subject', 'class_level']);
+        Response::validateRequired($input, ['teacher_id', 'subject_id', 'class_level', 'term_id', 'session_id']);
         
         // Validate teacher exists and is a teacher
         $teacher_check = $db->prepare("SELECT id FROM users WHERE id = ? AND role = 'teacher'");
@@ -96,9 +100,9 @@ function handlePost($db, $user) {
         // Check if assignment already exists
         $existing_check = $db->prepare("
             SELECT id FROM teacher_assignments 
-            WHERE teacher_id = ? AND subject = ? AND class_level = ?
+            WHERE teacher_id = ? AND subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
         ");
-        $existing_check->execute([$input['teacher_id'], $input['subject'], $input['class_level']]);
+        $existing_check->execute([$input['teacher_id'], $input['subject_id'], $input['class_level'], $input['term_id'], $input['session_id']]);
         
         if ($existing_check->fetch()) {
             Response::validationError('Teacher is already assigned to this subject and class');
@@ -124,15 +128,16 @@ function handlePost($db, $user) {
         
         // Create assignment
         $stmt = $db->prepare("
-            INSERT INTO teacher_assignments (teacher_id, subject, class_level, assigned_by)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO teacher_assignments (teacher_id, subject_id, class_level, term_id, session_id)
+            VALUES (?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
             $input['teacher_id'],
-            $input['subject'],
+            $input['subject_id'],
             $input['class_level'],
-            $user['id']
+            $input['term_id'],
+            $input['session_id']
         ]);
         
         $assignment_id = $db->lastInsertId();
