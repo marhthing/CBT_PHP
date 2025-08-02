@@ -309,34 +309,25 @@ export default function TestCodeManager() {
     setTimeout(() => setSuccessMessage(''), 2000)
   }
 
-  // Handle individual code deletion
-  const handleDeleteCode = async (codeId: number) => {
+  // Handle batch deletion
+  const handleDeleteBatch = async (batchId: string) => {
     try {
-      await api.delete(`/admin/test-codes/${codeId}`)
+      await api.delete(`/admin/test-codes/batch/${batchId}`)
       
-      // Remove code from state locally
-      setTestCodes(prevCodes => prevCodes.filter(code => code.id !== codeId))
+      // Remove all codes from this batch locally
+      setTestCodes(prevCodes => prevCodes.filter(code => code.batch_id !== batchId))
       
-      // Update selected batch if viewing modal
-      if (selectedBatch) {
-        const updatedBatch = {
-          ...selectedBatch,
-          codes: selectedBatch.codes.filter((code: any) => code.id !== codeId)
-        }
-        setSelectedBatch(updatedBatch)
-        
-        // Close modal if no codes left
-        if (updatedBatch.codes.length === 0) {
-          setShowViewModal(false)
-          setSelectedBatch(null)
-        }
+      // Close modal if currently viewing this batch
+      if (selectedBatch && selectedBatch.batchId === batchId) {
+        setShowViewModal(false)
+        setSelectedBatch(null)
       }
       
-      setSuccessMessage('Test code deleted successfully')
+      setSuccessMessage('Test code batch deleted successfully')
       setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
-      console.error('Failed to delete test code:', error)
-      setError(error.response?.data?.message || 'Failed to delete test code')
+      console.error('Failed to delete test code batch:', error)
+      setError(error.response?.data?.message || 'Failed to delete test code batch')
     }
   }
 
@@ -747,6 +738,27 @@ export default function TestCodeManager() {
                   <Copy size={12} />
                   Copy All
                 </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    if (confirm(`Are you sure you want to delete this entire batch of ${batch.codes.length} test codes? This action cannot be undone.`)) {
+                      handleDeleteBatch(batch.batchId)
+                    }
+                  }}
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid #dc2626',
+                    backgroundColor: 'white',
+                    color: '#dc2626',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  Delete Batch
+                </button>
               </div>
 
               {/* Brief Codes Preview */}
@@ -979,47 +991,23 @@ export default function TestCodeManager() {
                       }}>
                         {code.code}
                       </span>
-                      <div style={{
-                        display: 'flex',
-                        gap: '4px'
-                      }}>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault()
-                            copyToClipboard(code.code)
-                          }}
-                          style={{
-                            background: '#3b82f6',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            padding: '4px 8px',
-                            fontSize: '11px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Copy
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault()
-                            if (confirm(`Are you sure you want to delete test code ${code.code}?`)) {
-                              handleDeleteCode(code.id)
-                            }
-                          }}
-                          style={{
-                            background: '#dc2626',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            padding: '4px 8px',
-                            fontSize: '11px',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault()
+                          copyToClipboard(code.code)
+                        }}
+                        style={{
+                          background: '#3b82f6',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          padding: '4px 8px',
+                          fontSize: '11px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Copy
+                      </button>
                     </div>
                     <div style={{
                       fontSize: '11px',
@@ -1061,6 +1049,25 @@ export default function TestCodeManager() {
               >
                 <Copy size={14} />
                 Copy All Codes
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  if (confirm(`Are you sure you want to delete this entire batch of ${selectedBatch.codes.length} test codes? This action cannot be undone.`)) {
+                    handleDeleteBatch(selectedBatch.batchId)
+                  }
+                }}
+                style={{
+                  padding: '10px 16px',
+                  border: '1px solid #dc2626',
+                  borderRadius: '8px',
+                  backgroundColor: 'white',
+                  color: '#dc2626',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                Delete Batch
               </button>
               <button
                 onClick={(e) => {
