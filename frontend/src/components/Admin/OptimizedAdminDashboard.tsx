@@ -39,19 +39,38 @@ export default function OptimizedAdminDashboard() {
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [retrying, setRetrying] = useState(false)
 
-  // Memoized fetch function for performance
-  const fetchDashboardData = useCallback(async () => {
+  // Memoized fetch function with retry logic
+  const fetchDashboardData = useCallback(async (retryCount = 0) => {
+    const maxRetries = 3
+    
     try {
-      const [statsResponse, activitiesResponse] = await Promise.all([
-        api.get('/admin/dashboard-stats'),
-        api.get('/admin/test-codes?limit=8')
-      ])
+      console.log(`Fetching dashboard data (attempt ${retryCount + 1})`)
+      
+      // Fetch data sequentially to reduce server load
+      const statsResponse = await api.get('/admin/dashboard-stats')
+      await new Promise(resolve => setTimeout(resolve, 500)) // Small delay
+      const activitiesResponse = await api.get('/admin/test-codes?limit=8')
 
       setStats(statsResponse.data.data || statsResponse.data || {})
       setRecentActivities(activitiesResponse.data.data || activitiesResponse.data || [])
+      setError('') // Clear any previous errors
     } catch (error: any) {
-      console.error('Failed to fetch dashboard data:', error)
+      console.error(`Failed to fetch dashboard data (attempt ${retryCount + 1}):`, error.message)
+      
+      if (retryCount < maxRetries && error.code === 'ECONNABORTED') {
+        // Retry with exponential backoff for timeout errors
+        setRetrying(true)
+        const delay = Math.min(1000 * Math.pow(2, retryCount), 5000)
+        console.log(`Retrying in ${delay}ms...`)
+        setTimeout(() => {
+          setRetrying(false)
+          fetchDashboardData(retryCount + 1)
+        }, delay)
+        return
+      }
+      
       setError('Failed to load dashboard data. Please try refreshing the page.')
     } finally {
       setLoading(false)
@@ -143,10 +162,11 @@ export default function OptimizedAdminDashboard() {
     })
   }, [])
 
-  if (loading) {
+  if (loading || retrying) {
     return (
       <div style={{
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         minHeight: '400px',
@@ -158,8 +178,16 @@ export default function OptimizedAdminDashboard() {
           border: '4px solid #f3f3f3',
           borderTop: '4px solid #6366f1',
           borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
+          animation: 'spin 1s linear infinite',
+          marginBottom: '16px'
         }}></div>
+        <div style={{
+          fontSize: '14px',
+          color: '#64748b',
+          textAlign: 'center'
+        }}>
+          {retrying ? 'Connection timeout, retrying...' : 'Loading dashboard...'}
+        </div>
         <style>{`
           @keyframes spin {
             0% { transform: rotate(0deg); }
