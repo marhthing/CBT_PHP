@@ -79,7 +79,6 @@ CREATE TABLE questions (
     correct_answer CHAR(1) NOT NULL CHECK (correct_answer IN ('A', 'B', 'C', 'D')),
     subject_id INTEGER REFERENCES subjects(id) NOT NULL,
     class_level VARCHAR(10) NOT NULL,
-    difficulty VARCHAR(10) DEFAULT 'medium' CHECK (difficulty IN ('easy', 'medium', 'hard')),
     term_id INTEGER REFERENCES terms(id) DEFAULT 1,
     session_id INTEGER REFERENCES sessions(id) DEFAULT 1,
     teacher_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -90,7 +89,7 @@ CREATE TABLE questions (
 -- Create indexes for questions table
 CREATE INDEX idx_questions_subject_id ON questions(subject_id);
 CREATE INDEX idx_questions_class_level ON questions(class_level);
-CREATE INDEX idx_questions_difficulty ON questions(difficulty);
+
 CREATE INDEX idx_questions_teacher_id ON questions(teacher_id);
 CREATE INDEX idx_questions_created_at ON questions(created_at);
 CREATE INDEX idx_questions_subject_class ON questions(subject_id, class_level);
@@ -205,13 +204,13 @@ INSERT INTO teacher_assignments (teacher_id, subject_id, class_level, assigned_b
 (3, 2, 'SS2', 1); -- Jane Smith -> English Language -> SS2
 
 -- Insert sample questions using subject_id
-INSERT INTO questions (question_text, option_a, option_b, option_c, option_d, correct_answer, subject_id, class_level, difficulty, teacher_id, term_id, session_id) VALUES
-('What is 2 + 2?', '2', '3', '4', '5', 'C', 1, 'SS1', 'easy', 2, 1, 1),
-('What is 5 × 3?', '8', '15', '12', '18', 'B', 1, 'SS1', 'easy', 2, 1, 1),
-('What is the square root of 16?', '2', '4', '6', '8', 'B', 1, 'SS1', 'medium', 2, 1, 1),
-('Solve: 2x + 3 = 7', 'x = 1', 'x = 2', 'x = 3', 'x = 4', 'B', 1, 'SS2', 'medium', 2, 1, 1),
-('What is a noun?', 'An action word', 'A describing word', 'A naming word', 'A connecting word', 'C', 2, 'SS1', 'easy', 3, 1, 1),
-('Which is a pronoun?', 'Run', 'Beautiful', 'He', 'Quickly', 'C', 2, 'SS1', 'easy', 3, 1, 1);
+INSERT INTO questions (question_text, option_a, option_b, option_c, option_d, correct_answer, subject_id, class_level, teacher_id, term_id, session_id) VALUES
+('What is 2 + 2?', '2', '3', '4', '5', 'C', 1, 'SS1', 2, 1, 1),
+('What is 5 × 3?', '8', '15', '12', '18', 'B', 1, 'SS1', 2, 1, 1),
+('What is the square root of 16?', '2', '4', '6', '8', 'B', 1, 'SS1', 2, 1, 1),
+('Solve: 2x + 3 = 7', 'x = 1', 'x = 2', 'x = 3', 'x = 4', 'B', 1, 'SS2', 2, 1, 1),
+('What is a noun?', 'An action word', 'A describing word', 'A naming word', 'A connecting word', 'C', 2, 'SS1', 3, 1, 1),
+('Which is a pronoun?', 'Run', 'Beautiful', 'He', 'Quickly', 'C', 2, 'SS1', 3, 1, 1);
 
 -- Insert sample test codes using subject_id
 INSERT INTO test_codes (code, title, subject_id, class_level, duration_minutes, question_count, expires_at, created_by, term_id, session_id) VALUES
