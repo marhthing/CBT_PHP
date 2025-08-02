@@ -123,6 +123,18 @@ export default function TestCodeManager() {
     }
   }, [])
 
+  // Auto-generate title when subject, term, or session changes
+  const generateTitle = useCallback(() => {
+    const subject = lookupData.subjects?.find(s => s.id.toString() === createForm.subject_id)
+    const term = lookupData.terms?.find(t => t.id.toString() === createForm.term_id)
+    const session = lookupData.sessions?.find(s => s.id.toString() === createForm.session_id)
+    
+    if (subject && term && session) {
+      const title = `${subject.name} - ${term.name} - ${session.name}`
+      setCreateForm(prev => ({ ...prev, title }))
+    }
+  }, [createForm.subject_id, createForm.term_id, createForm.session_id, lookupData])
+
   useEffect(() => {
     fetchTestCodes()
     fetchLookupData()
@@ -134,14 +146,18 @@ export default function TestCodeManager() {
     }
   }, [createForm.subject_id, createForm.class_level, checkAvailableQuestions])
 
+  useEffect(() => {
+    generateTitle()
+  }, [generateTitle])
+
   const handleCreateCodes = async () => {
-    if (!createForm.title || !createForm.subject_id || !createForm.class_level || 
+    if (!createForm.subject_id || !createForm.class_level || 
         !createForm.term_id || !createForm.session_id) {
-      setError('All fields are required')
+      setError('Please fill in all required fields')
       return
     }
 
-    if (createForm.total_questions > availableQuestions) {
+    if (createForm.total_questions > availableQuestions && availableQuestions > 0) {
       setError(`Not enough questions available. You need ${createForm.total_questions} but only ${availableQuestions} are available.`)
       return
     }
@@ -150,8 +166,15 @@ export default function TestCodeManager() {
     setError('')
 
     try {
+      const payload = {
+        ...createForm,
+        subject_id: parseInt(createForm.subject_id),
+        term_id: parseInt(createForm.term_id),
+        session_id: parseInt(createForm.session_id)
+      }
+
       const endpoint = createForm.count > 1 ? '/admin/test-codes/bulk' : '/admin/test-codes'
-      await api.post(endpoint, createForm)
+      const response = await api.post(endpoint, payload)
       
       const message = createForm.count > 1 
         ? `Successfully created ${createForm.count} test codes`
@@ -170,6 +193,7 @@ export default function TestCodeManager() {
         expires_at: '',
         count: 1
       })
+      setAvailableQuestions(0)
       fetchTestCodes()
     } catch (error: any) {
       console.error('Failed to create test codes:', error)
@@ -788,21 +812,23 @@ export default function TestCodeManager() {
                     color: '#374151',
                     marginBottom: '6px'
                   }}>
-                    Test Title
+                    Test Title (Auto-generated)
                   </label>
                   <input
                     type="text"
                     value={createForm.title}
-                    onChange={(e) => setCreateForm({...createForm, title: e.target.value})}
+                    readOnly
                     style={{
                       width: '100%',
                       padding: '10px 12px',
                       border: '1px solid #d1d5db',
                       borderRadius: '8px',
                       fontSize: '14px',
-                      outline: 'none'
+                      outline: 'none',
+                      backgroundColor: '#f9fafb',
+                      color: '#6b7280'
                     }}
-                    placeholder="e.g., Mathematics Mid-Term Exam"
+                    placeholder="Select subject, term, and session to generate title"
                   />
                 </div>
 
@@ -846,8 +872,7 @@ export default function TestCodeManager() {
                   }}>
                     Class Level
                   </label>
-                  <input
-                    type="text"
+                  <select
                     value={createForm.class_level}
                     onChange={(e) => setCreateForm({...createForm, class_level: e.target.value})}
                     style={{
@@ -856,10 +881,15 @@ export default function TestCodeManager() {
                       border: '1px solid #d1d5db',
                       borderRadius: '8px',
                       fontSize: '14px',
+                      backgroundColor: 'white',
                       outline: 'none'
                     }}
-                    placeholder="e.g., SS1, JSS2"
-                  />
+                  >
+                    <option value="">Select Class Level</option>
+                    {lookupData.class_levels?.map(classLevel => (
+                      <option key={classLevel.id} value={classLevel.id}>{classLevel.name}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -1085,7 +1115,7 @@ export default function TestCodeManager() {
                 </button>
                 <button
                   onClick={handleCreateCodes}
-                  disabled={creating || createForm.total_questions > availableQuestions}
+                  disabled={creating || !createForm.subject_id || !createForm.class_level || !createForm.term_id || !createForm.session_id || (availableQuestions > 0 && createForm.total_questions > availableQuestions)}
                   style={{
                     padding: '10px 16px',
                     background: '#3b82f6',
@@ -1094,17 +1124,17 @@ export default function TestCodeManager() {
                     borderRadius: '8px',
                     fontSize: '14px',
                     fontWeight: '600',
-                    cursor: creating || createForm.total_questions > availableQuestions ? 'not-allowed' : 'pointer',
-                    opacity: creating || createForm.total_questions > availableQuestions ? 0.6 : 1,
+                    cursor: (creating || !createForm.subject_id || !createForm.class_level || !createForm.term_id || !createForm.session_id || (availableQuestions > 0 && createForm.total_questions > availableQuestions)) ? 'not-allowed' : 'pointer',
+                    opacity: (creating || !createForm.subject_id || !createForm.class_level || !createForm.term_id || !createForm.session_id || (availableQuestions > 0 && createForm.total_questions > availableQuestions)) ? 0.6 : 1,
                     transition: 'all 0.2s ease'
                   }}
                   onMouseEnter={(e) => {
-                    if (!creating && createForm.total_questions <= availableQuestions) {
+                    if (!creating && createForm.subject_id && createForm.class_level && createForm.term_id && createForm.session_id && (availableQuestions === 0 || createForm.total_questions <= availableQuestions)) {
                       e.currentTarget.style.backgroundColor = '#2563eb'
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (!creating && createForm.total_questions <= availableQuestions) {
+                    if (!creating && createForm.subject_id && createForm.class_level && createForm.term_id && createForm.session_id && (availableQuestions === 0 || createForm.total_questions <= availableQuestions)) {
                       e.currentTarget.style.backgroundColor = '#3b82f6'
                     }
                   }}
