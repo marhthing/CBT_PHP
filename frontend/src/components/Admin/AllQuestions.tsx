@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
-import { Search, BookOpen, Edit, Trash2, BarChart3, FileText, Users, GraduationCap, X, Save, Plus } from 'lucide-react'
+import { Search, BookOpen, Edit, Trash2, BarChart3, FileText, Users, GraduationCap, X, Save, Upload, Download } from 'lucide-react'
 
 interface Question {
   id: number
@@ -39,23 +39,16 @@ export default function AllQuestions() {
   const [loading, setLoading] = useState(true)
 
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [creating, setCreating] = useState(false)
+  const [showBulkUpload, setShowBulkUpload] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   
-  // Create form state
-  const [createForm, setCreateForm] = useState({
-    question_text: '',
-    question_type: 'multiple_choice',
-    subject_id: '',
-    class_level: '',
-    option_a: '',
-    option_b: '',
-    option_c: '',
-    option_d: '',
-    correct_answer: 'A'
-  })
+  // Bulk upload state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploadProgress, setUploadProgress] = useState<string[]>([])
+  const [defaultTermId, setDefaultTermId] = useState('')
+  const [defaultSessionId, setDefaultSessionId] = useState('')
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('')
@@ -162,43 +155,72 @@ export default function AllQuestions() {
     }
   }, [fetchQuestions])
 
-  const createQuestion = useCallback(async () => {
-    if (!createForm.question_text || !createForm.subject_id || !createForm.class_level || 
-        !createForm.option_a || !createForm.option_b || !createForm.option_c || !createForm.option_d) {
-      setError('Please fill in all required fields')
+  const handleBulkUpload = useCallback(async () => {
+    if (!selectedFile || !defaultTermId || !defaultSessionId) {
+      setError('Please select a file and set default term/session')
       return
     }
 
-    setCreating(true)
+    setUploading(true)
     setError('')
+    setUploadProgress(['Starting upload...'])
     
     try {
-      const response = await api.post('/admin/questions', createForm)
+      const formData = new FormData()
+      formData.append('file', selectedFile)
+      formData.append('default_term_id', defaultTermId)
+      formData.append('default_session_id', defaultSessionId)
+
+      const response = await api.post('/teacher/bulk-upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      
       if (response.data.success) {
         await fetchQuestions()
         await fetchQuestionStats()
-        setShowCreateModal(false)
-        setCreateForm({
-          question_text: '',
-          question_type: 'multiple_choice',
-          subject_id: '',
-          class_level: '',
-          option_a: '',
-          option_b: '',
-          option_c: '',
-          option_d: '',
-          correct_answer: 'A'
-        })
-        setSuccessMessage('Question created successfully!')
+        setShowBulkUpload(false)
+        setSelectedFile(null)
+        setUploadProgress([])
+        setSuccessMessage(`Successfully uploaded ${response.data.data?.uploaded_count || 0} questions!`)
         setTimeout(() => setSuccessMessage(''), 3000)
       }
     } catch (error: any) {
-      console.error('Failed to create question:', error)
-      setError('Failed to create question: ' + (error.response?.data?.message || error.message))
+      console.error('Failed to upload questions:', error)
+      setError('Failed to upload questions: ' + (error.response?.data?.message || error.message))
+      if (error.response?.data?.errors) {
+        setUploadProgress(error.response.data.errors)
+      }
     } finally {
-      setCreating(false)
+      setUploading(false)
     }
-  }, [createForm, fetchQuestions, fetchQuestionStats])
+  }, [selectedFile, defaultTermId, defaultSessionId, fetchQuestions, fetchQuestionStats])
+
+  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) {
+      setSelectedFile(file)
+      setUploadProgress([])
+      setError('')
+    }
+  }, [])
+
+  const downloadTemplate = useCallback(() => {
+    const csvContent = [
+      'question_text,subject_id,class_level,option_a,option_b,option_c,option_d,correct_answer',
+      '"What is the capital of Nigeria?",1,"JSS1","Lagos","Abuja","Kano","Port Harcourt","B"',
+      '"Which of the following is a prime number?",2,"JSS2","4","6","7","8","C"'
+    ].join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'questions_template.csv'
+    a.click()
+    window.URL.revokeObjectURL(url)
+  }, [])
 
   // Memoized filtered questions for performance
   const filteredQuestions = useMemo(() => {
@@ -312,7 +334,7 @@ export default function AllQuestions() {
           </p>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() => setShowBulkUpload(true)}
           style={{
             display: 'flex',
             alignItems: 'center',
@@ -328,8 +350,8 @@ export default function AllQuestions() {
             transition: 'all 0.2s ease'
           }}
         >
-          <Plus size={16} />
-          Add Question
+          <Upload size={16} />
+          Bulk Upload Questions
         </button>
       </div>
 
@@ -886,8 +908,8 @@ export default function AllQuestions() {
         </div>
       )}
 
-      {/* Create Question Modal */}
-      {showCreateModal && (
+      {/* Bulk Upload Modal */}
+      {showBulkUpload && (
         <div style={{
           position: 'fixed',
           top: 0,
@@ -922,10 +944,10 @@ export default function AllQuestions() {
                 color: '#1f2937',
                 margin: 0
               }}>
-                Create New Question
+                Bulk Upload Questions
               </h3>
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={() => setShowBulkUpload(false)}
                 style={{
                   padding: '8px',
                   background: 'transparent',
@@ -939,33 +961,60 @@ export default function AllQuestions() {
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {/* Instructions */}
+              <div style={{
+                background: '#f0f9ff',
+                border: '1px solid #bae6fd',
+                borderRadius: '8px',
+                padding: '16px'
+              }}>
+                <h4 style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#0c4a6e',
+                  margin: '0 0 8px 0'
                 }}>
-                  Question Text *
-                </label>
-                <textarea
-                  value={createForm.question_text}
-                  onChange={(e) => setCreateForm(prev => ({...prev, question_text: e.target.value}))}
-                  rows={3}
-                  placeholder="Enter the question text here..."
+                  How to Upload Questions
+                </h4>
+                <ol style={{
+                  fontSize: '14px',
+                  color: '#0369a1',
+                  margin: 0,
+                  paddingLeft: '20px'
+                }}>
+                  <li>Download the CSV template below</li>
+                  <li>Fill in your questions following the format</li>
+                  <li>Set default term and session for all questions</li>
+                  <li>Upload your completed CSV file</li>
+                </ol>
+              </div>
+
+              {/* Download Template */}
+              <div>
+                <button
+                  onClick={downloadTemplate}
                   style={{
-                    width: '100%',
-                    padding: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '12px 20px',
+                    background: '#f3f4f6',
+                    color: '#374151',
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
                     fontSize: '14px',
-                    resize: 'vertical'
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    width: 'fit-content'
                   }}
-                />
+                >
+                  <Download size={16} />
+                  Download CSV Template
+                </button>
               </div>
 
+              {/* Default Term and Session */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
                 <div>
                   <label style={{
@@ -975,11 +1024,11 @@ export default function AllQuestions() {
                     color: '#374151',
                     marginBottom: '4px'
                   }}>
-                    Subject *
+                    Default Term *
                   </label>
                   <select
-                    value={createForm.subject_id}
-                    onChange={(e) => setCreateForm(prev => ({...prev, subject_id: e.target.value}))}
+                    value={defaultTermId}
+                    onChange={(e) => setDefaultTermId(e.target.value)}
                     style={{
                       width: '100%',
                       padding: '12px',
@@ -988,9 +1037,9 @@ export default function AllQuestions() {
                       fontSize: '14px'
                     }}
                   >
-                    <option value="">Select Subject</option>
-                    {lookupData.subjects?.map(subject => (
-                      <option key={subject.id} value={subject.id}>{subject.name}</option>
+                    <option value="">Select Term</option>
+                    {lookupData.terms?.map(term => (
+                      <option key={term.id} value={term.id}>{term.name}</option>
                     ))}
                   </select>
                 </div>
@@ -1003,11 +1052,11 @@ export default function AllQuestions() {
                     color: '#374151',
                     marginBottom: '4px'
                   }}>
-                    Class Level *
+                    Default Session *
                   </label>
                   <select
-                    value={createForm.class_level}
-                    onChange={(e) => setCreateForm(prev => ({...prev, class_level: e.target.value}))}
+                    value={defaultSessionId}
+                    onChange={(e) => setDefaultSessionId(e.target.value)}
                     style={{
                       width: '100%',
                       padding: '12px',
@@ -1016,144 +1065,103 @@ export default function AllQuestions() {
                       fontSize: '14px'
                     }}
                   >
-                    <option value="">Select Class</option>
-                    <option value="JSS1">JSS1</option>
-                    <option value="JSS2">JSS2</option>
-                    <option value="JSS3">JSS3</option>
-                    <option value="SS1">SS1</option>
-                    <option value="SS2">SS2</option>
-                    <option value="SS3">SS3</option>
+                    <option value="">Select Session</option>
+                    {lookupData.sessions?.map(session => (
+                      <option key={session.id} value={session.id}>{session.name}</option>
+                    ))}
                   </select>
                 </div>
               </div>
 
+              {/* File Upload */}
               <div>
                 <label style={{
                   display: 'block',
                   fontSize: '14px',
                   fontWeight: '500',
                   color: '#374151',
-                  marginBottom: '4px'
+                  marginBottom: '8px'
                 }}>
-                  Option A *
+                  Upload CSV File *
                 </label>
-                <input
-                  type="text"
-                  value={createForm.option_a}
-                  onChange={(e) => setCreateForm(prev => ({...prev, option_a: e.target.value}))}
-                  placeholder="Enter option A"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}
-                />
+                <div style={{
+                  border: '2px dashed #d1d5db',
+                  borderRadius: '8px',
+                  padding: '20px',
+                  textAlign: 'center',
+                  background: selectedFile ? '#f0fdf4' : '#fafafa'
+                }}>
+                  <input
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileSelect}
+                    style={{ display: 'none' }}
+                    id="csv-upload"
+                  />
+                  <label
+                    htmlFor="csv-upload"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '12px 20px',
+                      background: '#3b82f6',
+                      color: 'white',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500'
+                    }}
+                  >
+                    <Upload size={16} />
+                    Choose CSV File
+                  </label>
+                  {selectedFile && (
+                    <div style={{
+                      marginTop: '12px',
+                      padding: '8px 12px',
+                      background: '#dcfce7',
+                      border: '1px solid #bbf7d0',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      color: '#16a34a'
+                    }}>
+                      ✓ {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
+              {/* Upload Progress */}
+              {uploadProgress.length > 0 && (
+                <div style={{
+                  background: '#f9fafb',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  padding: '16px'
                 }}>
-                  Option B *
-                </label>
-                <input
-                  type="text"
-                  value={createForm.option_b}
-                  onChange={(e) => setCreateForm(prev => ({...prev, option_b: e.target.value}))}
-                  placeholder="Enter option B"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
-                }}>
-                  Option C *
-                </label>
-                <input
-                  type="text"
-                  value={createForm.option_c}
-                  onChange={(e) => setCreateForm(prev => ({...prev, option_c: e.target.value}))}
-                  placeholder="Enter option C"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
-                }}>
-                  Option D *
-                </label>
-                <input
-                  type="text"
-                  value={createForm.option_d}
-                  onChange={(e) => setCreateForm(prev => ({...prev, option_d: e.target.value}))}
-                  placeholder="Enter option D"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}
-                />
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
-                }}>
-                  Correct Answer *
-                </label>
-                <select
-                  value={createForm.correct_answer}
-                  onChange={(e) => setCreateForm(prev => ({...prev, correct_answer: e.target.value}))}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}
-                >
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="C">C</option>
-                  <option value="D">D</option>
-                </select>
-              </div>
+                  <h4 style={{
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: '#374151',
+                    margin: '0 0 8px 0'
+                  }}>
+                    Upload Progress
+                  </h4>
+                  <div style={{
+                    maxHeight: '150px',
+                    overflowY: 'auto',
+                    fontSize: '13px',
+                    color: '#6b7280'
+                  }}>
+                    {uploadProgress.map((message, index) => (
+                      <div key={index} style={{ marginBottom: '4px' }}>
+                        {message}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div style={{
                 display: 'flex',
@@ -1162,7 +1170,7 @@ export default function AllQuestions() {
                 marginTop: '20px'
               }}>
                 <button
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => setShowBulkUpload(false)}
                   style={{
                     padding: '12px 20px',
                     background: '#f3f4f6',
@@ -1177,23 +1185,23 @@ export default function AllQuestions() {
                   Cancel
                 </button>
                 <button
-                  onClick={createQuestion}
-                  disabled={creating}
+                  onClick={handleBulkUpload}
+                  disabled={uploading || !selectedFile || !defaultTermId || !defaultSessionId}
                   style={{
                     padding: '12px 20px',
-                    background: creating ? '#9ca3af' : '#3b82f6',
+                    background: (uploading || !selectedFile || !defaultTermId || !defaultSessionId) ? '#9ca3af' : '#16a34a',
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '14px',
                     fontWeight: '500',
-                    cursor: creating ? 'not-allowed' : 'pointer',
+                    cursor: (uploading || !selectedFile || !defaultTermId || !defaultSessionId) ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px'
                   }}
                 >
-                  {creating ? (
+                  {uploading ? (
                     <>
                       <div style={{
                         width: '16px',
@@ -1203,12 +1211,12 @@ export default function AllQuestions() {
                         borderRadius: '50%',
                         animation: 'spin 1s linear infinite'
                       }}></div>
-                      Creating...
+                      Uploading...
                     </>
                   ) : (
                     <>
-                      <Save size={16} />
-                      Create Question
+                      <Upload size={16} />
+                      Upload Questions
                     </>
                   )}
                 </button>
