@@ -30,6 +30,41 @@ switch ($_SERVER['REQUEST_METHOD']) {
 
 function handleGet($db, $user) {
     try {
+        // Parse URL path to handle different endpoints
+        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $path_parts = explode('/', trim($path, '/'));
+        
+        // Check if requesting question count by subject
+        if (end($path_parts) === 'count' && isset($_GET['subject_id'])) {
+            $subject_id = $_GET['subject_id'];
+            $class_level = $_GET['class_level'] ?? null;
+            
+            $where_conditions = ['q.subject_id = ?'];
+            $params = [$subject_id];
+            
+            if ($class_level) {
+                $where_conditions[] = 'q.class_level = ?';
+                $params[] = $class_level;
+            }
+            
+            $where_clause = implode(' AND ', $where_conditions);
+            
+            $count_stmt = $db->prepare("
+                SELECT COUNT(*) as question_count
+                FROM questions q
+                WHERE {$where_clause}
+            ");
+            $count_stmt->execute($params);
+            $result = $count_stmt->fetch();
+            
+            Response::success('Question count retrieved', [
+                'count' => (int)$result['question_count'],
+                'subject_id' => $subject_id,
+                'class_level' => $class_level
+            ]);
+            return;
+        }
+        
         // Check if requesting stats
         if (isset($_GET['stats'])) {
             $stats_stmt = $db->prepare("

@@ -55,6 +55,7 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
       return [
         ...baseItems,
         { name: 'Test Codes', path: '/admin/test-codes', icon: '🔑' },
+        { name: 'Code Batches', path: '/admin/test-code-batches', icon: '📦' },
         { name: 'All Questions', path: '/admin/questions', icon: '📚' },
         { name: 'Teachers', path: '/admin/teachers', icon: '👥' }
       ]

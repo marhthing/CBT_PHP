@@ -327,6 +327,32 @@ try {
                 Response::badRequest('Cannot delete test code that has been used');
             }
             
+            // Delete the test code
+            $stmt = $db->prepare("DELETE FROM test_codes WHERE id = ?");
+            $stmt->execute([$test_code_id]);
+            
+            if ($stmt->rowCount() > 0) {
+                Response::success('Test code deleted successfully');
+            } else {
+                Response::notFound('Test code not found');
+            }
+            break;
+
+        default:
+            Response::methodNotAllowed();
+    }
+
+} catch (Exception $e) {
+    error_log("Error in test-codes API: " . $e->getMessage());
+    Response::serverError('An error occurred while processing your request');
+}
+
+?>
+            
+            if ($usage['usage_count'] > 0) {
+                Response::badRequest('Cannot delete test code that has been used');
+            }
+            
             $stmt = $db->prepare("DELETE FROM test_codes WHERE id = ?");
             $stmt->execute([$test_code_id]);
             

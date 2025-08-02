@@ -33,7 +33,7 @@ try {
     
     // Get test information
     $stmt = $db->prepare("
-        SELECT id, question_count, duration_minutes, is_active, expires_at
+        SELECT id, total_questions as question_count, duration_minutes, is_active, expires_at, is_used
         FROM test_codes 
         WHERE code = ?
     ");
@@ -45,8 +45,12 @@ try {
         Response::notFound('Test code not found');
     }
     
-    if (!$test['is_active'] || strtotime($test['expires_at']) < time()) {
+    if (!$test['is_active'] || ($test['expires_at'] && strtotime($test['expires_at']) < time())) {
         Response::error('Test is no longer available');
+    }
+    
+    if ($test['is_used']) {
+        Response::error('This test code has already been used');
     }
     
     // Check if student has already submitted this test
@@ -116,6 +120,14 @@ try {
             
             $answer_stmt->execute([$result_id, $question_id, strtoupper($student_answer), $is_correct]);
         }
+        
+        // Mark test code as used
+        $used_stmt = $db->prepare("
+            UPDATE test_codes 
+            SET is_used = true, used_at = CURRENT_TIMESTAMP, used_by = ?
+            WHERE id = ?
+        ");
+        $used_stmt->execute([$user['id'], $test['id']]);
         
         $db->commit();
         

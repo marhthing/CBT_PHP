@@ -11,6 +11,7 @@ import QuestionManager from './components/Teacher/QuestionManager'
 import BulkUpload from './components/Teacher/BulkUpload'
 import AdminDashboard from './components/Admin/AdminDashboard'
 import TestCodeManager from './components/Admin/TestCodeManager'
+import TestCodeBatchManager from './components/Admin/TestCodeBatchManager'
 import TeacherAssignment from './components/Admin/TeacherAssignment'
 import AllQuestions from './components/Admin/AllQuestions'
 
@@ -144,6 +145,14 @@ function App() {
                   element={
                     <ProtectedRoute requiredRole="admin">
                       <TestCodeManager />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/test-code-batches"
+                  element={
+                    <ProtectedRoute requiredRole="admin">
+                      <TestCodeBatchManager />
                     </ProtectedRoute>
                   }
                 />

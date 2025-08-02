@@ -38,8 +38,8 @@ try {
     // Validate test code
     $stmt = $db->prepare("
         SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level,
-               tc.duration_minutes, tc.question_count, tc.expires_at,
-               tc.is_active, tc.is_activated
+               tc.duration_minutes, tc.total_questions as question_count, tc.expires_at,
+               tc.is_active, tc.is_activated, tc.is_used, tc.used_at, tc.used_by
         FROM test_codes tc
         LEFT JOIN subjects s ON tc.subject_id = s.id
         WHERE tc.code = ?
@@ -59,7 +59,11 @@ try {
         Response::badRequest('Test code is not activated yet');
     }
 
-    if (strtotime($test['expires_at']) < time()) {
+    if ($test['is_used']) {
+        Response::badRequest('This test code has already been used');
+    }
+
+    if ($test['expires_at'] && strtotime($test['expires_at']) < time()) {
         Response::badRequest('Test code has expired');
     }
 

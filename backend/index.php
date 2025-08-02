@@ -92,6 +92,7 @@ $routes = [
     // Admin routes
     'admin/dashboard-stats' => 'admin/dashboard-stats.php',
     'admin/test-codes' => 'admin/test-codes.php',
+    'admin/test-code-batches' => 'admin/test-code-batches.php',
     'admin/questions' => 'admin/questions.php',
     'admin/teachers' => 'admin/teachers.php',
     'admin/assignments' => 'admin/assignments.php',
@@ -112,6 +113,16 @@ foreach ($routes as $route => $file) {
     }
     // Check for routes with ID parameters (e.g., admin/questions/123)
     if (preg_match("#^/?{$route}/\d+$#", $path)) {
+        $route_file = __DIR__ . "/api/$file";
+        break;
+    }
+    // Check for routes with query parameters (e.g., admin/questions/count)
+    if (preg_match("#^/?{$route}/[a-zA-Z0-9\-_]+$#", $path)) {
+        $route_file = __DIR__ . "/api/$file";
+        break;
+    }
+    // Check for routes with nested paths (e.g., admin/test-codes/123/toggle-activation)
+    if (preg_match("#^/?{$route}/\d+/[a-zA-Z0-9\-_]+$#", $path)) {
         $route_file = __DIR__ . "/api/$file";
         break;
     }
