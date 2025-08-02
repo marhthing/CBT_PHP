@@ -60,6 +60,7 @@ export default function TestCodeManager() {
   const [loading, setLoading] = useState(true)
   const [creating, setCreating] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showViewModal, setShowViewModal] = useState(false)
   const [lookupData, setLookupData] = useState<LookupData>({})
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
@@ -68,6 +69,8 @@ export default function TestCodeManager() {
   // Filters
   const [subjectFilter, setSubjectFilter] = useState('')
   const [classFilter, setClassFilter] = useState('')
+  const [termFilter, setTermFilter] = useState('')
+  const [sessionFilter, setSessionFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('') // all, active, used, unused
 
   // Create form
@@ -89,6 +92,8 @@ export default function TestCodeManager() {
       const params = new URLSearchParams()
       if (subjectFilter) params.append('subject_id', subjectFilter)
       if (classFilter) params.append('class_level', classFilter)
+      if (termFilter) params.append('term_id', termFilter)
+      if (sessionFilter) params.append('session_id', sessionFilter)
       params.append('limit', '100')
       
       const response = await api.get(`/admin/test-codes?${params.toString()}`)
@@ -99,7 +104,7 @@ export default function TestCodeManager() {
     } finally {
       setLoading(false)
     }
-  }, [subjectFilter, classFilter])
+  }, [subjectFilter, classFilter, termFilter, sessionFilter])
 
   const fetchLookupData = useCallback(async () => {
     try {
@@ -246,13 +251,15 @@ export default function TestCodeManager() {
   const filteredCodes = testCodes.filter(code => {
     const matchesSubject = !subjectFilter || code.subject_name.toLowerCase().includes(subjectFilter.toLowerCase())
     const matchesClass = !classFilter || code.class_level.toLowerCase().includes(classFilter.toLowerCase())
+    const matchesTerm = !termFilter || code.term_name.toLowerCase().includes(termFilter.toLowerCase())
+    const matchesSession = !sessionFilter || code.session_name.toLowerCase().includes(sessionFilter.toLowerCase())
     
     let matchesStatus = true
     if (statusFilter === 'active') matchesStatus = code.is_active && code.is_activated
     else if (statusFilter === 'used') matchesStatus = code.is_used
     else if (statusFilter === 'unused') matchesStatus = !code.is_used
     
-    return matchesSubject && matchesClass && matchesStatus
+    return matchesSubject && matchesClass && matchesTerm && matchesSession && matchesStatus
   })
 
   if (loading) {
@@ -324,32 +331,60 @@ export default function TestCodeManager() {
             Create and manage test codes with bulk generation support
           </p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          style={{
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '12px 20px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#2563eb'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#3b82f6'
-          }}
-        >
-          <Plus size={16} />
-          Create Test Codes
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={() => setShowViewModal(true)}
+            style={{
+              background: '#10b981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 20px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#059669'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#10b981'
+            }}
+          >
+            <FileText size={16} />
+            View All Codes
+          </button>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            style={{
+              background: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 20px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#2563eb'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#3b82f6'
+            }}
+          >
+            <Plus size={16} />
+            Create Test Codes
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -363,7 +398,7 @@ export default function TestCodeManager() {
       }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
           gap: '16px'
         }}>
           <div>
@@ -428,6 +463,64 @@ export default function TestCodeManager() {
               color: '#374151',
               marginBottom: '6px'
             }}>
+              Filter by Term
+            </label>
+            <select
+              value={termFilter}
+              onChange={(e) => setTermFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                backgroundColor: 'white',
+                outline: 'none'
+              }}
+            >
+              <option value="">All Terms</option>
+              {lookupData.terms?.map(term => (
+                <option key={term.id} value={term.name}>{term.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '6px'
+            }}>
+              Filter by Session
+            </label>
+            <select
+              value={sessionFilter}
+              onChange={(e) => setSessionFilter(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                fontSize: '14px',
+                backgroundColor: 'white',
+                outline: 'none'
+              }}
+            >
+              <option value="">All Sessions</option>
+              {lookupData.sessions?.map(session => (
+                <option key={session.id} value={session.name}>{session.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={{
+              display: 'block',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#374151',
+              marginBottom: '6px'
+            }}>
               Filter by Status
             </label>
             <select
@@ -457,6 +550,8 @@ export default function TestCodeManager() {
               onClick={() => {
                 setSubjectFilter('')
                 setClassFilter('')
+                setTermFilter('')
+                setSessionFilter('')
                 setStatusFilter('')
               }}
               style={{
@@ -740,6 +835,174 @@ export default function TestCodeManager() {
           }}>
             Create your first test codes to get started
           </p>
+        </div>
+      )}
+
+      {/* View All Codes Modal */}
+      {showViewModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px',
+          zIndex: 50
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '12px',
+            maxWidth: '90vw',
+            width: '100%',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            <div style={{ padding: '24px' }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px'
+              }}>
+                <h3 style={{
+                  fontSize: '20px',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  margin: 0
+                }}>
+                  All Test Codes ({filteredCodes.length})
+                </h3>
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  style={{
+                    color: '#6b7280',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '4px',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.color = '#374151'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.color = '#6b7280'
+                  }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div style={{
+                maxHeight: '60vh',
+                overflowY: 'auto',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px'
+              }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead style={{ background: '#f9fafb', position: 'sticky', top: 0 }}>
+                    <tr>
+                      <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Code</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Title</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Subject</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Class</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Term</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Session</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Status</th>
+                      <th style={{ padding: '12px', textAlign: 'left', fontSize: '14px', fontWeight: '600', color: '#374151', borderBottom: '1px solid #e5e7eb' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCodes.map((code) => (
+                      <tr key={code.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                        <td style={{ padding: '12px', fontSize: '14px', fontFamily: 'monospace', fontWeight: '600', color: '#3b82f6' }}>
+                          {code.code}
+                        </td>
+                        <td style={{ padding: '12px', fontSize: '13px', color: '#374151', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {code.title}
+                        </td>
+                        <td style={{ padding: '12px', fontSize: '13px', color: '#374151' }}>
+                          {code.subject_name}
+                        </td>
+                        <td style={{ padding: '12px', fontSize: '13px', color: '#374151' }}>
+                          {code.class_level}
+                        </td>
+                        <td style={{ padding: '12px', fontSize: '13px', color: '#374151' }}>
+                          {code.term_name}
+                        </td>
+                        <td style={{ padding: '12px', fontSize: '13px', color: '#374151' }}>
+                          {code.session_name}
+                        </td>
+                        <td style={{ padding: '12px' }}>
+                          <span style={{
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            ...(code.is_used 
+                              ? { background: '#fef2f2', color: '#dc2626' }
+                              : code.is_activated 
+                                ? { background: '#f0fdf4', color: '#166534' }
+                                : { background: '#fef3c7', color: '#d97706' })
+                          }}>
+                            {code.is_used ? 'Used' : code.is_activated ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '12px' }}>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => copyToClipboard(code.code)}
+                              style={{
+                                background: '#eff6ff',
+                                color: '#1d4ed8',
+                                padding: '6px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                border: 'none',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              <Copy size={12} />
+                            </button>
+                            <button
+                              onClick={() => handleToggleActivation(code)}
+                              disabled={code.is_used}
+                              style={{
+                                padding: '6px 8px',
+                                borderRadius: '4px',
+                                fontSize: '12px',
+                                border: 'none',
+                                cursor: code.is_used ? 'not-allowed' : 'pointer',
+                                opacity: code.is_used ? 0.5 : 1,
+                                ...(code.is_activated
+                                  ? { background: '#fef3c7', color: '#d97706' }
+                                  : { background: '#f0fdf4', color: '#166534' })
+                              }}
+                            >
+                              {code.is_activated ? <Pause size={12} /> : <Play size={12} />}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {filteredCodes.length === 0 && (
+                  <div style={{
+                    textAlign: 'center',
+                    padding: '48px 24px',
+                    color: '#6b7280'
+                  }}>
+                    No test codes found matching the current filters.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
