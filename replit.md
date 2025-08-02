@@ -4,6 +4,15 @@ This is a Computer-Based Testing (CBT) Portal application designed for secondary
 
 ## Recent Changes (August 2, 2025)
 
+### Complete Edit Question Functionality Added ✅
+- ✓ Implemented full edit question functionality with interactive modal interface
+- ✓ Added PUT endpoint for updating questions (/admin/questions/{id})
+- ✓ Fixed API routing to handle REST-style URLs with ID parameters
+- ✓ Reduced API timeout from 30s to 10s to improve responsiveness
+- ✓ Created sample questions for testing edit functionality
+- ✓ Edit modal allows updating question text and answer options with correct answer selection
+- ✓ Proper error handling and success feedback for question updates
+
 ### Final API Integration Fixes Complete ✅
 - ✓ Fixed PostgreSQL GROUP BY errors in test-codes API endpoint
 - ✓ Added missing badRequest method to Response class for proper error handling

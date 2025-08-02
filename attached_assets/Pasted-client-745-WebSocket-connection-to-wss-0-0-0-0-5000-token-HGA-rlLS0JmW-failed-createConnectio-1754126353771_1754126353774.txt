@@ -1,0 +1,335 @@
+client:745 WebSocket connection to 'wss://0.0.0.0:5000/?token=HGA-rlLS0JmW' failed: 
+createConnection @ client:745
+connect @ client:412
+connect @ client:751
+connect @ client:290
+connect @ client:374
+(anonymous) @ client:823Understand this error
+client:772 [vite] failed to connect to websocket (Error: WebSocket closed without opened.). 
+overrideMethod @ hook.js:608
+connect @ client:772
+await in connect
+connect @ client:290
+connect @ client:374
+(anonymous) @ client:823Understand this error
+client:424 Uncaught (in promise) Error: WebSocket closed without opened.
+    at WebSocket.<anonymous> (client:424:30)
+(anonymous) @ client:424Understand this error
+api.ts:34 API Error: undefined undefined /admin/questions?stats=true
+overrideMethod @ hook.js:608
+(anonymous) @ api.ts:34
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Axios.<computed> @ Axios.js:213
+wrap @ bind.js:5
+fetchQuestionStats @ AllQuestions.tsx:102
+(anonymous) @ AllQuestions.tsx:66
+react_stack_bottom_frame @ react-dom-client.development.js:23953
+runWithFiberInDEV @ react-dom-client.development.js:1519
+commitHookEffectListMount @ react-dom-client.development.js:11905
+commitHookPassiveMountEffects @ react-dom-client.development.js:12026
+reconnectPassiveEffects @ react-dom-client.development.js:14004
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+doubleInvokeEffectsOnFiber @ react-dom-client.development.js:15968
+runWithFiberInDEV @ react-dom-client.development.js:1519
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15928
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+commitDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15977
+flushPassiveEffects @ react-dom-client.development.js:15747
+(anonymous) @ react-dom-client.development.js:15379
+performWorkUntilDeadline @ scheduler.development.js:45
+<AllQuestions>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+App @ App.tsx:162
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<App>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anonymous) @ main.tsx:23Understand this error
+AllQuestions.tsx:105 Failed to fetch question stats: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}
+overrideMethod @ hook.js:608
+fetchQuestionStats @ AllQuestions.tsx:105
+await in fetchQuestionStats
+(anonymous) @ AllQuestions.tsx:66
+react_stack_bottom_frame @ react-dom-client.development.js:23953
+runWithFiberInDEV @ react-dom-client.development.js:1519
+commitHookEffectListMount @ react-dom-client.development.js:11905
+commitHookPassiveMountEffects @ react-dom-client.development.js:12026
+reconnectPassiveEffects @ react-dom-client.development.js:14004
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+doubleInvokeEffectsOnFiber @ react-dom-client.development.js:15968
+runWithFiberInDEV @ react-dom-client.development.js:1519
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15928
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+commitDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15977
+flushPassiveEffects @ react-dom-client.development.js:15747
+(anonymous) @ react-dom-client.development.js:15379
+performWorkUntilDeadline @ scheduler.development.js:45
+<AllQuestions>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+App @ App.tsx:162
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<App>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anonymous) @ main.tsx:23Understand this error
+api.ts:34 API Error: undefined undefined /system/lookup
+overrideMethod @ hook.js:608
+(anonymous) @ api.ts:34
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Axios.<computed> @ Axios.js:213
+wrap @ bind.js:5
+fetchLookupData @ AllQuestions.tsx:111
+(anonymous) @ AllQuestions.tsx:67
+react_stack_bottom_frame @ react-dom-client.development.js:23953
+runWithFiberInDEV @ react-dom-client.development.js:1519
+commitHookEffectListMount @ react-dom-client.development.js:11905
+commitHookPassiveMountEffects @ react-dom-client.development.js:12026
+reconnectPassiveEffects @ react-dom-client.development.js:14004
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+doubleInvokeEffectsOnFiber @ react-dom-client.development.js:15968
+runWithFiberInDEV @ react-dom-client.development.js:1519
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15928
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+commitDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15977
+flushPassiveEffects @ react-dom-client.development.js:15747
+(anonymous) @ react-dom-client.development.js:15379
+performWorkUntilDeadline @ scheduler.development.js:45
+<AllQuestions>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+App @ App.tsx:162
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<App>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anonymous) @ main.tsx:23Understand this error
+AllQuestions.tsx:114 Failed to fetch lookup data: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}
+overrideMethod @ hook.js:608
+fetchLookupData @ AllQuestions.tsx:114
+await in fetchLookupData
+(anonymous) @ AllQuestions.tsx:67
+react_stack_bottom_frame @ react-dom-client.development.js:23953
+runWithFiberInDEV @ react-dom-client.development.js:1519
+commitHookEffectListMount @ react-dom-client.development.js:11905
+commitHookPassiveMountEffects @ react-dom-client.development.js:12026
+reconnectPassiveEffects @ react-dom-client.development.js:14004
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+doubleInvokeEffectsOnFiber @ react-dom-client.development.js:15968
+runWithFiberInDEV @ react-dom-client.development.js:1519
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15928
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+commitDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15977
+flushPassiveEffects @ react-dom-client.development.js:15747
+(anonymous) @ react-dom-client.development.js:15379
+performWorkUntilDeadline @ scheduler.development.js:45
+<AllQuestions>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+App @ App.tsx:162
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<App>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anonymous) @ main.tsx:23Understand this error
+api.ts:34 API Error: undefined undefined /admin/questions?limit=50
+overrideMethod @ hook.js:608
+(anonymous) @ api.ts:34
+Promise.then
+_request @ Axios.js:163
+request @ Axios.js:40
+Axios.<computed> @ Axios.js:213
+wrap @ bind.js:5
+fetchQuestions @ AllQuestions.tsx:88
+(anonymous) @ AllQuestions.tsx:72
+setTimeout
+(anonymous) @ AllQuestions.tsx:71
+react_stack_bottom_frame @ react-dom-client.development.js:23953
+runWithFiberInDEV @ react-dom-client.development.js:1519
+commitHookEffectListMount @ react-dom-client.development.js:11905
+commitHookPassiveMountEffects @ react-dom-client.development.js:12026
+reconnectPassiveEffects @ react-dom-client.development.js:14004
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:13997
+recursivelyTraverseReconnectPassiveEffects @ react-dom-client.development.js:13976
+reconnectPassiveEffects @ react-dom-client.development.js:14051
+doubleInvokeEffectsOnFiber @ react-dom-client.development.js:15968
+runWithFiberInDEV @ react-dom-client.development.js:1519
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15928
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+recursivelyTraverseAndDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15935
+commitDoubleInvokeEffectsInDEV @ react-dom-client.development.js:15977
+flushPassiveEffects @ react-dom-client.development.js:15747
+(anonymous) @ react-dom-client.development.js:15379
+performWorkUntilDeadline @ scheduler.development.js:45
+<AllQuestions>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+App @ App.tsx:162
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<App>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anonymous) @ main.tsx:23Understand this error
+AllQuestions.tsx:92 Failed to fetch questions: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}

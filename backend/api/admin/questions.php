@@ -18,6 +18,9 @@ switch ($_SERVER['REQUEST_METHOD']) {
     case 'POST':
         handlePost($db, $user);
         break;
+    case 'PUT':
+        handlePut($db, $user);
+        break;
     case 'DELETE':
         handleDelete($db, $user);
         break;
@@ -210,7 +213,14 @@ function handlePost($db, $user) {
 
 function handleDelete($db, $user) {
     try {
-        $question_id = $_GET['id'] ?? null;
+        // Parse question ID from URL path
+        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $path_parts = explode('/', trim($path, '/'));
+        $question_id = end($path_parts);
+        
+        if (!is_numeric($question_id)) {
+            $question_id = $_GET['id'] ?? null;
+        }
         
         if (!$question_id) {
             Response::validationError('Question ID is required');
@@ -247,6 +257,83 @@ function handleDelete($db, $user) {
     } catch (Exception $e) {
         error_log("Error deleting question: " . $e->getMessage());
         Response::serverError('Failed to delete question');
+    }
+}
+
+function handlePut($db, $user) {
+    try {
+        // Parse question ID from URL path
+        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $path_parts = explode('/', trim($path, '/'));
+        $question_id = end($path_parts);
+        
+        if (!is_numeric($question_id)) {
+            $question_id = $_GET['id'] ?? null;
+        }
+        
+        if (!$question_id) {
+            Response::validationError('Question ID is required');
+        }
+        
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        if (!$input) {
+            Response::validationError('Invalid JSON input');
+        }
+        
+        // Check if question exists
+        $check_stmt = $db->prepare("SELECT id FROM questions WHERE id = ?");
+        $check_stmt->execute([$question_id]);
+        
+        if (!$check_stmt->fetch()) {
+            Response::notFound('Question not found');
+        }
+        
+        // Prepare update fields
+        $update_fields = [];
+        $params = [];
+        
+        if (isset($input['question_text'])) {
+            $update_fields[] = "question_text = ?";
+            $params[] = $input['question_text'];
+        }
+        
+        // Update options if provided
+        if (isset($input['options']) && is_array($input['options'])) {
+            $correct_answer = null;
+            foreach ($input['options'] as $index => $option) {
+                if (isset($option['option_text'])) {
+                    $option_field = "option_" . chr(97 + $index); // a, b, c, d
+                    $update_fields[] = "$option_field = ?";
+                    $params[] = $option['option_text'];
+                    
+                    if ($option['is_correct'] ?? false) {
+                        $correct_answer = chr(65 + $index); // A, B, C, D
+                    }
+                }
+            }
+            
+            if ($correct_answer) {
+                $update_fields[] = "correct_answer = ?";
+                $params[] = $correct_answer;
+            }
+        }
+        
+        if (!empty($update_fields)) {
+            $update_fields[] = "updated_at = CURRENT_TIMESTAMP";
+            $params[] = $question_id;
+            
+            $sql = "UPDATE questions SET " . implode(', ', $update_fields) . " WHERE id = ?";
+            $stmt = $db->prepare($sql);
+            $stmt->execute($params);
+        }
+        
+        Response::logRequest('admin/questions', 'PUT', $user['id']);
+        Response::success('Question updated successfully');
+        
+    } catch (Exception $e) {
+        error_log("Error updating question: " . $e->getMessage());
+        Response::serverError('Failed to update question');
     }
 }
 

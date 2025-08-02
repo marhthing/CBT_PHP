@@ -1327,13 +1327,116 @@ export default function AllQuestions() {
             }}>
               Edit Question
             </h3>
-            <p style={{
-              fontSize: '14px',
-              color: '#64748b',
-              margin: '0 0 24px 0'
-            }}>
-              Question editing functionality will be implemented in the next update.
-            </p>
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: '#374151',
+                marginBottom: '8px'
+              }}>
+                Question Text *
+              </label>
+              <textarea
+                value={editingQuestion.question_text}
+                onChange={(e) => setEditingQuestion({...editingQuestion, question_text: e.target.value})}
+                rows={3}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  outline: 'none',
+                  resize: 'vertical',
+                  fontFamily: 'inherit'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+              />
+            </div>
+
+            {editingQuestion.options && editingQuestion.options.length > 0 && (
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  marginBottom: '12px'
+                }}>
+                  Answer Options
+                </label>
+                {editingQuestion.options.map((option, index) => (
+                  <div key={option.id || `edit-option-${index}`} style={{ marginBottom: '12px' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px'
+                    }}>
+                      <span style={{
+                        background: '#6366f1',
+                        color: 'white',
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        flexShrink: 0
+                      }}>
+                        {String.fromCharCode(65 + index)}
+                      </span>
+                      <input
+                        type="text"
+                        value={option.option_text}
+                        onChange={(e) => {
+                          const newOptions = [...editingQuestion.options!]
+                          newOptions[index] = {...option, option_text: e.target.value}
+                          setEditingQuestion({...editingQuestion, options: newOptions})
+                        }}
+                        style={{
+                          flex: 1,
+                          padding: '10px 12px',
+                          border: '2px solid #e2e8f0',
+                          borderRadius: '8px',
+                          fontSize: '14px',
+                          outline: 'none'
+                        }}
+                        onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                        onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                      />
+                      <label style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '14px',
+                        color: '#374151',
+                        cursor: 'pointer'
+                      }}>
+                        <input
+                          type="radio"
+                          name="correct_answer"
+                          checked={option.is_correct}
+                          onChange={() => {
+                            const newOptions = editingQuestion.options!.map((opt, idx) => ({
+                              ...opt,
+                              is_correct: idx === index
+                            }))
+                            setEditingQuestion({...editingQuestion, options: newOptions})
+                          }}
+                          style={{ margin: 0 }}
+                        />
+                        Correct
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div style={{
               display: 'flex',
               gap: '12px',
@@ -1353,6 +1456,41 @@ export default function AllQuestions() {
                 }}
               >
                 Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    // Transform options to match backend expectations
+                    const transformedOptions = editingQuestion.options?.map((option) => ({
+                      option_text: option.option_text,
+                      is_correct: option.is_correct
+                    }))
+                    
+                    const updateData = {
+                      question_text: editingQuestion.question_text,
+                      options: transformedOptions
+                    }
+                    await api.put(`/admin/questions/${editingQuestion.id}`, updateData)
+                    await fetchQuestions()
+                    setEditingQuestion(null)
+                    setSuccessMessage('Question updated successfully!')
+                  } catch (error: any) {
+                    console.error('Failed to update question:', error)
+                    setError('Failed to update question: ' + (error.response?.data?.message || error.message))
+                  }
+                }}
+                style={{
+                  background: '#6366f1',
+                  color: 'white',
+                  border: 'none',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Save Changes
               </button>
             </div>
           </div>

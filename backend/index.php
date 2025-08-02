@@ -103,10 +103,15 @@ $routes = [
     'debug/headers' => 'debug/headers.php',
 ];
 
-// Find matching route
+// Find matching route - handle both exact matches and patterns with IDs
 $route_file = null;
 foreach ($routes as $route => $file) {
     if ($path === $route || $path === "/$route") {
+        $route_file = __DIR__ . "/api/$file";
+        break;
+    }
+    // Check for routes with ID parameters (e.g., admin/questions/123)
+    if (preg_match("#^/?{$route}/\d+$#", $path)) {
         $route_file = __DIR__ . "/api/$file";
         break;
     }
