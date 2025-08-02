@@ -103,7 +103,8 @@ CREATE TABLE test_codes (
     created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP,
-    activated_at TIMESTAMP
+    activated_at TIMESTAMP,
+    batch_id VARCHAR(255) NULL
 );
 
 -- Test results table
