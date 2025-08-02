@@ -12,6 +12,14 @@ interface DashboardStats {
   total_teachers: number
   total_students: number
   recent_tests: number
+  tests_today: number
+  average_score: number
+  inactive_test_codes: number
+  total_admins: number
+  total_assignments: number
+  most_active_subject: string
+  most_active_subject_count: number
+  completion_rate: number
 }
 
 interface RecentActivity {
@@ -35,7 +43,15 @@ export default function AdminDashboard() {
     active_test_codes: 0,
     total_teachers: 0,
     total_students: 0,
-    recent_tests: 0
+    recent_tests: 0,
+    tests_today: 0,
+    average_score: 0,
+    inactive_test_codes: 0,
+    total_admins: 0,
+    total_assignments: 0,
+    most_active_subject: '',
+    most_active_subject_count: 0,
+    completion_rate: 0
   })
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([])
   const [loading, setLoading] = useState(true)
@@ -102,8 +118,8 @@ export default function AdminDashboard() {
     }
   }, [fetchDashboardData])
 
-  // Memoized dashboard cards for performance
-  const dashboardCards = useMemo(() => [
+  // Primary dashboard cards for core metrics
+  const primaryCards = useMemo(() => [
     {
       title: 'Total Questions',
       value: stats.total_questions,
@@ -145,12 +161,84 @@ export default function AdminDashboard() {
       onClick: () => navigate('/admin/students')
     },
     {
-      title: 'Recent Tests',
-      value: stats.recent_tests,
+      title: 'Tests Today',
+      value: stats.tests_today,
       color: '#06b6d4',
       icon: Clock,
       description: 'Tests taken today',
       onClick: () => navigate('/admin/results')
+    }
+  ], [stats, navigate])
+
+  // Secondary analytics cards for advanced metrics
+  const analyticsCards = useMemo(() => [
+    {
+      title: 'Average Score',
+      value: `${stats.average_score}%`,
+      color: '#10b981',
+      icon: BarChart3,
+      description: 'Overall performance',
+      onClick: () => navigate('/admin/results')
+    },
+    {
+      title: 'Completion Rate',
+      value: `${stats.completion_rate}%`,
+      color: '#8b5cf6',
+      icon: Activity,
+      description: 'Test completion rate',
+      onClick: () => navigate('/admin/results')
+    },
+    {
+      title: 'Recent Tests',
+      value: stats.recent_tests,
+      color: '#f59e0b',
+      icon: Clock,
+      description: 'Last 7 days',
+      onClick: () => navigate('/admin/results')
+    },
+    {
+      title: 'Assignments',
+      value: stats.total_assignments,
+      color: '#06b6d4',
+      icon: Users,
+      description: 'Teacher assignments',
+      onClick: () => navigate('/admin/assignments')
+    }
+  ], [stats, navigate])
+
+  // System overview cards
+  const systemCards = useMemo(() => [
+    {
+      title: 'Inactive Tests',
+      value: stats.inactive_test_codes,
+      color: '#ef4444',
+      icon: FileText,
+      description: 'Inactive test codes',
+      onClick: () => navigate('/admin/testcodes')
+    },
+    {
+      title: 'Administrators',
+      value: stats.total_admins,
+      color: '#6366f1',
+      icon: Shield,
+      description: 'System admins',
+      onClick: () => navigate('/admin/users')
+    },
+    {
+      title: 'Top Subject',
+      value: stats.most_active_subject_count,
+      color: '#10b981',
+      icon: BookOpen,
+      description: stats.most_active_subject || 'No data',
+      onClick: () => navigate('/admin/questions')
+    },
+    {
+      title: 'Database',
+      value: 'Connected',
+      color: '#10b981',
+      icon: Database,
+      description: 'System status',
+      onClick: () => window.open('/health', '_blank')
     }
   ], [stats, navigate])
 
@@ -288,14 +376,23 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Stats Cards Grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: '24px',
-        marginBottom: '40px'
-      }}>
-        {dashboardCards.map((card, index) => {
+      {/* Primary Stats Cards */}
+      <div style={{ marginBottom: '32px' }}>
+        <h2 style={{
+          fontSize: '20px',
+          fontWeight: '600',
+          color: '#1f2937',
+          marginBottom: '16px'
+        }}>
+          Core Metrics
+        </h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '24px',
+          marginBottom: '32px'
+        }}>
+          {primaryCards.map((card, index) => {
           const IconComponent = card.icon
           return (
             <div
@@ -363,6 +460,181 @@ export default function AdminDashboard() {
             </div>
           )
         })}
+        </div>
+      </div>
+
+      {/* Analytics Cards */}
+      <div style={{ marginBottom: '32px' }}>
+        <h2 style={{
+          fontSize: '20px',
+          fontWeight: '600',
+          color: '#1f2937',
+          marginBottom: '16px'
+        }}>
+          Performance Analytics
+        </h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '24px',
+          marginBottom: '32px'
+        }}>
+          {analyticsCards.map((card, index) => {
+            const IconComponent = card.icon
+            return (
+              <div
+                key={index}
+                onClick={card.onClick}
+                style={{
+                  background: '#ffffff',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  border: '1px solid #e5e7eb',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '16px'
+                }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    backgroundColor: card.color,
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white'
+                  }}>
+                    <IconComponent size={24} />
+                  </div>
+                  <div style={{
+                    fontSize: '28px',
+                    fontWeight: 'bold',
+                    color: card.color
+                  }}>
+                    {card.value}
+                  </div>
+                </div>
+                <h3 style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  margin: '0 0 4px 0'
+                }}>
+                  {card.title}
+                </h3>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#6b7280',
+                  margin: 0
+                }}>
+                  {card.description}
+                </p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* System Overview Cards */}
+      <div style={{ marginBottom: '32px' }}>
+        <h2 style={{
+          fontSize: '20px',
+          fontWeight: '600',
+          color: '#1f2937',
+          marginBottom: '16px'
+        }}>
+          System Overview
+        </h2>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: '24px',
+          marginBottom: '32px'
+        }}>
+          {systemCards.map((card, index) => {
+            const IconComponent = card.icon
+            return (
+              <div
+                key={index}
+                onClick={card.onClick}
+                style={{
+                  background: '#ffffff',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                  border: '1px solid #e5e7eb',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '16px'
+                }}>
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    backgroundColor: card.color,
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white'
+                  }}>
+                    <IconComponent size={24} />
+                  </div>
+                  <div style={{
+                    fontSize: '28px',
+                    fontWeight: 'bold',
+                    color: card.color
+                  }}>
+                    {card.value}
+                  </div>
+                </div>
+                <h3 style={{
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#1f2937',
+                  margin: '0 0 4px 0'
+                }}>
+                  {card.title}
+                </h3>
+                <p style={{
+                  fontSize: '14px',
+                  color: '#6b7280',
+                  margin: 0
+                }}>
+                  {card.description}
+                </p>
+              </div>
+            )
+          })}
+        </div>
       </div>
 
       <div style={{

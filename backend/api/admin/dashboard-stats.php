@@ -58,6 +58,68 @@ try {
     $stmt->execute();
     $stats['recent_tests'] = $stmt->fetch()['total'];
 
+    // Tests taken today
+    $stmt = $db->prepare("
+        SELECT COUNT(*) as total 
+        FROM test_results 
+        WHERE DATE(submitted_at) = CURRENT_DATE
+    ");
+    $stmt->execute();
+    $stats['tests_today'] = $stmt->fetch()['total'];
+
+    // Average score across all tests
+    $stmt = $db->prepare("
+        SELECT COALESCE(ROUND(AVG(score::decimal / total_questions * 100), 1), 0) as avg_score
+        FROM test_results 
+        WHERE total_questions > 0
+    ");
+    $stmt->execute();
+    $stats['average_score'] = $stmt->fetch()['avg_score'];
+
+    // Inactive test codes
+    $stmt = $db->prepare("SELECT COUNT(*) as total FROM test_codes WHERE is_active = false OR is_activated = false");
+    $stmt->execute();
+    $stats['inactive_test_codes'] = $stmt->fetch()['total'];
+
+    // Total admins
+    $stmt = $db->prepare("SELECT COUNT(*) as total FROM users WHERE role = 'admin' AND is_active = true");
+    $stmt->execute();
+    $stats['total_admins'] = $stmt->fetch()['total'];
+
+    // Teacher assignments count
+    $stmt = $db->prepare("SELECT COUNT(*) as total FROM teacher_assignments");
+    $stmt->execute();
+    $stats['total_assignments'] = $stmt->fetch()['total'];
+
+    // Most active subject (by questions)
+    $stmt = $db->prepare("
+        SELECT s.name as subject_name, COUNT(q.id) as question_count
+        FROM subjects s
+        LEFT JOIN questions q ON s.id = q.subject_id
+        GROUP BY s.id, s.name
+        ORDER BY question_count DESC
+        LIMIT 1
+    ");
+    $stmt->execute();
+    $most_active = $stmt->fetch();
+    $stats['most_active_subject'] = $most_active ? $most_active['subject_name'] : 'No subjects';
+    $stats['most_active_subject_count'] = $most_active ? $most_active['question_count'] : 0;
+
+    // Test completion rate
+    $stmt = $db->prepare("
+        SELECT 
+            COUNT(CASE WHEN tr.id IS NOT NULL THEN 1 END) as completed_tests,
+            COUNT(tc.id) as total_activated_codes
+        FROM test_codes tc
+        LEFT JOIN test_results tr ON tc.id = tr.test_code_id
+        WHERE tc.is_activated = true
+    ");
+    $stmt->execute();
+    $completion_data = $stmt->fetch();
+    $stats['completion_rate'] = $completion_data['total_activated_codes'] > 0 
+        ? round(($completion_data['completed_tests'] / $completion_data['total_activated_codes']) * 100, 1)
+        : 0;
+
     Response::success('Dashboard statistics retrieved', $stats);
 
 } catch (Exception $e) {
