@@ -124,15 +124,6 @@ export default function AllQuestions() {
     })
   }
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case 'easy': return '#10b981'
-      case 'medium': return '#f59e0b'
-      case 'hard': return '#ef4444'
-      default: return '#6b7280'
-    }
-  }
-
   const getTypeColor = (type: string) => {
     switch (type.toLowerCase()) {
       case 'multiple_choice': return '#6366f1'
@@ -143,7 +134,6 @@ export default function AllQuestions() {
   }
 
   const classLevels = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3']
-  const difficulties = ['Easy', 'Medium', 'Hard']
   const questionTypes = ['Multiple Choice', 'True/False', 'Short Answer']
 
   const filteredQuestions = questions.filter(question => {
@@ -435,26 +425,6 @@ export default function AllQuestions() {
           </select>
 
           <select
-            value={difficultyFilter}
-            onChange={(e) => setDifficultyFilter(e.target.value)}
-            style={{
-              padding: '10px 12px',
-              border: '2px solid #e2e8f0',
-              borderRadius: '8px',
-              fontSize: '14px',
-              outline: 'none',
-              transition: 'border-color 0.2s'
-            }}
-            onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-          >
-            <option value="">All Difficulties</option>
-            {difficulties.map(diff => (
-              <option key={diff} value={diff.toLowerCase()}>{diff}</option>
-            ))}
-          </select>
-
-          <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             style={{
@@ -481,7 +451,6 @@ export default function AllQuestions() {
               setSearchTerm('')
               setSubjectFilter('')
               setClassFilter('')
-              setDifficultyFilter('')
               setTypeFilter('')
             }}
             style={{
@@ -597,16 +566,7 @@ export default function AllQuestions() {
                       }}>
                         {question.class_level}
                       </span>
-                      <span style={{
-                        background: getDifficultyColor(question.difficulty_level) + '20',
-                        color: getDifficultyColor(question.difficulty_level),
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        fontSize: '12px',
-                        fontWeight: '500'
-                      }}>
-                        {question.difficulty_level}
-                      </span>
+
                       <span style={{
                         background: getTypeColor(question.question_type) + '20',
                         color: getTypeColor(question.question_type),
@@ -750,16 +710,7 @@ export default function AllQuestions() {
                 }}>
                   {selectedQuestion.subject_name} • {selectedQuestion.class_level}
                 </span>
-                <span style={{
-                  background: getDifficultyColor(selectedQuestion.difficulty_level) + '20',
-                  color: getDifficultyColor(selectedQuestion.difficulty_level),
-                  padding: '4px 12px',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  fontWeight: '500'
-                }}>
-                  {selectedQuestion.difficulty_level}
-                </span>
+
                 <span style={{
                   background: getTypeColor(selectedQuestion.question_type) + '20',
                   color: getTypeColor(selectedQuestion.question_type),
