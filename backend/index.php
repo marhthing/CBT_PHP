@@ -98,6 +98,9 @@ $routes = [
     
     // System routes
     'system/lookup' => 'system/lookup.php',
+    
+    // Debug routes (development only)
+    'debug/headers' => 'debug/headers.php',
 ];
 
 // Find matching route

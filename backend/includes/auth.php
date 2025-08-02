@@ -68,10 +68,29 @@ class Auth {
 
     // Get current user from token
     public function getCurrentUser() {
-        $headers = getallheaders();
-        $auth_header = $headers['Authorization'] ?? '';
+        // Try multiple ways to get the authorization header
+        $auth_header = '';
+        
+        // Method 1: getallheaders()
+        if (function_exists('getallheaders')) {
+            $headers = getallheaders();
+            $auth_header = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+        }
+        
+        // Method 2: $_SERVER variables (more reliable with proxies)
+        if (!$auth_header) {
+            $auth_header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        }
+        
+        // Method 3: Apache specific
+        if (!$auth_header && isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $auth_header = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        }
+        
+        error_log("Auth header found: " . ($auth_header ? substr($auth_header, 0, 20) . '...' : 'NONE'));
         
         if (!$auth_header || strpos($auth_header, 'Bearer ') !== 0) {
+            error_log("Invalid auth header format: " . $auth_header);
             return false;
         }
 
