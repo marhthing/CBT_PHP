@@ -238,6 +238,7 @@ export default function TestCodeManager() {
         count: 1
       })
       setAvailableQuestions(0)
+      // Refresh to get new batch data
       fetchTestCodes()
     } catch (error: any) {
       console.error('Failed to create test codes:', error)
@@ -255,8 +256,16 @@ export default function TestCodeManager() {
         is_activated: newStatus
       })
       
+      // Update state locally instead of full refresh
+      setTestCodes(prevCodes => 
+        prevCodes.map(code => 
+          code.batch_id === batchId 
+            ? { ...code, is_activated: newStatus }
+            : code
+        )
+      )
+      
       setSuccessMessage(`Test code batch ${newStatus ? 'activated' : 'deactivated'} successfully`)
-      fetchTestCodes()
     } catch (error: any) {
       console.error('Failed to toggle batch activation:', error)
       setError(error.response?.data?.message || 'Failed to toggle batch activation')
@@ -266,6 +275,8 @@ export default function TestCodeManager() {
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
     setSuccessMessage('Codes copied to clipboard')
+    // Clear success message after 2 seconds to avoid UI clutter
+    setTimeout(() => setSuccessMessage(''), 2000)
   }
 
   if (loading) {
