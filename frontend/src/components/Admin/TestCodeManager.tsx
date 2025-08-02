@@ -3,10 +3,6 @@ import { api } from '../../lib/api'
 import ErrorNotification from '../ui/ErrorNotification'
 import { 
   Plus, 
-  FileText, 
-  Clock, 
-  BookOpen, 
-  Users,
   Copy
 } from 'lucide-react'
 
@@ -107,10 +103,10 @@ export default function TestCodeManager() {
     }
   }, [])
 
-  // Check available questions
+  // Check available questions without causing re-renders
   const checkAvailableQuestions = useCallback(async () => {
     if (!createForm.subject_id || !createForm.class_level) {
-      setAvailableQuestions(0)
+      if (availableQuestions !== 0) setAvailableQuestions(0)
       return
     }
 
@@ -122,13 +118,14 @@ export default function TestCodeManager() {
           count_only: true
         }
       })
-      setAvailableQuestions(response.data.total || 0)
+      const newCount = response.data.total || 0
+      if (newCount !== availableQuestions) setAvailableQuestions(newCount)
     } catch (error) {
-      setAvailableQuestions(0)
+      if (availableQuestions !== 0) setAvailableQuestions(0)
     }
-  }, [createForm.subject_id, createForm.class_level])
+  }, [createForm.subject_id, createForm.class_level, availableQuestions])
 
-  // Auto-generate title
+  // Auto-generate title without triggering re-renders
   const generateTitle = useCallback(() => {
     if (createForm.subject_id && createForm.class_level && createForm.term_id && createForm.session_id) {
       const subject = lookupData.subjects?.find(s => s.id === parseInt(createForm.subject_id))
@@ -137,10 +134,10 @@ export default function TestCodeManager() {
       
       if (subject && term && session) {
         const title = `${subject.name} - ${createForm.class_level} (${term.name} ${session.name})`
-        setCreateForm(prev => ({ ...prev, title }))
+        setCreateForm(prev => prev.title !== title ? { ...prev, title } : prev)
       }
     }
-  }, [createForm.subject_id, createForm.class_level, createForm.term_id, createForm.session_id, lookupData])
+  }, [createForm.subject_id, createForm.class_level, createForm.term_id, createForm.session_id, lookupData, createForm.title])
 
   useEffect(() => {
     fetchTestCodes()
@@ -218,7 +215,34 @@ export default function TestCodeManager() {
         session_id: parseInt(createForm.session_id)
       }
 
-      await api.post('/admin/test-codes/bulk', payload)
+      const response = await api.post('/admin/test-codes/bulk', payload)
+      
+      // Add new codes to state locally instead of full refresh
+      if (response.data.data?.codes) {
+        const newCodes = response.data.data.codes.map((codeData: any) => ({
+          id: codeData.id,
+          code: codeData.code,
+          title: createForm.title,
+          subject_name: lookupData.subjects?.find(s => s.id === parseInt(createForm.subject_id))?.name || '',
+          class_level: createForm.class_level,
+          term_name: lookupData.terms?.find(t => t.id === parseInt(createForm.term_id))?.name || '',
+          session_name: lookupData.sessions?.find(s => s.id === parseInt(createForm.session_id))?.name || '',
+          duration_minutes: createForm.duration_minutes,
+          total_questions: createForm.total_questions,
+          usage_count: 0,
+          is_active: true,
+          is_activated: false,
+          is_used: false,
+          used_at: '',
+          used_by: 0,
+          created_at: new Date().toISOString(),
+          expires_at: createForm.expires_at,
+          created_by_name: 'admin',
+          batch_id: response.data.data.batch_id
+        }))
+        
+        setTestCodes(prevCodes => [...prevCodes, ...newCodes])
+      }
       
       const message = createForm.count === 1 
         ? 'Test code batch created successfully (1 code)'
@@ -238,8 +262,9 @@ export default function TestCodeManager() {
         count: 1
       })
       setAvailableQuestions(0)
-      // Refresh to get new batch data
-      fetchTestCodes()
+      
+      // Auto-clear success message
+      setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
       console.error('Failed to create test codes:', error)
       setError(error.response?.data?.message || 'Failed to create test codes')
@@ -266,6 +291,9 @@ export default function TestCodeManager() {
       )
       
       setSuccessMessage(`Test code batch ${newStatus ? 'activated' : 'deactivated'} successfully`)
+      
+      // Auto-clear success message
+      setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
       console.error('Failed to toggle batch activation:', error)
       setError(error.response?.data?.message || 'Failed to toggle batch activation')
@@ -278,6 +306,8 @@ export default function TestCodeManager() {
     // Clear success message after 2 seconds to avoid UI clutter
     setTimeout(() => setSuccessMessage(''), 2000)
   }
+
+
 
   if (loading) {
     return (
@@ -343,7 +373,10 @@ export default function TestCodeManager() {
           </p>
         </div>
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={(e) => {
+            e.preventDefault()
+            setShowCreateModal(true)
+          }}
           style={{
             background: '#3b82f6',
             color: 'white',
@@ -476,7 +509,8 @@ export default function TestCodeManager() {
             alignItems: 'end'
           }}>
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault()
                 setSubjectFilter('')
                 setClassFilter('')
                 setTermFilter('')
@@ -615,7 +649,10 @@ export default function TestCodeManager() {
                 marginBottom: '16px'
               }}>
                 <button
-                  onClick={() => handleToggleBatchActivation(batch.batchId, batch.isActivated)}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handleToggleBatchActivation(batch.batchId, batch.isActivated)
+                  }}
                   disabled={batch.hasUsedCodes && !batch.isActivated}
                   style={{
                     flex: 1,
@@ -634,7 +671,8 @@ export default function TestCodeManager() {
                   {batch.isActivated ? 'Deactivate Batch' : 'Activate Batch'}
                 </button>
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault()
                     const codes = batch.codes.map(c => c.code).join(', ')
                     copyToClipboard(codes)
                   }}
@@ -681,7 +719,10 @@ export default function TestCodeManager() {
                   {batch.codes.map((code) => (
                     <span
                       key={code.id}
-                      onClick={() => copyToClipboard(code.code)}
+                      onClick={(e) => {
+                        e.preventDefault()
+                        copyToClipboard(code.code)
+                      }}
                       style={{
                         padding: '4px 6px',
                         background: '#ffffff',
@@ -740,7 +781,10 @@ export default function TestCodeManager() {
             }
           </p>
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={(e) => {
+              e.preventDefault()
+              setShowCreateModal(true)
+            }}
             style={{
               background: '#3b82f6',
               color: 'white',
@@ -958,7 +1002,10 @@ export default function TestCodeManager() {
               justifyContent: 'flex-end'
             }}>
               <button
-                onClick={() => setShowCreateModal(false)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  setShowCreateModal(false)
+                }}
                 style={{
                   padding: '10px 16px',
                   border: '1px solid #d1d5db',
@@ -972,7 +1019,10 @@ export default function TestCodeManager() {
                 Cancel
               </button>
               <button
-                onClick={handleCreateCodes}
+                onClick={(e) => {
+                  e.preventDefault()
+                  handleCreateCodes()
+                }}
                 disabled={creating || !createForm.subject_id || !createForm.class_level || 
                   !createForm.term_id || !createForm.session_id ||
                   (createForm.total_questions > availableQuestions && availableQuestions > 0)}
