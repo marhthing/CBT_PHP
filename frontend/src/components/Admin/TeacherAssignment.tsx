@@ -137,6 +137,7 @@ export default function TeacherAssignment() {
 
   // Memoized filtered assignments for performance
   const filteredAssignments = useMemo(() => {
+    if (!Array.isArray(assignments)) return []
     return assignments.filter(assignment => {
       const matchesTeacher = !teacherFilter || assignment.teacher_name.toLowerCase().includes(teacherFilter.toLowerCase())
       const matchesSubject = !subjectFilter || assignment.subject_name === subjectFilter
@@ -148,6 +149,15 @@ export default function TeacherAssignment() {
 
   // Memoized stats for performance
   const assignmentStats = useMemo(() => {
+    if (!Array.isArray(assignments) || assignments.length === 0) {
+      return {
+        totalAssignments: 0,
+        assignedTeachers: 0,
+        assignedSubjects: 0,
+        assignedClasses: 0
+      }
+    }
+    
     const uniqueTeachers = new Set(assignments.map(a => a.teacher_id)).size
     const uniqueSubjects = new Set(assignments.map(a => a.subject_id)).size
     const uniqueClasses = new Set(assignments.map(a => a.class_level)).size
