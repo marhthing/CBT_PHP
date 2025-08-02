@@ -80,19 +80,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('Login response:', response.data)
       
-      const responseData = response.data.data || response.data
-      const { token, user: userData } = responseData
+      if (!response.data.success || !response.data.data) {
+        throw new Error(response.data.message || 'Login failed')
+      }
+      
+      const { token, user: userData } = response.data.data
       
       if (!token || !userData) {
-        throw new Error('Invalid response from server')
+        console.error('Missing token or user data:', response.data.data)
+        throw new Error('Invalid response from server - missing token or user data')
       }
 
       // Store token and set user
+      console.log('Storing token:', token.substring(0, 20) + '...')
       localStorage.setItem('token', token)
       setUser(userData)
       setError(null)
       
-      console.log('Login successful:', userData)
+      console.log('Login successful, user set:', userData)
+      console.log('Token stored in localStorage:', !!localStorage.getItem('token'))
     } catch (error: any) {
       console.error('Login error:', error)
       

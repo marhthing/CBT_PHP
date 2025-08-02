@@ -14,8 +14,11 @@ export default function SimpleLogin() {
     setError('')
 
     try {
+      console.log('SimpleLogin: Attempting login with:', identifier)
       await login(identifier, password)
+      console.log('SimpleLogin: Login successful!')
     } catch (err: any) {
+      console.error('SimpleLogin: Login failed:', err)
       setError(err.message || 'Invalid credentials. Please try again.')
     }
   }
