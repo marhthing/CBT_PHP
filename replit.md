@@ -3,7 +3,7 @@
 This project is a Computer-Based Testing (CBT) Portal designed for secondary schools. Its primary purpose is to provide a comprehensive platform for administering online tests. Key capabilities include secure test management, a robust question bank, detailed result tracking, and real-time test administration. The system features role-based access for students, teachers, and administrators, aiming to streamline the testing process in an educational setting.
 
 ## Migration Status: COMPLETED (August 2, 2025)
-Successfully migrated from Replit Agent to standard Replit environment with PostgreSQL database integration. All authentication and core functionality verified working.
+Successfully migrated from Replit Agent to standard Replit environment with PostgreSQL database integration. Database schema deployed with proper password hashing and all authentication verified working.
 
 ## Enhanced Test Code Management System: IMPLEMENTED (August 2, 2025)
 Consolidated into single unified Test Code Management system with:
