@@ -71,7 +71,7 @@ class Auth {
         $headers = getallheaders();
         $auth_header = $headers['Authorization'] ?? '';
         
-        if (!$auth_header || !str_starts_with($auth_header, 'Bearer ')) {
+        if (!$auth_header || strpos($auth_header, 'Bearer ') !== 0) {
             return false;
         }
 

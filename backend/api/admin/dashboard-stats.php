@@ -18,8 +18,6 @@ if (!$user || $user['role'] !== 'admin') {
 }
 
 try {
-    // Get database connection
-    require_once __DIR__ . '/../../config/database.php';
     $database = new Database();
     $db = $database->getConnection();
 

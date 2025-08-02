@@ -46,15 +46,20 @@ export default function AdminDashboard() {
 
   const fetchDashboardData = async () => {
     try {
+      console.log('Fetching dashboard data...')
       const [statsResponse, activitiesResponse] = await Promise.all([
         api.get('/admin/dashboard-stats'),
         api.get('/admin/test-codes?limit=8')
       ])
       
-      setStats(statsResponse.data.data || {})
-      setRecentActivities(activitiesResponse.data.data || [])
+      console.log('Stats response:', statsResponse.data)
+      console.log('Activities response:', activitiesResponse.data)
+      
+      setStats(statsResponse.data.data || statsResponse.data || {})
+      setRecentActivities(activitiesResponse.data.data || activitiesResponse.data || [])
     } catch (error: any) {
       console.error('Failed to fetch dashboard data:', error)
+      console.error('Error response:', error.response?.data)
       setError('Failed to load dashboard data. Please try refreshing the page.')
     } finally {
       setLoading(false)

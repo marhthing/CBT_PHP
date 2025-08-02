@@ -25,36 +25,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const initializeAuth = async () => {
     const token = localStorage.getItem('token')
+    console.log('Initializing auth, token exists:', !!token)
+    
     if (!token) {
+      console.log('No token found, user not authenticated')
       setLoading(false)
       return
     }
 
     try {
-      console.log('Checking existing token...')
+      console.log('Validating existing token...')
       const response = await api.get('/auth/me')
-      const userData = response.data.data?.user || response.data.user
+      console.log('Auth validation response:', response.data)
       
-      if (userData) {
+      const userData = response.data.data?.user || response.data.user || response.data.data
+      
+      if (userData && userData.id) {
         console.log('Token valid, user authenticated:', userData)
         setUser(userData)
         setError(null)
       } else {
-        console.log('Invalid response format from /auth/me')
+        console.log('Invalid response format from /auth/me:', response.data)
         handleAuthFailure()
       }
     } catch (error: any) {
       console.error('Token validation failed:', error)
-      // Only clear auth state if it's a real 401 error, not network issues
+      console.error('Error response:', error.response?.data)
+      
+      // Only clear auth state if it's a real 401/403 error
       if (error.response?.status === 401 || error.response?.status === 403) {
+        console.log('Authentication failed (401/403), clearing token')
         handleAuthFailure()
       } else {
-        console.log('Network or other error during token validation - keeping existing token')
-        // Keep the existing user state if we have one and it's just a network issue
-        const existingUser = localStorage.getItem('token')
-        if (existingUser) {
-          console.log('Keeping user logged in despite network error')
-        }
+        console.log('Network or other error during token validation - retaining session')
+        // For network errors, don't clear the user state
+        setError(null)
       }
     } finally {
       setLoading(false)

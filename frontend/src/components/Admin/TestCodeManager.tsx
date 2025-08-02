@@ -85,10 +85,14 @@ export default function TestCodeManager() {
 
   const fetchLookupData = async () => {
     try {
+      console.log('Fetching lookup data...')
       const response = await api.get('/system/lookup')
-      setLookupData(response.data.data || {})
-    } catch (error) {
+      console.log('Lookup response:', response.data)
+      setLookupData(response.data.data || response.data || {})
+    } catch (error: any) {
       console.error('Failed to fetch lookup data:', error)
+      console.error('Lookup error response:', error.response?.data)
+      setError('Failed to load dropdown data. Please refresh the page.')
     }
   }
 
