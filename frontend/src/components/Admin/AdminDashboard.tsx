@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
 import ErrorNotification from '../ui/ErrorNotification'
-import { BarChart3, FileText, PlayCircle, Users, GraduationCap, Clock, Plus, UserPlus, BookOpen, Activity, Database, Shield, TrendingUp } from 'lucide-react'
+import { BarChart3, FileText, PlayCircle, Users, GraduationCap, Clock, Plus, UserPlus, BookOpen, Activity, Database, Shield } from 'lucide-react'
 
 interface DashboardStats {
   total_questions: number
@@ -83,11 +83,30 @@ export default function AdminDashboard() {
   const fetchStats = useCallback(async () => {
     try {
       setLoadingStats(true)
+      console.log('Fetching dashboard stats...')
       const response = await api.get('/admin/dashboard-stats')
+      console.log('Dashboard stats response:', response.data)
       setStats(response.data.data || response.data || {})
     } catch (error: any) {
-      console.error('Failed to fetch stats:', error.message)
-      setError(error.response?.data?.message || 'Failed to load statistics')
+      console.error('Failed to fetch stats:', error)
+      console.error('Stats error details:', error.response?.data)
+      // Don't show error for stats, just use default values
+      setStats({
+        total_questions: 0,
+        total_test_codes: 0,
+        active_test_codes: 0,
+        total_teachers: 0,
+        total_students: 0,
+        recent_tests: 0,
+        tests_today: 0,
+        average_score: 0,
+        inactive_test_codes: 0,
+        total_admins: 0,
+        total_assignments: 0,
+        most_active_subject: '',
+        most_active_subject_count: 0,
+        completion_rate: 0
+      })
     } finally {
       setLoadingStats(false)
     }
@@ -96,21 +115,31 @@ export default function AdminDashboard() {
   const fetchActivities = useCallback(async () => {
     try {
       setLoadingActivities(true)
+      const startTime = performance.now()
       const response = await api.get('/admin/test-codes?limit=8')
+      const endTime = performance.now()
+      const responseTime = Math.round(endTime - startTime)
+      
+      console.log('Activities API response time:', responseTime + 'ms')
+      console.log('Activities API response:', response.data)
+      
       setRecentActivities(response.data.data || response.data || [])
+      setApiResponseTime(`${responseTime}ms`)
     } catch (error: any) {
-      console.error('Failed to fetch activities:', error.message)
-      setError(error.response?.data?.message || 'Failed to load recent activities')
+      console.error('Failed to fetch activities:', error)
+      console.error('Error details:', error.response?.data)
+      setApiResponseTime('Error')
+      setError(error.response?.data?.message || error.message || 'Failed to load recent activities')
     } finally {
       setLoadingActivities(false)
     }
   }, [])
 
-  // Load components independently
+  // Load components independently on mount
   useEffect(() => {
     fetchStats()
     fetchActivities()
-  }, [fetchStats, fetchActivities])
+  }, [])
 
   // Live server time updates every second
   useEffect(() => {
@@ -161,7 +190,7 @@ export default function AdminDashboard() {
     return `${hours}h ${minutes}m`
   }, [])
 
-  // API Response Time monitoring every 5 seconds (reduced frequency)
+  // API Response Time monitoring every 10 seconds (reduced frequency to avoid spam)
   useEffect(() => {
     const measureApiResponseTime = async () => {
       try {
@@ -171,9 +200,14 @@ export default function AdminDashboard() {
         const endTime = performance.now()
         const responseTime = Math.round(endTime - startTime)
 
+        console.log('Health check response time:', responseTime + 'ms')
+
         // Only update if we got a successful response
         if (response && response.status === 200) {
-          setApiResponseTime(`${responseTime}ms`)
+          // Don't override if activities API already set the response time
+          if (apiResponseTime === 'Error' || apiResponseTime === '< 200ms') {
+            setApiResponseTime(`${responseTime}ms`)
+          }
         } else {
           setApiResponseTime('Slow')
         }
@@ -186,29 +220,13 @@ export default function AdminDashboard() {
     // Measure immediately
     measureApiResponseTime()
 
-    // Then measure every 5 seconds (reduced from 2 seconds)
-    const apiInterval = setInterval(measureApiResponseTime, 5000)
+    // Then measure every 10 seconds (reduced frequency)
+    const apiInterval = setInterval(measureApiResponseTime, 10000)
 
     return () => clearInterval(apiInterval)
   }, [])
 
-  const quickToggleActivation = useCallback(async (testCodeId: number, isActivated: boolean) => {
-    try {
-      await api.patch(`/admin/test-codes/${testCodeId}/toggle-activation`, {
-        is_activated: !isActivated
-      })
 
-      // Update local state optimistically
-      setRecentActivities(prev => prev.map(activity => 
-        activity.id === testCodeId 
-          ? { ...activity, is_activated: !isActivated }
-          : activity
-      ))
-    } catch (error) {
-      console.error('Failed to toggle test code activation:', error)
-      setError('Failed to update test code status')
-    }
-  }, [])
 
   // Memoized cards for performance
   const primaryCards = useMemo(() => [
@@ -246,76 +264,7 @@ export default function AdminDashboard() {
     }
   ], [stats, navigate])
 
-  const analyticsCards = useMemo(() => [
-    {
-      title: 'Average Score',
-      value: `${stats.average_score}%`,
-      color: '#06b6d4',
-      icon: BarChart3,
-      description: 'Student performance',
-      onClick: () => navigate('/admin/analytics')
-    },
-    {
-      title: 'Tests Today',
-      value: stats.tests_today,
-      color: '#ec4899',
-      icon: Clock,
-      description: 'Active sessions',
-      onClick: () => navigate('/admin/results')
-    },
-    {
-      title: 'Most Active Subject',
-      value: stats.most_active_subject_count,
-      color: '#10b981',
-      icon: BookOpen,
-      description: stats.most_active_subject || 'No data',
-      onClick: () => navigate('/admin/questions')
-    },
-    {
-      title: 'Total Users',
-      value: stats.total_teachers + stats.total_students + stats.total_admins,
-      color: '#6366f1',
-      icon: Users,
-      description: 'All active users',
-      onClick: () => navigate('/admin/users')
-    }
-  ], [stats, navigate])
 
-  // Memoized system overview cards
-  const systemCards = useMemo(() => [
-    {
-      title: 'Live Monitoring',
-      value: apiResponseTime,
-      color: apiResponseTime === 'Error' ? '#ef4444' : '#10b981',
-      icon: Activity,
-      description: `Server time: ${liveMetrics.currentTime}`,
-      onClick: () => fetchHealthData()
-    },
-    {
-      title: 'Database Status',
-      value: 'Online',
-      color: '#10b981',
-      icon: Database,
-      description: 'PostgreSQL connected',
-      onClick: () => fetchHealthData()
-    },
-    {
-      title: 'System Uptime',
-      value: liveMetrics.uptime,
-      color: '#3b82f6',
-      icon: Clock,
-      description: `Memory: ${liveMetrics.memoryUsage}`,
-      onClick: () => fetchHealthData()
-    },
-    {
-      title: 'Security Status',
-      value: 'Secure',
-      color: '#10b981',
-      icon: Shield,
-      description: 'All systems protected',
-      onClick: () => fetchHealthData()
-    }
-  ], [liveMetrics, apiResponseTime, fetchHealthData])
 
   // Memoized quick actions for performance
   const quickActions = useMemo(() => [
