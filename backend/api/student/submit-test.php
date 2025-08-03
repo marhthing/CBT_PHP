@@ -33,7 +33,7 @@ try {
     
     // Get test information
     $stmt = $db->prepare("
-        SELECT id, total_questions as question_count, duration_minutes, is_active, expires_at, is_used
+        SELECT id, total_questions as question_count, duration_minutes, is_active, expires_at, is_used, score_per_question, subject_id, class_level, term_id, session_id
         FROM test_codes 
         WHERE code = ?
     ");
@@ -65,6 +65,29 @@ try {
         Response::error('Test already submitted', 409);
     }
     
+    // Check if student has already taken a test for this subject, class, term, and session
+    $duplicate_check_stmt = $db->prepare("
+        SELECT tr.id FROM test_results tr
+        JOIN test_codes tc ON tr.test_code_id = tc.id
+        WHERE tr.student_id = ? 
+        AND tc.subject_id = ? 
+        AND tc.class_level = ? 
+        AND tc.term_id = ? 
+        AND tc.session_id = ?
+    ");
+    
+    $duplicate_check_stmt->execute([
+        $user['id'], 
+        $test['subject_id'], 
+        $test['class_level'], 
+        $test['term_id'], 
+        $test['session_id']
+    ]);
+    
+    if ($duplicate_check_stmt->fetch()) {
+        Response::error('You have already taken a test for this subject, class, term and session', 409);
+    }
+    
     // Validate time taken (allow 10% buffer)
     $max_time = $test['duration_minutes'] * 60 * 1.1; // 10% buffer
     if ($time_taken > $max_time) {
@@ -88,16 +111,19 @@ try {
         $correct_stmt->execute($question_ids);
         $correct_answers = $correct_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
         
-        // Calculate score
-        $score = 0;
+        // Calculate score using score_per_question
+        $correct_count = 0;
         $total_questions = count($answers);
+        $score_per_question = (int)$test['score_per_question'];
         
         foreach ($answers as $question_id => $student_answer) {
             if (isset($correct_answers[$question_id]) && 
                 strtoupper($student_answer) === strtoupper($correct_answers[$question_id])) {
-                $score++;
+                $correct_count++;
             }
         }
+        
+        $score = $correct_count * $score_per_question;
         
         // Insert test result
         $result_stmt = $db->prepare("
@@ -133,13 +159,19 @@ try {
         
         Response::logRequest('student/submit-test', 'POST', $user['id']);
         
+        $max_possible_score = $total_questions * $score_per_question;
+        $percentage = round(($score / $max_possible_score) * 100, 2);
+        
         Response::success('Test submitted successfully', [
             'result_id' => $result_id,
             'score' => $score,
             'total_questions' => $total_questions,
-            'percentage' => round(($score / $total_questions) * 100, 2),
+            'correct_answers' => $correct_count,
+            'score_per_question' => $score_per_question,
+            'max_possible_score' => $max_possible_score,
+            'percentage' => $percentage,
             'time_taken' => $time_taken,
-            'score_display' => "$score/$total_questions"
+            'score_display' => "$score/$max_possible_score"
         ]);
         
     } catch (Exception $e) {

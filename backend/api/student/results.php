@@ -32,7 +32,8 @@ try {
             tc.title,
             s.name as subject,
             tc.class_level,
-            tc.duration_minutes
+            tc.duration_minutes,
+            tc.score_per_question
         FROM test_results tr
         JOIN test_codes tc ON tr.test_code_id = tc.id
         LEFT JOIN subjects s ON tc.subject_id = s.id
@@ -50,8 +51,10 @@ try {
     
     // Add calculated fields
     foreach ($results as &$result) {
-        $result['percentage'] = round(($result['score'] / $result['total_questions']) * 100, 2);
+        $max_possible_score = $result['total_questions'] * $result['score_per_question'];
+        $result['percentage'] = round(($result['score'] / $max_possible_score) * 100, 2);
         $result['grade'] = calculateGrade($result['percentage']);
+        $result['max_possible_score'] = $max_possible_score;
         $result['test_code'] = [
             'code' => $result['code'],
             'title' => $result['title'],

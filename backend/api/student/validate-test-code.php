@@ -82,6 +82,29 @@ try {
     if ($existing_result) {
         Response::badRequest('You have already taken this test');
     }
+    
+    // Check if student has already taken a test for this subject, class, term, and session
+    $duplicate_check_stmt = $db->prepare("
+        SELECT tr.id FROM test_results tr
+        JOIN test_codes tc ON tr.test_code_id = tc.id
+        WHERE tr.student_id = ? 
+        AND tc.subject_id = (SELECT subject_id FROM test_codes WHERE id = ?)
+        AND tc.class_level = ?
+        AND tc.term_id = (SELECT term_id FROM test_codes WHERE id = ?)
+        AND tc.session_id = (SELECT session_id FROM test_codes WHERE id = ?)
+    ");
+    
+    $duplicate_check_stmt->execute([
+        $user['id'], 
+        $test['id'],
+        $test['class_level'], 
+        $test['id'],
+        $test['id']
+    ]);
+    
+    if ($duplicate_check_stmt->fetch()) {
+        Response::badRequest('You have already taken a test for this subject, class, term and session');
+    }
 
     // Check if there are enough questions for this test
     $stmt = $db->prepare("
