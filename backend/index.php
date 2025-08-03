@@ -85,7 +85,9 @@ $routes = [
     'student/results' => 'student/results.php',
     
     // Teacher routes
+    'teacher/questions/bulk' => 'teacher/questions/bulk.php',
     'teacher/questions' => 'teacher/questions.php',
+    'teacher/assignments' => 'teacher/assignments.php',
     'teacher/bulk-upload' => 'teacher/bulk-upload.php',
     'teacher/classes' => 'teacher/classes.php',
     

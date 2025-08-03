@@ -101,7 +101,11 @@ class Response {
         $missing_fields = [];
         
         foreach ($required_fields as $field) {
-            if (!isset($data[$field]) || empty($data[$field])) {
+            if (!isset($data[$field])) {
+                $missing_fields[] = $field;
+            } else if (is_string($data[$field]) && trim($data[$field]) === '') {
+                $missing_fields[] = $field;
+            } else if (is_array($data[$field]) && count($data[$field]) === 0) {
                 $missing_fields[] = $field;
             }
         }
