@@ -44,46 +44,57 @@ function extractDatabaseSchema() {
             return false;
         }
         
-        // Now extract data for users table only
-        $data_command = sprintf(
-            'pg_dump --host=%s --port=%s --username=%s --dbname=%s --data-only --no-owner --no-privileges --table=users',
-            escapeshellarg($host),
-            escapeshellarg($port),
-            escapeshellarg($username),
-            escapeshellarg($db_name)
-        );
+        // Tables to extract data for
+        $data_tables = ['users', 'class_levels', 'sessions', 'terms'];
+        $data_content = '';
         
-        echo "Extracting users table data...\n";
-        echo "Running: $data_command\n\n";
-        
-        // Execute data dump for users table
-        $data_output = [];
-        $return_code = 0;
-        exec($data_command . ' 2>&1', $data_output, $return_code);
-        
-        if ($return_code !== 0) {
-            echo "Error running data dump (return code: $return_code):\n";
-            echo implode("\n", $data_output) . "\n";
-            return false;
+        // Extract data for specified tables
+        foreach ($data_tables as $table) {
+            $data_command = sprintf(
+                'pg_dump --host=%s --port=%s --username=%s --dbname=%s --data-only --no-owner --no-privileges --table=%s',
+                escapeshellarg($host),
+                escapeshellarg($port),
+                escapeshellarg($username),
+                escapeshellarg($db_name),
+                escapeshellarg($table)
+            );
+            
+            echo "Extracting $table table data...\n";
+            echo "Running: $data_command\n\n";
+            
+            // Execute data dump for this table
+            $table_data_output = [];
+            $return_code = 0;
+            exec($data_command . ' 2>&1', $table_data_output, $return_code);
+            
+            if ($return_code !== 0) {
+                echo "Warning: Error extracting data for table $table (return code: $return_code):\n";
+                echo implode("\n", $table_data_output) . "\n";
+                continue; // Continue with other tables
+            }
+            
+            $table_data_content = implode("\n", $table_data_output);
+            if (!empty($table_data_content) && trim($table_data_content) !== '') {
+                $data_content .= "\n\n--\n-- Data for Name: $table; Type: TABLE DATA; Schema: public; Owner: -\n--\n\n";
+                $data_content .= $table_data_content;
+            }
         }
         
         // Combine schema and data
         $schema_content = implode("\n", $schema_output);
-        $data_content = implode("\n", $data_output);
         
         // Add header comment
         $header = "-- PostgreSQL Database Schema for CBT Portal\n";
         $header .= "-- Generated: " . date('F j, Y \a\t g:i A') . "\n";
         $header .= "-- Extracted from database: $db_name\n";
         $header .= "-- Structure: All tables\n";
-        $header .= "-- Data: users table only\n\n";
+        $header .= "-- Data: " . implode(', ', $data_tables) . " tables only\n\n";
         
         // Combine everything
         $full_schema = $header . $schema_content;
         
-        // Add users data if we have any
+        // Add data if we have any
         if (!empty($data_content) && trim($data_content) !== '') {
-            $full_schema .= "\n\n--\n-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -\n--\n\n";
             $full_schema .= $data_content;
         }
         
@@ -116,7 +127,7 @@ function extractDatabaseSchema() {
             }
         }
         
-        // Count INSERT statements for users data
+        // Count INSERT statements for data
         foreach ($data_lines as $line) {
             if (preg_match('/^INSERT INTO/', $line)) {
                 $data_rows++;
@@ -127,7 +138,8 @@ function extractDatabaseSchema() {
         echo "- Tables (structure): $tables\n";
         echo "- Indexes: $indexes\n";
         echo "- Constraints: $constraints\n";
-        echo "- Users data rows: $data_rows\n";
+        echo "- Data tables with content: " . implode(', ', $data_tables) . "\n";
+        echo "- Total data INSERT statements: $data_rows\n";
         
         return true;
         
