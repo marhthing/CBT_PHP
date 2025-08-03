@@ -255,48 +255,29 @@ export default function TeacherAssignment() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
         {statsCards.map((card, index) => {
           const IconComponent = card.icon
+          const bgColors = ['bg-blue-50', 'bg-green-50', 'bg-purple-50', 'bg-amber-50']
+          const bgColor = bgColors[index % bgColors.length]
+          
           return (
             <div
               key={index}
-              style={{
-                background: 'white',
-                borderRadius: '12px',
-                padding: '20px',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px'
-              }}
+              className={`${bgColor} rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200`}
             >
-              <div style={{
-                width: '48px',
-                height: '48px',
-                backgroundColor: card.color,
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white'
-              }}>
-                <IconComponent size={24} />
-              </div>
-              <div>
-                <div style={{
-                  fontSize: '24px',
-                  fontWeight: 'bold',
-                  color: card.color,
-                  marginBottom: '4px'
-                }}>
-                  {card.value}
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600 mb-1">{card.title}</p>
+                  <p className="text-2xl lg:text-3xl font-bold" style={{ color: card.color }}>
+                    {card.value}
+                  </p>
                 </div>
-                <div style={{
-                  fontSize: '14px',
-                  color: '#6b7280'
-                }}>
-                  {card.title}
+                <div 
+                  className="p-3 rounded-lg"
+                  style={{ backgroundColor: card.color, opacity: 0.1 }}
+                >
+                  <IconComponent size={24} style={{ color: card.color }} />
                 </div>
               </div>
             </div>

@@ -525,17 +525,25 @@ export default function AllQuestions() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {statsCards.map((card, index) => {
           const IconComponent = card.icon
+          const colors = ['#3b82f6', '#10b981', '#8b5cf6', '#f59e0b']
+          const bgColors = ['bg-blue-50', 'bg-green-50', 'bg-purple-50', 'bg-amber-50']
+          const color = colors[index % colors.length]
+          const bgColor = bgColors[index % bgColors.length]
+          
           return (
-            <div key={index} className="bg-white rounded-lg border border-gray-200 p-4">
-              <div className="flex items-center gap-3">
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <IconComponent size={20} className="text-gray-600" />
-                  </div>
+            <div key={index} className={`${bgColor} rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200`}>
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-600 mb-1">{card.title}</p>
+                  <p className="text-2xl lg:text-3xl font-bold" style={{ color: color }}>
+                    {card.value}
+                  </p>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-                  <p className="text-sm text-gray-600 truncate">{card.title}</p>
+                <div 
+                  className="p-3 rounded-lg"
+                  style={{ backgroundColor: color, opacity: 0.1 }}
+                >
+                  <IconComponent size={24} style={{ color: color }} />
                 </div>
               </div>
             </div>
