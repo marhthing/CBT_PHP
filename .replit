@@ -3,7 +3,7 @@ run = "node index.js"
 
 [nix]
 channel = "stable-25_05"
-packages = ["php82", "php82Packages.composer", "php82Extensions.pdo", "php82Extensions.pdo_pgsql", "php82Extensions.mbstring", "php82Extensions.curl"]
+packages = ["php82", "php82Packages.composer", "php82Extensions.pdo", "php82Extensions.pdo_pgsql", "php82Extensions.mbstring", "php82Extensions.curl", "php82Extensions.pgsql"]
 
 [workflows]
 runButton = "Project"
@@ -41,15 +41,11 @@ waitForPort = 8000
 
 [[ports]]
 localPort = 5000
-externalPort = 80
-
-[[ports]]
-localPort = 5001
-externalPort = 3000
+externalPort = 5000
 
 [[ports]]
 localPort = 8000
-externalPort = 8000
+externalPort = 80
 
 [deployment]
 run = ["sh", "-c", "node index.js"]
