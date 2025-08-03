@@ -1,0 +1,37 @@
+[vite] connecting...
+client:827 [vite] connected.
+react-dom-client.development.js:24871 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+AdminDashboard.tsx:86 Fetching dashboard stats...
+Node cannot be found in the current page.Understand this warning
+AdminDashboard.tsx:86 Fetching dashboard stats...
+2AdminDashboard.tsx:86 Fetching dashboard stats...
+AdminDashboard.tsx:88 Dashboard stats response: {success: true, message: 'Dashboard statistics retrieved', timestamp: '2025-08-03T20:46:43+00:00', data: {…}}
+AdminDashboard.tsx:123 Activities API response time: 12991ms
+AdminDashboard.tsx:124 Activities API response: {success: true, message: 'Test codes retrieved', timestamp: '2025-08-03T20:46:46+00:00', data: Array(0)}
+AdminDashboard.tsx:203 Health check response time: 14312ms
+AdminDashboard.tsx:88 Dashboard stats response: {success: true, message: 'Dashboard statistics retrieved', timestamp: '2025-08-03T20:46:55+00:00', data: {…}}
+AdminDashboard.tsx:123 Activities API response time: 25233ms
+AdminDashboard.tsx:124 Activities API response: {success: true, message: 'Test codes retrieved', timestamp: '2025-08-03T20:46:58+00:00', data: Array(0)}
+AdminDashboard.tsx:203 Health check response time: 26599ms
+AdminDashboard.tsx:123 Activities API response time: 29591ms
+AdminDashboard.tsx:124 Activities API response: {success: true, message: 'Test codes retrieved', timestamp: '2025-08-03T20:47:02+00:00', data: Array(0)}
+AdminDashboard.tsx:91 Failed to fetch stats: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}
+(anonymous) @ AdminDashboard.tsx:91Understand this error
+AdminDashboard.tsx:92 Stats error details: undefined
+(anonymous) @ AdminDashboard.tsx:92Understand this error
+AdminDashboard.tsx:215 API health check failed: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}
+AdminDashboard.tsx:91 Failed to fetch stats: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}
+(anonymous) @ AdminDashboard.tsx:91Understand this error
+AdminDashboard.tsx:92 Stats error details: undefined
+(anonymous) @ AdminDashboard.tsx:92Understand this error
+AdminDashboard.tsx:129 Failed to fetch activities: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}
+(anonymous) @ AdminDashboard.tsx:129Understand this error
+AdminDashboard.tsx:130 Error details: undefined
+(anonymous) @ AdminDashboard.tsx:130Understand this error
+AdminDashboard.tsx:215 API health check failed: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}
+AdminDashboard.tsx:215 API health check failed: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}
+AdminDashboard.tsx:215 API health check failed: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}
+scheduler.development.js:14 [Violation] 'message' handler took 230ms
+AdminDashboard.tsx:215 API health check failed: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}
+AdminDashboard.tsx:215 API health check failed: AxiosError {message: 'timeout of 30000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}
+scheduler.development.js:14 [Violation] 'message' handler took 233ms
