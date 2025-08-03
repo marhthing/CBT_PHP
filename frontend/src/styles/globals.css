@@ -256,6 +256,21 @@
   .sidebar-mobile.open {
     transform: translateX(0);
   }
+  
+  /* Mobile table improvements */
+  .mobile-table-responsive {
+    font-size: 14px;
+  }
+  
+  .mobile-table-responsive th,
+  .mobile-table-responsive td {
+    padding: 8px 12px !important;
+  }
+  
+  /* Mobile grid improvements */
+  .mobile-grid-single {
+    grid-template-columns: 1fr !important;
+  }
 }
 
 /* High contrast mode support */
