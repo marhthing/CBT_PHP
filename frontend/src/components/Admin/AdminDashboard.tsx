@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
 import ErrorNotification from '../ui/ErrorNotification'
-import { BarChart3, FileText, PlayCircle, Users, GraduationCap, Clock, Plus, UserPlus, BookOpen, Activity, Database, Shield } from 'lucide-react'
+import { BarChart3, FileText, PlayCircle, Users, GraduationCap, Clock, Plus, UserPlus, BookOpen, Activity, Database, Shield, TrendingUp } from 'lucide-react'
 
 interface DashboardStats {
   total_questions: number
@@ -57,7 +57,6 @@ export default function AdminDashboard() {
   const [loadingStats, setLoadingStats] = useState(true)
   const [loadingActivities, setLoadingActivities] = useState(true)
   const [error, setError] = useState('')
-  const [retrying, setRetrying] = useState(false)
   const [showHealthModal, setShowHealthModal] = useState(false)
   const [healthData, setHealthData] = useState<any>(null)
   const [liveMetrics, setLiveMetrics] = useState({
@@ -363,632 +362,220 @@ export default function AdminDashboard() {
   // No global loading screen - each component loads independently
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 bg-white min-h-screen">
+    <div className="p-6 bg-gray-50 min-h-screen">
       {error && <ErrorNotification message={error} onClose={() => setError('')} />}
 
       {/* Header */}
-      <div className="mb-6 sm:mb-8">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
           Admin Dashboard
         </h1>
-        <p className="text-sm sm:text-base text-gray-600">
+        <p className="text-gray-600">
           Welcome back, {user?.full_name || 'Administrator'}
         </p>
       </div>
 
-      {retrying && (
-        <div style={{
-          background: '#f0f9ff',
-          border: '1px solid #bfdbfe',
-          borderRadius: '8px',
-          padding: '12px',
-          marginBottom: '24px',
-          color: '#1e40af',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px'
-        }}>
-          <div style={{
-            width: '16px',
-            height: '16px',
-            border: '2px solid #bfdbfe',
-            borderTop: '2px solid #1e40af',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-          Retrying connection...
-        </div>
-      )}
-
-      {/* Primary Stats Cards */}
-      <div style={{ marginBottom: '32px' }}>
-        <h2 style={{
-          fontSize: '20px',
-          fontWeight: '600',
-          color: '#1f2937',
-          marginBottom: '16px'
-        }}>
-          Core Metrics
-        </h2>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '24px',
-          marginBottom: '32px'
-        }}>
-          {loadingStats ? (
-            // Loading skeleton for stats cards
-            Array.from({ length: 4 }).map((_, index) => (
-              <div
-                key={index}
-                style={{
-                  background: '#ffffff',
-                  borderRadius: '12px',
-                  padding: '24px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid #e5e7eb',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '120px'
-                }}
-              >
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  color: '#6b7280'
-                }}>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {loadingStats ? (
+          // Loading skeleton for stats cards
+          Array.from({ length: 4 }).map((_, index) => (
+            <div key={index} className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center justify-center h-20">
+                <div className="flex items-center gap-2 text-gray-500">
                   <div className="loading-spinner w-4 h-4"></div>
-                  Loading stats...
+                  <span>Loading...</span>
                 </div>
               </div>
-            ))
-          ) : (
-            primaryCards.map((card, index) => {
-              const IconComponent = card.icon
-              return (
-                <div
-                  key={index}
-                  onClick={card.onClick}
-                  style={{
-                    background: '#ffffff',
-                    borderRadius: '12px',
-                    padding: '24px',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                    border: '1px solid #e5e7eb',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                  }}
-                >
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    marginBottom: '16px'
-                  }}>
-                    <div style={{
-                      width: '48px',
-                      height: '48px',
-                      backgroundColor: card.color,
-                      borderRadius: '8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white'
-                    }}>
-                      <IconComponent size={24} />
-                    </div>
-                    <div style={{
-                      fontSize: '28px',
-                      fontWeight: 'bold',
-                      color: card.color
-                    }}>
-                      {card.value}
-                    </div>
-                  </div>
-                  <h3 style={{
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    color: '#1f2937',
-                    margin: '0 0 4px 0'
-                  }}>
-                    {card.title}
-                  </h3>
-                  <p style={{
-                    fontSize: '14px',
-                    color: '#6b7280',
-                    margin: 0
-                  }}>
-                    {card.description}
-                  </p>
-                </div>
-              )
-            })
-          )}
-        </div>
-      </div>
-
-      {/* Analytics Cards */}
-      <div style={{ marginBottom: '32px' }}>
-        <h2 style={{
-          fontSize: '20px',
-          fontWeight: '600',
-          color: '#1f2937',
-          marginBottom: '16px'
-        }}>
-          Performance Analytics
-        </h2>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '24px',
-          marginBottom: '32px'
-        }}>
-          {analyticsCards.map((card, index) => {
+            </div>
+          ))
+        ) : (
+          primaryCards.map((card, index) => {
             const IconComponent = card.icon
             return (
-              <div
-                key={index}
-                onClick={card.onClick}
-                style={{
-                  background: '#ffffff',
-                  borderRadius: '12px',
-                  padding: '24px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid #e5e7eb',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                }}
-              >
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '16px'
-                }}>
-                  <div style={{
-                    width: '48px',
-                    height: '48px',
-                    backgroundColor: card.color,
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white'
-                  }}>
-                    <IconComponent size={24} />
+              <div key={index} onClick={card.onClick} className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-200 p-6 cursor-pointer">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ backgroundColor: card.color }}>
+                      <IconComponent className="w-5 h-5 text-white" />
+                    </div>
                   </div>
-                  <div style={{
-                    fontSize: '28px',
-                    fontWeight: 'bold',
-                    color: card.color
-                  }}>
-                    {card.value}
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-500 truncate">{card.title}</dt>
+                      <dd>
+                        <div className="text-lg font-medium text-gray-900">{card.value}</div>
+                      </dd>
+                    </dl>
                   </div>
                 </div>
-                <h3 style={{
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: '#1f2937',
-                  margin: '0 0 4px 0'
-                }}>
-                  {card.title}
-                </h3>
-                <p style={{
-                  fontSize: '14px',
-                  color: '#6b7280',
-                  margin: 0
-                }}>
-                  {card.description}
-                </p>
               </div>
             )
-          })}
-        </div>
+          })
+        )}
       </div>
 
-      {/* System Overview Cards */}
-      <div style={{ marginBottom: '32px' }}>
-        <h2 style={{
-          fontSize: '20px',
-          fontWeight: '600',
-          color: '#1f2937',
-          marginBottom: '16px'
-        }}>
-          System Overview
-        </h2>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-          gap: '24px',
-          marginBottom: '32px'
-        }}>
-          {systemCards.map((card, index) => {
-            const IconComponent = card.icon
-            return (
-              <div
-                key={index}
-                onClick={card.onClick}
-                style={{
-                  background: '#ffffff',
-                  borderRadius: '12px',
-                  padding: '24px',
-                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                  border: '1px solid #e5e7eb',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)'
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)'
-                  e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-                }}
-              >
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '16px'
-                }}>
-                  <div style={{
-                    width: '48px',
-                    height: '48px',
-                    backgroundColor: card.color,
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white'
-                  }}>
-                    <IconComponent size={24} />
-                  </div>
-                  <div style={{
-                    fontSize: '28px',
-                    fontWeight: 'bold',
-                    color: card.color
-                  }}>
-                    {card.value}
-                  </div>
-                </div>
-                <h3 style={{
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: '#1f2937',
-                  margin: '0 0 4px 0'
-                }}>
-                  {card.title}
-                </h3>
-                <p style={{
-                  fontSize: '14px',
-                  color: '#6b7280',
-                  margin: 0
-                }}>
-                  {card.description}
-                </p>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
-      <div className="dashboard-main-grid">
+      {/* Dashboard Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         {/* Recent Test Codes */}
-        <div style={{
-          background: '#ffffff',
-          borderRadius: '12px',
-          padding: '24px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px'
-          }}>
-            <h2 style={{
-              fontSize: '20px',
-              fontWeight: 'bold',
-              color: '#1f2937',
-              margin: 0
-            }}>
-              Recent Test Codes
-            </h2>
-            <button
-              onClick={() => navigate('/admin/testcodes')}
-              style={{
-                background: '#3b82f6',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 16px',
-                fontSize: '14px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#2563eb'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#3b82f6'
-              }}
-            >
-              View All
-            </button>
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">Recent Test Codes</h3>
+              <button
+                onClick={() => navigate('/admin/testcodes')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                View All
+              </button>
+            </div>
           </div>
-
-          {loadingActivities ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '40px',
-              color: '#6b7280'
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}>
-                <div className="loading-spinner w-4 h-4"></div>
-                Loading activities...
+          <div className="p-6">
+            {loadingActivities ? (
+              <div className="text-center py-8">
+                <div className="flex items-center justify-center gap-2 text-gray-500">
+                  <div className="loading-spinner w-4 h-4"></div>
+                  <span>Loading activities...</span>
+                </div>
               </div>
-            </div>
-          ) : recentActivities.length === 0 ? (
-            <div style={{
-              textAlign: 'center',
-              padding: '40px',
-              color: '#6b7280'
-            }}>
-              <FileText size={48} style={{ color: '#d1d5db', marginBottom: '16px' }} />
-              <p style={{ margin: 0, fontSize: '16px' }}>No test codes created yet</p>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {recentActivities.slice(0, 5).map((activity) => (
-                <div
-                  key={activity.id}
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    padding: '16px',
-                    background: '#f9fafb',
-                    borderRadius: '8px',
-                    border: '1px solid #e5e7eb'
-                  }}
-                >
-                  <div style={{ flex: 1 }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      marginBottom: '4px'
-                    }}>
-                      <h4 style={{
-                        fontSize: '16px',
-                        fontWeight: '600',
-                        color: '#1f2937',
-                        margin: 0
-                      }}>
-                        {activity.title}
-                      </h4>
-                      <span style={{
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        color: '#3b82f6',
-                        background: '#eff6ff',
-                        padding: '2px 8px',
-                        borderRadius: '4px'
-                      }}>
-                        {activity.code}
-                      </span>
-                    </div>
-                    <p style={{
-                      fontSize: '14px',
-                      color: '#6b7280',
-                      margin: '0 0 8px 0'
-                    }}>
-                      {activity.subject_name} • {activity.class_level} • Used {activity.usage_count} times
-                    </p>
-                    <p style={{
-                      fontSize: '12px',
-                      color: '#9ca3af',
-                      margin: 0
-                    }}>
-                      {formatDate(activity.created_at)}
-                    </p>
-                  </div>
+            ) : recentActivities.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">No test codes</h3>
+                <p className="mt-1 text-sm text-gray-500">Get started by creating your first test code.</p>
+                <div className="mt-6">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      quickToggleActivation(activity.id, activity.is_activated)
-                    }}
-                    style={{
-                      background: activity.is_activated ? '#10b981' : '#6b7280',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      padding: '6px 12px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'scale(1.05)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)'
-                    }}
+                    onClick={() => navigate('/admin/testcodes')}
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                   >
-                    {activity.is_activated ? 'Active' : 'Inactive'}
+                    <Plus className="-ml-1 mr-2 h-5 w-5" />
+                    Create Test Code
                   </button>
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ) : (
+              <div className="flow-root">
+                <ul className="-my-5 divide-y divide-gray-200">
+                  {recentActivities.slice(0, 5).map((activity) => (
+                    <li key={activity.id} className="py-5">
+                      <div className="relative focus-within:ring-2 focus-within:ring-blue-500">
+                        <h3 className="text-sm font-semibold text-gray-800">
+                          <span className="absolute inset-0" />
+                          {activity.title}
+                          <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {activity.code}
+                          </span>
+                        </h3>
+                        <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                          {activity.subject_name} • {activity.class_level} • Used {activity.usage_count} times
+                        </p>
+                        <div className="mt-2 flex items-center justify-between">
+                          <p className="text-sm text-gray-500">{formatDate(activity.created_at)}</p>
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            activity.is_activated 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {activity.is_activated ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Quick Actions */}
-        <div style={{
-          background: '#ffffff',
-          borderRadius: '12px',
-          padding: '24px',
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-          border: '1px solid #e5e7eb'
-        }}>
-          <h2 style={{
-            fontSize: '20px',
-            fontWeight: 'bold',
-            color: '#1f2937',
-            marginBottom: '24px'
-          }}>
-            Quick Actions
-          </h2>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '16px'
-          }}>
-            {quickActions.map((action, index) => {
-              const IconComponent = action.icon
-              return (
-                <div
-                  key={index}
-                  onClick={action.onClick}
-                  style={{
-                    background: '#f9fafb',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    padding: '20px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-2px)'
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = 'none'
-                  }}
-                >
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    backgroundColor: action.color,
-                    borderRadius: '8px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '12px'
-                  }}>
-                    <IconComponent size={20} color="white" />
-                  </div>
-                  <h3 style={{
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    color: '#1f2937',
-                    margin: '0 0 4px 0'
-                  }}>
-                    {action.title}
-                  </h3>
-                  <p style={{
-                    fontSize: '14px',
-                    color: '#6b7280',
-                    margin: 0
-                  }}>
-                    {action.description}
-                  </p>
-                </div>
-              )
-            })}
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
           </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {quickActions.map((action, index) => {
+                const IconComponent = action.icon
+                return (
+                  <button
+                    key={index}
+                    onClick={action.onClick}
+                    className="relative group bg-white p-6 focus-within:ring-2 focus-within:ring-inset focus-within:ring-blue-500 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all duration-200"
+                  >
+                    <div>
+                      <span className="rounded-lg inline-flex p-3 ring-4 ring-white" style={{ backgroundColor: action.color }}>
+                        <IconComponent className="h-6 w-6 text-white" />
+                      </span>
+                    </div>
+                    <div className="mt-4">
+                      <h3 className="text-lg font-medium text-gray-900 group-hover:text-gray-800">
+                        <span className="absolute inset-0" />
+                        {action.title}
+                      </h3>
+                      <p className="mt-2 text-sm text-gray-500">
+                        {action.description}
+                      </p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Live Metrics */}
+      <div className="bg-white rounded-lg shadow mb-8">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900">System Status</h3>
+        </div>
+        <div className="p-6">
+          <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-3">
+            <div className="sm:col-span-1">
+              <dt className="text-sm font-medium text-gray-500">Server Time</dt>
+              <dd className="mt-1 text-sm text-gray-900">{liveMetrics.currentTime}</dd>
+            </div>
+            <div className="sm:col-span-1">
+              <dt className="text-sm font-medium text-gray-500">API Response</dt>
+              <dd className="mt-1 text-sm text-gray-900">{apiResponseTime}</dd>
+            </div>
+            <div className="sm:col-span-1">
+              <dt className="text-sm font-medium text-gray-500">Uptime</dt>
+              <dd className="mt-1 text-sm text-gray-900">{liveMetrics.uptime}</dd>
+            </div>
+          </dl>
         </div>
       </div>
 
       {/* Health Modal */}
       {showHealthModal && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '24px',
-            maxWidth: '500px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '20px'
-            }}>
-              <h2 style={{
-                fontSize: '20px',
-                fontWeight: 'bold',
-                color: '#1f2937',
-                margin: 0
-              }}>
-                System Health Details
-              </h2>
-              <button
-                onClick={() => setShowHealthModal(false)}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  fontSize: '24px',
-                  cursor: 'pointer',
-                  color: '#6b7280'
-                }}
-              >
-                ×
-              </button>
-            </div>
-            {healthData && (
-              <div style={{ lineHeight: '1.6' }}>
-                <p><strong>Status:</strong> {healthData.status}</p>
-                <p><strong>Version:</strong> {healthData.version}</p>
-                <p><strong>Environment:</strong> {healthData.environment}</p>
-                <p><strong>Database:</strong> {healthData.database}</p>
-                <p><strong>PHP Version:</strong> {healthData.php_version}</p>
-                <p><strong>Memory Usage:</strong> {(healthData.memory_usage / 1024 / 1024).toFixed(2)} MB</p>
-                <p><strong>Timestamp:</strong> {new Date(healthData.timestamp).toLocaleString()}</p>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3 text-center">
+              <h3 className="text-lg font-medium text-gray-900">System Health Details</h3>
+              <div className="mt-2 px-7 py-3">
+                {healthData && (
+                  <div className="text-sm text-gray-500">
+                    <p><strong>Status:</strong> {healthData.status}</p>
+                    <p><strong>Version:</strong> {healthData.version}</p>
+                    <p><strong>Environment:</strong> {healthData.environment}</p>
+                    <p><strong>Database:</strong> {healthData.database}</p>
+                    <p><strong>PHP Version:</strong> {healthData.php_version}</p>
+                    <p><strong>Memory Usage:</strong> {(healthData.memory_usage / 1024 / 1024).toFixed(2)} MB</p>
+                    <p><strong>Timestamp:</strong> {new Date(healthData.timestamp).toLocaleString()}</p>
+                  </div>
+                )}
               </div>
-            )}
+              <div className="items-center px-4 py-3">
+                <button
+                  onClick={() => setShowHealthModal(false)}
+                  className="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
