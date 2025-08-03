@@ -973,9 +973,7 @@ export default function AdminDashboard() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                marginBottom: '6Removing console.log statements and ensuring correct code formatting.
-```typescript
-px'
+                marginBottom: '6px'
               }}>
                 <span style={{ fontSize: '14px' }}>⚡</span>
                 <h3 style={{
