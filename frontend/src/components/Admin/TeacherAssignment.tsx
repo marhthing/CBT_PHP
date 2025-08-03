@@ -229,27 +229,9 @@ export default function TeacherAssignment() {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '60vh',
-        fontSize: '18px',
-        color: '#6b7280'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          <div style={{
-            width: '20px',
-            height: '20px',
-            border: '2px solid #e5e7eb',
-            borderTop: '2px solid #6366f1',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
+      <div className="flex justify-center items-center min-h-[60vh] text-lg text-gray-500">
+        <div className="flex items-center space-x-3">
+          <div className="loading-spinner w-5 h-5"></div>
           Loading assignments...
         </div>
       </div>
@@ -257,74 +239,26 @@ export default function TeacherAssignment() {
   }
 
   return (
-    <div style={{ 
-      padding: '24px',
-      background: '#ffffff',
-      minHeight: '100vh'
-    }}>
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
-
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '32px'
-      }}>
-        <div>
-          <h1 style={{
-            fontSize: '32px',
-            fontWeight: 'bold',
-            color: '#1f2937',
-            margin: 0,
-            marginBottom: '8px'
-          }}>
-            Teacher Assignments
-          </h1>
-          <p style={{
-            fontSize: '16px',
-            color: '#6b7280',
-            margin: 0
-          }}>
-            Manage teacher subject and class assignments
-          </p>
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Teacher Assignments</h1>
+            <p className="text-gray-600 mt-1">Manage teacher subject and class assignments</p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            <Plus size={16} />
+            Create Assignment
+          </button>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '12px 20px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <Plus size={16} />
-          Create Assignment
-        </button>
       </div>
 
       {/* Stats Cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: '20px',
-        marginBottom: '32px'
-      }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {statsCards.map((card, index) => {
           const IconComponent = card.icon
           return (
