@@ -86,27 +86,21 @@ export default function AdminDashboard() {
   const fetchStats = useCallback(async (signal?: AbortSignal) => {
     // Prevent duplicate requests
     if (activeRequests.has('stats')) {
-      console.log('Stats request already in progress, skipping...')
       return
     }
     
     try {
       setActiveRequests(prev => new Set(prev).add('stats'))
       setLoadingStats(true)
-      console.log('Fetching dashboard stats...')
       const response = await api.get('/admin/dashboard-stats', { 
         signal,
         timeout: 45000 // 45 second timeout for this request
       })
-      console.log('Dashboard stats response:', response.data)
       setStats(response.data.data || response.data || {})
     } catch (error: any) {
       if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
-        console.log('Stats request was cancelled')
         return
       }
-      console.error('Failed to fetch stats:', error)
-      console.error('Stats error details:', error.response?.data)
       // Don't show error for stats, just use default values
       setStats({
         total_questions: 0,
@@ -137,7 +131,6 @@ export default function AdminDashboard() {
   const fetchActivities = useCallback(async (signal?: AbortSignal) => {
     // Prevent duplicate requests
     if (activeRequests.has('activities')) {
-      console.log('Activities request already in progress, skipping...')
       return
     }
     
@@ -152,18 +145,12 @@ export default function AdminDashboard() {
       const endTime = performance.now()
       const responseTime = Math.round(endTime - startTime)
       
-      console.log('Activities API response time:', responseTime + 'ms')
-      console.log('Activities API response:', response.data)
-      
       setRecentActivities(response.data.data || response.data || [])
       setApiResponseTime(`${responseTime}ms`)
     } catch (error: any) {
       if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
-        console.log('Activities request was cancelled')
         return
       }
-      console.error('Failed to fetch activities:', error)
-      console.error('Error details:', error.response?.data)
       setApiResponseTime('Error')
       // Only show error if it's not a timeout - timeout is expected with slow backend
       if (!error.message?.includes('timeout')) {
@@ -266,8 +253,6 @@ export default function AdminDashboard() {
         const endTime = performance.now()
         const responseTime = Math.round(endTime - startTime)
 
-        console.log('Health check response time:', responseTime + 'ms')
-
         // Only update if we got a successful response and component is still mounted
         if (response && response.status === 200 && isMounting) {
           setApiResponseTime(`${responseTime}ms`)
@@ -276,7 +261,6 @@ export default function AdminDashboard() {
         if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
           return
         }
-        console.log('API health check failed:', error)
         if (isMounting) {
           setApiResponseTime('Slow')
         }
