@@ -155,13 +155,13 @@ try {
                     Response::badRequest('Count must be between 1 and 100');
                 }
                 
-                // First verify there are enough questions
+                // First verify there are enough questions for the specific subject, class, term, and session
                 $question_check = $db->prepare("
                     SELECT COUNT(*) as count 
                     FROM questions 
-                    WHERE subject_id = ?
+                    WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
                 ");
-                $question_check->execute([$input['subject_id']]);
+                $question_check->execute([$input['subject_id'], $input['class_level'], $input['term_id'], $input['session_id']]);
                 $available_questions = $question_check->fetch()['count'];
                 
                 if ($input['total_questions'] > $available_questions) {

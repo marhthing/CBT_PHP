@@ -107,7 +107,7 @@ export default function TestCodeManager() {
 
   // Check available questions without causing re-renders
   const checkAvailableQuestions = useCallback(async () => {
-    if (!createForm.subject_id || !createForm.class_level) {
+    if (!createForm.subject_id || !createForm.class_level || !createForm.term_id || !createForm.session_id) {
       if (availableQuestions !== 0) setAvailableQuestions(0)
       return
     }
@@ -117,6 +117,8 @@ export default function TestCodeManager() {
         params: {
           subject_id: createForm.subject_id,
           class_level: createForm.class_level,
+          term_id: createForm.term_id,
+          session_id: createForm.session_id,
           count_only: true
         }
       })
@@ -125,7 +127,7 @@ export default function TestCodeManager() {
     } catch (error) {
       if (availableQuestions !== 0) setAvailableQuestions(0)
     }
-  }, [createForm.subject_id, createForm.class_level, availableQuestions])
+  }, [createForm.subject_id, createForm.class_level, createForm.term_id, createForm.session_id, availableQuestions])
 
   // Auto-generate title without triggering re-renders
   const generateTitle = useCallback(() => {

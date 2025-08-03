@@ -30,12 +30,51 @@ switch ($_SERVER['REQUEST_METHOD']) {
 
 function handleGet($db, $user) {
     try {
+        // Check if requesting count only
+        if (isset($_GET['count_only'])) {
+            $where_conditions = [];
+            $params = [];
+            
+            // Add filters for subject_id, class_level, term_id, session_id
+            if (isset($_GET['subject_id']) && !empty($_GET['subject_id'])) {
+                $where_conditions[] = 'subject_id = ?';
+                $params[] = $_GET['subject_id'];
+            }
+            
+            if (isset($_GET['class_level']) && !empty($_GET['class_level'])) {
+                $where_conditions[] = 'class_level = ?';
+                $params[] = $_GET['class_level'];
+            }
+            
+            if (isset($_GET['term_id']) && !empty($_GET['term_id'])) {
+                $where_conditions[] = 'term_id = ?';
+                $params[] = $_GET['term_id'];
+            }
+            
+            if (isset($_GET['session_id']) && !empty($_GET['session_id'])) {
+                $where_conditions[] = 'session_id = ?';
+                $params[] = $_GET['session_id'];
+            }
+            
+            $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
+            
+            $count_stmt = $db->prepare("
+                SELECT COUNT(*) as total 
+                FROM questions 
+                $where_clause
+            ");
+            $count_stmt->execute($params);
+            $result = $count_stmt->fetch();
+            
+            Response::success('Question count retrieved', ['total' => (int)$result['total']]);
+        }
+        
         // Check if requesting stats
         if (isset($_GET['stats'])) {
             $stats_stmt = $db->prepare("
                 SELECT 
                     COUNT(*) as total_questions,
-                    COUNT(DISTINCT subject) as subjects_count,
+                    COUNT(DISTINCT subject_id) as subjects_count,
                     COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as this_week
                 FROM questions 
                 WHERE teacher_id = ?
@@ -45,7 +84,7 @@ function handleGet($db, $user) {
             
             // Get recent questions
             $recent_stmt = $db->prepare("
-                SELECT id, question_text, subject, class_level, difficulty
+                SELECT id, question_text, subject_id, class_level, created_at
                 FROM questions 
                 WHERE teacher_id = ?
                 ORDER BY created_at DESC

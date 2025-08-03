@@ -2,8 +2,14 @@
 
 This project is a Computer-Based Testing (CBT) Portal designed for secondary schools. Its primary purpose is to provide a comprehensive platform for administering online tests. Key capabilities include secure test management, a robust question bank, detailed result tracking, and real-time test administration. The system features role-based access for students, teachers, and administrators, aiming to streamline the testing process in an educational setting.
 
-## Migration Status: COMPLETED (August 2, 2025)
+## Migration Status: COMPLETED (August 3, 2025)
 Successfully migrated from Replit Agent to standard Replit environment with PostgreSQL database integration. Database schema deployed with proper password hashing and all authentication verified working.
+
+### Latest Updates (August 3, 2025)
+✓ **Question Filtering Fixed**: Test code creation now properly validates questions scoped to specific term, session, and subject
+✓ **Password Security Enhanced**: All user passwords re-hashed with proper PHP password_hash() for maximum security  
+✓ **Database Integrity**: PostgreSQL database fully configured with sample data and proper indexing
+✓ **API Endpoints Updated**: Teacher questions endpoint enhanced with count_only parameter and proper filtering
 
 ### Final Migration Verification (August 2, 2025)
 ✓ PostgreSQL database created and fully configured with Neon
