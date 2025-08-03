@@ -269,7 +269,7 @@ export default function AdminDashboard() {
       title: 'System Health',
       description: 'Monitor system status',
       icon: Activity,
-      onClick: () => window.open('/api/debug/health', '_blank'),
+      onClick: () => window.open('/health', '_blank'),
       color: '#f59e0b'
     }
   ], [navigate])
@@ -869,7 +869,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* System Status Footer */}
+      {/* System Metrics Footer */}
       <div style={{
         marginTop: '48px',
         background: '#ffffff',
@@ -878,16 +878,48 @@ export default function AdminDashboard() {
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
         border: '1px solid #e5e7eb'
       }}>
-        <h2 style={{
-          fontSize: '20px',
-          fontWeight: 'bold',
-          color: '#1f2937',
-          margin: '0 0 20px 0',
-          textAlign: 'center'
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px'
         }}>
-          System Status
-        </h2>
-        <div className="system-status-grid">
+          <h2 style={{
+            fontSize: '20px',
+            fontWeight: 'bold',
+            color: '#1f2937',
+            margin: 0
+          }}>
+            System Metrics
+          </h2>
+          <button
+            onClick={() => window.open('/health', '_blank')}
+            style={{
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '6px 12px',
+              fontSize: '12px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#4b5563'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#6b7280'
+            }}
+          >
+            Detailed Health
+          </button>
+        </div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '16px'
+        }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -898,18 +930,18 @@ export default function AdminDashboard() {
             border: '1px solid #e5e7eb'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Database size={18} style={{ color: '#10b981' }} />
-              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>Database</span>
+              <Database size={18} style={{ color: '#059669' }} />
+              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>Database Entities</span>
             </div>
             <span style={{
               fontSize: '12px',
               fontWeight: '600',
-              color: '#10b981',
-              background: '#dcfce7',
+              color: '#059669',
+              background: '#d1fae5',
               padding: '4px 8px',
               borderRadius: '6px'
             }}>
-              Healthy
+              {stats.total_questions + stats.total_test_codes + stats.total_teachers + stats.total_students} Records
             </span>
           </div>
           
@@ -923,18 +955,18 @@ export default function AdminDashboard() {
             border: '1px solid #e5e7eb'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Server size={18} style={{ color: '#10b981' }} />
-              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>API Server</span>
+              <Activity size={18} style={{ color: stats.active_test_codes > 0 ? '#059669' : '#f59e0b' }} />
+              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>Active Tests</span>
             </div>
             <span style={{
               fontSize: '12px',
               fontWeight: '600',
-              color: '#10b981',
-              background: '#dcfce7',
+              color: stats.active_test_codes > 0 ? '#059669' : '#f59e0b',
+              background: stats.active_test_codes > 0 ? '#d1fae5' : '#fef3c7',
               padding: '4px 8px',
               borderRadius: '6px'
             }}>
-              Running
+              {stats.active_test_codes} Live
             </span>
           </div>
           
@@ -948,18 +980,18 @@ export default function AdminDashboard() {
             border: '1px solid #e5e7eb'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Shield size={18} style={{ color: '#10b981' }} />
-              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>Authentication</span>
+              <Users size={18} style={{ color: '#0891b2' }} />
+              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>User Activity</span>
             </div>
             <span style={{
               fontSize: '12px',
               fontWeight: '600',
-              color: '#10b981',
-              background: '#dcfce7',
+              color: '#0891b2',
+              background: '#cffafe',
               padding: '4px 8px',
               borderRadius: '6px'
             }}>
-              Active
+              {stats.tests_today} Tests Today
             </span>
           </div>
           
@@ -973,18 +1005,18 @@ export default function AdminDashboard() {
             border: '1px solid #e5e7eb'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <HardDrive size={18} style={{ color: '#10b981' }} />
-              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>File Storage</span>
+              <BarChart3 size={18} style={{ color: '#7c3aed' }} />
+              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>Performance</span>
             </div>
             <span style={{
               fontSize: '12px',
               fontWeight: '600',
-              color: '#10b981',
-              background: '#dcfce7',
+              color: '#7c3aed',
+              background: '#ede9fe',
               padding: '4px 8px',
               borderRadius: '6px'
             }}>
-              Available
+              {stats.average_score}% Avg Score
             </span>
           </div>
         </div>
