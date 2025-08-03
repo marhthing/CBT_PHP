@@ -37,15 +37,9 @@ try {
             break;
 
         case 'class_levels':
-            // Common class levels for secondary schools
-            $data = [
-                ['id' => 'JSS1', 'name' => 'JSS 1'],
-                ['id' => 'JSS2', 'name' => 'JSS 2'],
-                ['id' => 'JSS3', 'name' => 'JSS 3'],
-                ['id' => 'SS1', 'name' => 'SS 1'],
-                ['id' => 'SS2', 'name' => 'SS 2'],
-                ['id' => 'SS3', 'name' => 'SS 3']
-            ];
+            $stmt = $conn->prepare("SELECT name as id, display_name as name, level_type, display_order FROM class_levels WHERE is_active = true ORDER BY display_order");
+            $stmt->execute();
+            $data = $stmt->fetchAll();
             break;
 
         case 'difficulties':
@@ -76,14 +70,10 @@ try {
             $data['sessions'] = $stmt->fetchAll();
             
             // Get class levels
-            $data['class_levels'] = [
-                ['id' => 'JSS1', 'name' => 'JSS 1'],
-                ['id' => 'JSS2', 'name' => 'JSS 2'],
-                ['id' => 'JSS3', 'name' => 'JSS 3'],
-                ['id' => 'SS1', 'name' => 'SS 1'],
-                ['id' => 'SS2', 'name' => 'SS 2'],
-                ['id' => 'SS3', 'name' => 'SS 3']
-            ];
+            $stmt = $conn->prepare("SELECT name as id, display_name as name, level_type, display_order FROM class_levels WHERE is_active = true ORDER BY display_order");
+            $stmt->execute();
+            $data['class_levels'] = $stmt->fetchAll();
+            break;
     }
 
     Response::success("$lookup_type retrieved successfully", $data);

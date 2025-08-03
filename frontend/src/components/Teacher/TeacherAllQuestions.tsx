@@ -38,6 +38,7 @@ interface LookupData {
   subjects?: Array<{id: number, name: string, code: string}>
   terms?: Array<{id: number, name: string}>
   sessions?: Array<{id: number, name: string}>
+  class_levels?: Array<{id: string, name: string}>
 }
 
 interface QuestionStats {

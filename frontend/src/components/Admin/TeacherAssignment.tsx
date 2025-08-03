@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
-import { Users, UserPlus, BookOpen, GraduationCap, Search, Plus, X, Save, Trash2 } from 'lucide-react'
+import { Users, UserPlus, BookOpen, GraduationCap, Plus, X, Save, Trash2 } from 'lucide-react'
 import ConfirmationModal from '../ui/ConfirmationModal'
 
 interface Teacher {
@@ -28,6 +28,7 @@ interface LookupData {
   subjects?: Array<{id: number, name: string}>
   terms?: Array<{id: number, name: string}>
   sessions?: Array<{id: number, name: string}>
+  class_levels?: Array<{id: string, name: string}>
 }
 
 interface CreateAssignmentForm {
@@ -431,12 +432,11 @@ export default function TeacherAssignment() {
             }}
           >
             <option value="">All Classes</option>
-            <option value="JSS1" style={{ color: '#1f2937' }}>JSS 1</option>
-            <option value="JSS2" style={{ color: '#1f2937' }}>JSS 2</option>
-            <option value="JSS3" style={{ color: '#1f2937' }}>JSS 3</option>
-            <option value="SS1" style={{ color: '#1f2937' }}>SS 1</option>
-            <option value="SS2" style={{ color: '#1f2937' }}>SS 2</option>
-            <option value="SS3" style={{ color: '#1f2937' }}>SS 3</option>
+            {(lookupData.class_levels || []).map(classLevel => (
+              <option key={classLevel.id} value={classLevel.id} style={{ color: '#1f2937' }}>
+                {classLevel.name}
+              </option>
+            ))}
           </select>
         </div>
 

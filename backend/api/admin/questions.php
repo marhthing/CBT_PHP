@@ -247,8 +247,9 @@ function handlePost($db, $user) {
         }
         
         // Validate class level
-        $valid_classes = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
-        if (!in_array($input['class_level'], $valid_classes)) {
+        $check_stmt = $db->prepare("SELECT name FROM class_levels WHERE name = ? AND is_active = true");
+        $check_stmt->execute([$input['class_level']]);
+        if (!$check_stmt->fetch()) {
             Response::validationError('Invalid class level');
         }
         

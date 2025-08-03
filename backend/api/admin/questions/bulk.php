@@ -42,6 +42,13 @@ try {
         Response::validationError('Questions must be a non-empty array');
     }
     
+    // Validate class level against database
+    $class_stmt = $db->prepare("SELECT name FROM class_levels WHERE name = ? AND is_active = true");
+    $class_stmt->execute([$class_level]);
+    if (!$class_stmt->fetch()) {
+        Response::validationError('Invalid class level');
+    }
+
     // Validate questions
     $valid_questions = [];
     $errors = [];

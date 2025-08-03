@@ -31,6 +31,7 @@ interface LookupData {
   subjects?: Array<{id: number, name: string}>
   terms?: Array<{id: number, name: string}>
   sessions?: Array<{id: number, name: string}>
+  class_levels?: Array<{id: string, name: string}>
 }
 
 export default function AllQuestions() {
@@ -739,12 +740,9 @@ export default function AllQuestions() {
             }}
           >
             <option value="">All Classes</option>
-            <option value="JSS1">JSS 1</option>
-            <option value="JSS2">JSS 2</option>
-            <option value="JSS3">JSS 3</option>
-            <option value="SS1">SS 1</option>
-            <option value="SS2">SS 2</option>
-            <option value="SS3">SS 3</option>
+            {(lookupData.class_levels || []).map(classLevel => (
+              <option key={classLevel.id} value={classLevel.id}>{classLevel.name}</option>
+            ))}
           </select>
 
           <select
@@ -1658,12 +1656,9 @@ export default function AllQuestions() {
                   }}
                 >
                   <option value="">Select Class</option>
-                  <option value="JSS1">JSS1</option>
-                  <option value="JSS2">JSS2</option>
-                  <option value="JSS3">JSS3</option>
-                  <option value="SS1">SS1</option>
-                  <option value="SS2">SS2</option>
-                  <option value="SS3">SS3</option>
+                  {(lookupData.class_levels || []).map(classLevel => (
+                    <option key={classLevel.id} value={classLevel.id}>{classLevel.name}</option>
+                  ))}
                 </select>
               </div>
 
