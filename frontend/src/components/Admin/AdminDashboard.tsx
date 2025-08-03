@@ -886,194 +886,315 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Recent Activity Feed */}
+      {/* Admin Control Center */}
       <div style={{
         marginTop: '48px',
-        background: '#ffffff',
-        borderRadius: '12px',
-        padding: '24px',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-        border: '1px solid #e5e7eb'
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr',
+        gap: '24px'
       }}>
+        {/* Quick Admin Actions */}
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '20px'
+          background: '#ffffff',
+          borderRadius: '12px',
+          padding: '24px',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #e5e7eb'
         }}>
           <h2 style={{
             fontSize: '20px',
             fontWeight: 'bold',
             color: '#1f2937',
-            margin: 0
+            margin: '0 0 20px 0'
           }}>
-            System Overview
+            ⚡ Quick Admin Actions
           </h2>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '12px'
+          }}>
             <button
-              onClick={() => fetchHealthData()}
-              disabled={loadingHealth}
+              onClick={() => navigate('/admin/testcodes')}
               style={{
-                background: loadingHealth ? '#9ca3af' : '#3b82f6',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
                 border: 'none',
-                borderRadius: '6px',
-                padding: '8px 12px',
-                fontSize: '12px',
-                fontWeight: '500',
-                cursor: loadingHealth ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}
-              onMouseEnter={(e) => {
-                if (!loadingHealth) e.currentTarget.style.backgroundColor = '#2563eb'
-              }}
-              onMouseLeave={(e) => {
-                if (!loadingHealth) e.currentTarget.style.backgroundColor = '#3b82f6'
-              }}
-            >
-              {loadingHealth ? (
-                <>
-                  <div style={{
-                    width: '12px',
-                    height: '12px',
-                    border: '2px solid #ffffff40',
-                    borderTop: '2px solid #ffffff',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite'
-                  }}></div>
-                  Checking...
-                </>
-              ) : (
-                <>🔍 System Health</>
-              )}
-            </button>
-            <button
-              onClick={() => fetchDashboardData()}
-              style={{
-                background: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '8px 12px',
-                fontSize: '12px',
-                fontWeight: '500',
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'left',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#059669'
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 8px 16px rgba(102, 126, 234, 0.3)'
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#10b981'
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
               }}
             >
-              🔄 Refresh Data
+              <div style={{ fontSize: '20px', marginBottom: '8px' }}>🎯</div>
+              <div style={{ fontSize: '14px', fontWeight: '600' }}>Bulk Test Codes</div>
+              <div style={{ fontSize: '12px', opacity: 0.9 }}>Generate multiple test codes at once</div>
+            </button>
+            
+            <button
+              onClick={() => navigate('/admin/questions')}
+              style={{
+                background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 8px 16px rgba(240, 147, 251, 0.3)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              <div style={{ fontSize: '20px', marginBottom: '8px' }}>📝</div>
+              <div style={{ fontSize: '14px', fontWeight: '600' }}>Question Analytics</div>
+              <div style={{ fontSize: '12px', opacity: 0.9 }}>View question performance & stats</div>
+            </button>
+            
+            <button
+              onClick={() => navigate('/admin/teachers')}
+              style={{
+                background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 8px 16px rgba(79, 172, 254, 0.3)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              <div style={{ fontSize: '20px', marginBottom: '8px' }}>👨‍🏫</div>
+              <div style={{ fontSize: '14px', fontWeight: '600' }}>Bulk Assignments</div>
+              <div style={{ fontSize: '12px', opacity: 0.9 }}>Assign subjects to multiple teachers</div>
+            </button>
+            
+            <button
+              onClick={() => fetchHealthData()}
+              disabled={loadingHealth}
+              style={{
+                background: loadingHealth ? '#9ca3af' : 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'left',
+                cursor: loadingHealth ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                if (!loadingHealth) {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 8px 16px rgba(250, 112, 154, 0.3)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!loadingHealth) {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }
+              }}
+            >
+              <div style={{ fontSize: '20px', marginBottom: '8px' }}>
+                {loadingHealth ? '⏳' : '🔍'}
+              </div>
+              <div style={{ fontSize: '14px', fontWeight: '600' }}>
+                {loadingHealth ? 'Checking...' : 'System Health'}
+              </div>
+              <div style={{ fontSize: '12px', opacity: 0.9 }}>
+                {loadingHealth ? 'Please wait...' : 'Check system status & performance'}
+              </div>
+            </button>
+            
+            <button
+              onClick={() => window.open('mailto:support@school.edu?subject=CBT Portal Support', '_blank')}
+              style={{
+                background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                color: '#374151',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 8px 16px rgba(168, 237, 234, 0.3)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              <div style={{ fontSize: '20px', marginBottom: '8px' }}>💬</div>
+              <div style={{ fontSize: '14px', fontWeight: '600' }}>Get Support</div>
+              <div style={{ fontSize: '12px', opacity: 0.8 }}>Contact technical support team</div>
+            </button>
+            
+            <button
+              onClick={() => fetchDashboardData()}
+              style={{
+                background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                color: '#374151',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '16px',
+                textAlign: 'left',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)'
+                e.currentTarget.style.boxShadow = '0 8px 16px rgba(252, 182, 159, 0.3)'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              <div style={{ fontSize: '20px', marginBottom: '8px' }}>🔄</div>
+              <div style={{ fontSize: '14px', fontWeight: '600' }}>Refresh Dashboard</div>
+              <div style={{ fontSize: '12px', opacity: 0.8 }}>Update all dashboard data</div>
             </button>
           </div>
         </div>
         
+        {/* System Alerts & Tips */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '16px'
+          background: '#ffffff',
+          borderRadius: '12px',
+          padding: '24px',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #e5e7eb'
         }}>
-          <div style={{
-            padding: '16px',
-            background: '#f8fafc',
-            borderRadius: '8px',
-            border: '1px solid #e2e8f0'
+          <h2 style={{
+            fontSize: '20px',
+            fontWeight: 'bold',
+            color: '#1f2937',
+            margin: '0 0 20px 0'
           }}>
-            <h3 style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#374151',
-              margin: '0 0 8px 0'
-            }}>
-              🎯 System Status
-            </h3>
-            <p style={{
-              fontSize: '12px',
-              color: '#6b7280',
-              margin: 0,
-              lineHeight: '1.4'
-            }}>
-              All core systems operational. Database connected with {stats.total_questions + stats.total_test_codes + stats.total_teachers + stats.total_students} total records.
-            </p>
-          </div>
+            🛎️ System Alerts
+          </h2>
           
-          <div style={{
-            padding: '16px',
-            background: stats.active_test_codes > 0 ? '#f0fdf4' : '#fefce8',
-            borderRadius: '8px',
-            border: stats.active_test_codes > 0 ? '1px solid #bbf7d0' : '1px solid #fde047'
-          }}>
-            <h3 style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#374151',
-              margin: '0 0 8px 0'
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {stats.active_test_codes === 0 && (
+              <div style={{
+                padding: '12px',
+                background: '#fef3c7',
+                borderRadius: '8px',
+                border: '1px solid #fde047'
+              }}>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#92400e', marginBottom: '4px' }}>
+                  ⚠️ No Active Tests
+                </div>
+                <div style={{ fontSize: '12px', color: '#a16207' }}>
+                  Consider creating and activating test codes for upcoming exams.
+                </div>
+              </div>
+            )}
+            
+            {stats.total_questions < 50 && (
+              <div style={{
+                padding: '12px',
+                background: '#fef2f2',
+                borderRadius: '8px',
+                border: '1px solid #fecaca'
+              }}>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#991b1b', marginBottom: '4px' }}>
+                  📚 Low Question Count
+                </div>
+                <div style={{ fontSize: '12px', color: '#7f1d1d' }}>
+                  Only {stats.total_questions} questions available. Add more for better test variety.
+                </div>
+              </div>
+            )}
+            
+            {stats.total_teachers === 0 && (
+              <div style={{
+                padding: '12px',
+                background: '#fef2f2',
+                borderRadius: '8px',
+                border: '1px solid #fecaca'
+              }}>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#991b1b', marginBottom: '4px' }}>
+                  👨‍🏫 No Teachers
+                </div>
+                <div style={{ fontSize: '12px', color: '#7f1d1d' }}>
+                  Add teacher accounts to start creating and managing questions.
+                </div>
+              </div>
+            )}
+            
+            {stats.total_students === 0 && (
+              <div style={{
+                padding: '12px',
+                background: '#fef2f2',
+                borderRadius: '8px',
+                border: '1px solid #fecaca'
+              }}>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#991b1b', marginBottom: '4px' }}>
+                  👨‍🎓 No Students
+                </div>
+                <div style={{ fontSize: '12px', color: '#7f1d1d' }}>
+                  Add student accounts to enable test-taking functionality.
+                </div>
+              </div>
+            )}
+            
+            {stats.total_questions >= 50 && stats.active_test_codes > 0 && stats.total_teachers > 0 && stats.total_students > 0 && (
+              <div style={{
+                padding: '12px',
+                background: '#f0fdf4',
+                borderRadius: '8px',
+                border: '1px solid #bbf7d0'
+              }}>
+                <div style={{ fontSize: '14px', fontWeight: '600', color: '#065f46', marginBottom: '4px' }}>
+                  ✅ System Ready
+                </div>
+                <div style={{ fontSize: '12px', color: '#047857' }}>
+                  All systems operational! Your CBT portal is ready for testing.
+                </div>
+              </div>
+            )}
+            
+            <div style={{
+              padding: '12px',
+              background: '#f0f9ff',
+              borderRadius: '8px',
+              border: '1px solid #bfdbfe'
             }}>
-              📊 Test Activity
-            </h3>
-            <p style={{
-              fontSize: '12px',
-              color: '#6b7280',
-              margin: 0,
-              lineHeight: '1.4'
-            }}>
-              {stats.active_test_codes} active tests available. {stats.tests_today} tests completed today with {stats.average_score}% average score.
-            </p>
-          </div>
-          
-          <div style={{
-            padding: '16px',
-            background: '#f0f9ff',
-            borderRadius: '8px',
-            border: '1px solid #bae6fd'
-          }}>
-            <h3 style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#374151',
-              margin: '0 0 8px 0'
-            }}>
-              👥 User Management
-            </h3>
-            <p style={{
-              fontSize: '12px',
-              color: '#6b7280',
-              margin: 0,
-              lineHeight: '1.4'
-            }}>
-              {stats.total_teachers} teachers managing {stats.total_assignments} assignments across {stats.total_students} students.
-            </p>
-          </div>
-          
-          <div style={{
-            padding: '16px',
-            background: '#fef7ff',
-            borderRadius: '8px',
-            border: '1px solid #f3e8ff'
-          }}>
-            <h3 style={{
-              fontSize: '14px',
-              fontWeight: '600',
-              color: '#374151',
-              margin: '0 0 8px 0'
-            }}>
-              📚 Content Library
-            </h3>
-            <p style={{
-              fontSize: '12px',
-              color: '#6b7280',
-              margin: 0,
-              lineHeight: '1.4'
-            }}>
-              {stats.total_questions} questions available. Top subject: {stats.most_active_subject || 'None'} ({stats.most_active_subject_count} questions).
-            </p>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: '#1e40af', marginBottom: '4px' }}>
+                💡 Pro Tip
+              </div>
+              <div style={{ fontSize: '12px', color: '#1e3a8a' }}>
+                Regular backups and test code rotation help maintain system security.
+              </div>
+            </div>
           </div>
         </div>
       </div>
