@@ -145,7 +145,7 @@ export default function MobileBottomBar({ children }: MobileBottomBarProps) {
       </div>
 
       {/* Mobile Bottom Navigation - Only visible on mobile */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-1">
+      <nav id="mobile-bottom-nav" className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-1">
         <div className="flex items-center justify-around">
           {navigationItems.slice(0, 4).map((item) => {
             const Icon = item.icon

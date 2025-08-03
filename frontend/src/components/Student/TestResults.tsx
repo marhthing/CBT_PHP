@@ -1,5 +1,13 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../lib/api'
+import { 
+  Trophy, 
+  TrendingUp, 
+  Award, 
+  BookOpen,
+  Filter,
+  RefreshCw
+} from 'lucide-react'
 
 interface TestResult {
   id: number
@@ -48,10 +56,9 @@ export default function TestResults() {
   const fetchResults = async () => {
     try {
       const response = await api.get('/student/results')
-      console.log('API Response:', response.data) // Debug log
       setResults(response.data.data?.results || [])
     } catch (error) {
-      console.error('Failed to fetch results:', error)
+      // Failed to fetch results
     } finally {
       setLoading(false)
     }
@@ -62,7 +69,7 @@ export default function TestResults() {
       const response = await api.get('/system/lookup')
       setLookupData(response.data.data || {})
     } catch (error) {
-      console.error('Failed to fetch lookup data:', error)
+      // Failed to fetch lookup data
     }
   }
 
@@ -87,90 +94,112 @@ export default function TestResults() {
     return { bg: '#fef2f2', color: '#dc2626' }
   }
 
+  const statCards = [
+    {
+      title: 'Total Tests',
+      value: filteredResults.length,
+      color: '#3b82f6',
+      bgColor: 'bg-blue-50',
+      icon: BookOpen
+    },
+    {
+      title: 'Average Score',
+      value: filteredResults.length > 0 
+        ? `${Math.round(filteredResults.reduce((sum, result) => sum + result.percentage, 0) / filteredResults.length)}%`
+        : '0%',
+      color: '#10b981',
+      bgColor: 'bg-green-50',
+      icon: TrendingUp
+    },
+    {
+      title: 'Best Score',
+      value: filteredResults.length > 0 
+        ? `${Math.max(...filteredResults.map(r => r.percentage))}%`
+        : '0%',
+      color: '#8b5cf6',
+      bgColor: 'bg-purple-50',
+      icon: Trophy
+    },
+    {
+      title: 'Passed',
+      value: filteredResults.filter(r => r.percentage >= 50).length,
+      color: '#f59e0b',
+      bgColor: 'bg-yellow-50',
+      icon: Award
+    }
+  ]
+
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '200px',
-        color: '#64748b'
-      }}>
-        Loading results...
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Loading results...</div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{
-      maxWidth: '100%',
-      margin: '0 auto',
-      padding: '0',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    }}>
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
-        color: 'white',
-        padding: '20px 16px',
-        borderRadius: '12px',
-        marginBottom: '20px'
-      }}>
-        <h1 style={{ 
-          fontSize: '20px', 
-          fontWeight: 'bold',
-          margin: '0 0 4px 0'
-        }}>
-          Test Results
-        </h1>
-        <p style={{ 
-          fontSize: '14px', 
-          opacity: 0.9,
-          margin: '0'
-        }}>
-          View your test performance and grades
-        </p>
+      <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Test Results</h1>
+            <p className="text-gray-600 mt-1">View your test performance and grades</p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="text-sm text-gray-500">
+              <span className="font-medium">Last Updated:</span> {new Date().toLocaleTimeString()}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div style={{
-        background: 'white',
-        padding: '16px',
-        borderRadius: '12px',
-        marginBottom: '20px',
-        border: '1px solid #e2e8f0'
-      }}>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px'
-        }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '12px'
-          }}>
+      <div className="p-4 sm:p-6 space-y-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          {statCards.map((card, index) => {
+            const IconComponent = card.icon
+            return (
+              <div
+                key={index}
+                className={`${card.bgColor} rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-600 mb-1">{card.title}</p>
+                    <p className="text-2xl lg:text-3xl font-bold" style={{ color: card.color }}>
+                      {card.value}
+                    </p>
+                  </div>
+                  <div 
+                    className="p-3 rounded-lg"
+                    style={{ backgroundColor: card.color, opacity: 0.1 }}
+                  >
+                    <IconComponent size={24} style={{ color: card.color }} />
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Filter size={20} />
+            Filter Results
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-              <label style={{
-                display: 'block',
-                fontSize: '12px',
-                fontWeight: '600',
-                color: '#374151',
-                marginBottom: '4px'
-              }}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Subject
               </label>
               <select
                 value={filters.subject}
                 onChange={(e) => setFilters(prev => ({ ...prev, subject: e.target.value }))}
-                style={{
-                  width: '100%',
-                  padding: '8px 10px',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  outline: 'none'
-                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">All Subjects</option>
                 {lookupData.subjects?.map((subject: any) => (
@@ -182,26 +211,13 @@ export default function TestResults() {
             </div>
 
             <div>
-              <label style={{
-                display: 'block',
-                fontSize: '12px',
-                fontWeight: '600',
-                color: '#374151',
-                marginBottom: '4px'
-              }}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Term
               </label>
               <select
                 value={filters.term}
                 onChange={(e) => setFilters(prev => ({ ...prev, term: e.target.value }))}
-                style={{
-                  width: '100%',
-                  padding: '8px 10px',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  outline: 'none'
-                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">All Terms</option>
                 {lookupData.terms?.map((term: any) => (
@@ -213,26 +229,13 @@ export default function TestResults() {
             </div>
 
             <div>
-              <label style={{
-                display: 'block',
-                fontSize: '12px',
-                fontWeight: '600',
-                color: '#374151',
-                marginBottom: '4px'
-              }}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Session
               </label>
               <select
                 value={filters.session}
                 onChange={(e) => setFilters(prev => ({ ...prev, session: e.target.value }))}
-                style={{
-                  width: '100%',
-                  padding: '8px 10px',
-                  border: '2px solid #e2e8f0',
-                  borderRadius: '6px',
-                  fontSize: '13px',
-                  outline: 'none'
-                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">All Sessions</option>
                 {lookupData.sessions?.map((session: any) => (
@@ -242,242 +245,116 @@ export default function TestResults() {
                 ))}
               </select>
             </div>
-          </div>
 
-          <button
-            onClick={resetFilters}
-            style={{
-              background: '#f1f5f9',
-              border: '1px solid #e2e8f0',
-              color: '#64748b',
-              padding: '8px 12px',
-              borderRadius: '6px',
-              fontSize: '12px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              alignSelf: 'flex-start'
-            }}
-          >
-            Reset Filters
-          </button>
-        </div>
-      </div>
-
-      {/* Results Summary */}
-      {filteredResults.length > 0 && (
-        <div style={{
-          background: 'white',
-          padding: '16px',
-          borderRadius: '12px',
-          marginBottom: '20px',
-          border: '1px solid #e2e8f0'
-        }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-            gap: '12px'
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                fontSize: '18px',
-                fontWeight: 'bold',
-                color: '#1e40af'
-              }}>
-                {filteredResults.length}
-              </div>
-              <div style={{
-                fontSize: '11px',
-                color: '#64748b',
-                fontWeight: '500'
-              }}>
-                Total Tests
-              </div>
-            </div>
-
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                fontSize: '18px',
-                fontWeight: 'bold',
-                color: '#059669'
-              }}>
-                {Math.round(filteredResults.reduce((sum, result) => sum + result.percentage, 0) / filteredResults.length)}%
-              </div>
-              <div style={{
-                fontSize: '11px',
-                color: '#64748b',
-                fontWeight: '500'
-              }}>
-                Average Score
-              </div>
-            </div>
-
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                fontSize: '18px',
-                fontWeight: 'bold',
-                color: '#7c3aed'
-              }}>
-                {Math.max(...filteredResults.map(r => r.percentage))}%
-              </div>
-              <div style={{
-                fontSize: '11px',
-                color: '#64748b',
-                fontWeight: '500'
-              }}>
-                Best Score
-              </div>
-            </div>
-
-            <div style={{ textAlign: 'center' }}>
-              <div style={{
-                fontSize: '18px',
-                fontWeight: 'bold',
-                color: '#dc2626'
-              }}>
-                {filteredResults.filter(r => r.percentage >= 50).length}
-              </div>
-              <div style={{
-                fontSize: '11px',
-                color: '#64748b',
-                fontWeight: '500'
-              }}>
-                Passed
-              </div>
+            <div className="flex items-end">
+              <button
+                onClick={resetFilters}
+                className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+              >
+                <RefreshCw size={16} />
+                Reset
+              </button>
             </div>
           </div>
         </div>
-      )}
 
-      {/* Results List */}
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        border: '1px solid #e2e8f0',
-        overflow: 'hidden'
-      }}>
-        {filteredResults.length > 0 ? (
-          <div>
-            {filteredResults.map((result) => {
-              const gradeColors = getGradeColor(result.percentage)
-              return (
-                <div
-                  key={result.id}
-                  style={{
-                    padding: '16px',
-                    borderBottom: '1px solid #f1f5f9'
-                  }}
-                >
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '8px'
-                  }}>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        color: '#1e293b',
-                        margin: '0 0 4px 0'
-                      }}>
-                        {result.test_code?.title}
-                      </h3>
-                      <div style={{
-                        fontSize: '12px',
-                        color: '#64748b',
-                        marginBottom: '4px'
-                      }}>
-                        {result.test_code?.subject} • {result.test_code?.class_level}
+        {/* Results List */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-4 lg:p-6 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Results History</h2>
+          </div>
+
+          {filteredResults.length > 0 ? (
+            <div className="divide-y divide-gray-200">
+              {filteredResults.map((result) => {
+                const gradeColors = getGradeColor(result.percentage)
+                return (
+                  <div
+                    key={result.id}
+                    className="p-4 lg:p-6 hover:bg-gray-50"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          {result.test_code?.title}
+                        </h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-gray-600">
+                          <div>
+                            <span className="font-medium">Subject:</span> {result.test_code?.subject}
+                          </div>
+                          <div>
+                            <span className="font-medium">Class:</span> {result.test_code?.class_level}
+                          </div>
+                          <div>
+                            <span className="font-medium">Code:</span> {result.test_code?.code}
+                          </div>
+                          <div>
+                            <span className="font-medium">Date:</span> {new Date(result.submitted_at).toLocaleDateString()}
+                          </div>
+                        </div>
                       </div>
-                      <div style={{
-                        fontSize: '11px',
-                        color: '#94a3b8'
-                      }}>
-                        Code: {result.test_code?.code} • {new Date(result.submitted_at).toLocaleDateString()}
+
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                        <div className="text-center">
+                          <div className="text-2xl font-bold text-gray-900">
+                            {result.score}/{result.max_possible_score}
+                          </div>
+                          <div className="text-sm text-gray-500">Score</div>
+                        </div>
+
+                        <div className="text-center">
+                          <div 
+                            className="px-3 py-1 rounded-lg text-lg font-bold"
+                            style={{ backgroundColor: gradeColors.bg, color: gradeColors.color }}
+                          >
+                            {result.percentage}%
+                          </div>
+                          <div className="text-sm text-gray-500 mt-1">
+                            Grade: {
+                              result.percentage >= 80 ? 'A' :
+                              result.percentage >= 70 ? 'B' :
+                              result.percentage >= 60 ? 'C' :
+                              result.percentage >= 50 ? 'D' : 'F'
+                            }
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div style={{
-                      textAlign: 'right'
-                    }}>
-                      {/* Primary Score Display */}
-                      <div style={{
-                        fontSize: '18px',
-                        fontWeight: '800',
-                        color: '#1e293b',
-                        marginBottom: '2px'
-                      }}>
-                        {result.score}/{result.max_possible_score}
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm text-gray-600">
+                      <div>
+                        <span className="font-medium">Duration:</span> {Math.round(result.time_taken / 60)} min
                       </div>
-                      {/* Secondary Percentage Display */}
-                      <div style={{
-                        background: gradeColors.bg,
-                        color: gradeColors.color,
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        fontSize: '11px',
-                        fontWeight: '600',
-                        display: 'inline-block'
-                      }}>
-                        {result.percentage}%
+                      <div>
+                        <span className="font-medium">Status:</span> {
+                          result.percentage >= 50 ? 
+                          <span className="text-green-600 font-semibold">Passed</span> : 
+                          <span className="text-red-600 font-semibold">Failed</span>
+                        }
+                      </div>
+                      <div>
+                        <span className="font-medium">Questions:</span> {result.total_questions}
                       </div>
                     </div>
                   </div>
-
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
-                    gap: '12px',
-                    fontSize: '11px',
-                    color: '#64748b'
-                  }}>
-                    <div>
-                      <span style={{ fontWeight: '500' }}>Duration:</span> {Math.round(result.time_taken / 60)} min
-                    </div>
-                    <div>
-                      <span style={{ fontWeight: '500' }}>Grade:</span> {
-                        result.percentage >= 80 ? 'A' :
-                        result.percentage >= 70 ? 'B' :
-                        result.percentage >= 60 ? 'C' :
-                        result.percentage >= 50 ? 'D' : 'F'
-                      }
-                    </div>
-                    <div>
-                      <span style={{ fontWeight: '500' }}>Status:</span> {
-                        result.percentage >= 50 ? 'Passed' : 'Failed'
-                      }
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        ) : (
-          <div style={{
-            textAlign: 'center',
-            padding: '40px 20px',
-            color: '#64748b'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>📊</div>
-            <h3 style={{
-              fontSize: '16px',
-              fontWeight: '600',
-              margin: '0 0 8px 0'
-            }}>
-              No Results Found
-            </h3>
-            <p style={{
-              fontSize: '14px',
-              margin: '0',
-              opacity: 0.8
-            }}>
-              {results.length === 0 ? 
-                "You haven't taken any tests yet. Start by entering a test code!" :
-                "No results match your current filters. Try adjusting the filter options."
-              }
-            </p>
-          </div>
-        )}
+                )
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📊</div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No Results Found
+              </h3>
+              <p className="text-gray-600">
+                {results.length === 0 ? 
+                  "You haven't taken any tests yet. Start by entering a test code!" :
+                  "No results match your current filters. Try adjusting the filter options."
+                }
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
