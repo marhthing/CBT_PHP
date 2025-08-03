@@ -77,35 +77,73 @@ try {
     $answer_mappings = [];
     
     foreach ($raw_questions as $question) {
-        // Create options array with original mapping
-        $original_options = [
-            'A' => $question['option_a'],
-            'B' => $question['option_b'], 
-            'C' => $question['option_c'],
-            'D' => $question['option_d']
-        ];
-        
-        // Get the values and shuffle them
-        $option_values = array_values($original_options);
-        shuffle($option_values);
-        
-        // Create new shuffled mapping
-        $shuffled_options = [
-            'A' => $option_values[0],
-            'B' => $option_values[1],
-            'C' => $option_values[2],
-            'D' => $option_values[3]
-        ];
-        
-        // Find where the correct answer ended up after shuffling
-        $original_correct_answer = $question['correct_answer'];
-        $original_correct_text = $original_options[$original_correct_answer];
-        
-        $new_correct_answer = 'A';
-        foreach ($shuffled_options as $new_key => $text) {
-            if ($text === $original_correct_text) {
-                $new_correct_answer = $new_key;
-                break;
+        // Handle True/False questions differently to avoid shuffling empty options
+        if ($question['question_type'] === 'true_false') {
+            // For True/False questions, only shuffle A and B options
+            $original_options = [
+                'A' => $question['option_a'],
+                'B' => $question['option_b']
+            ];
+            
+            // Get the values and shuffle them
+            $option_values = array_values($original_options);
+            shuffle($option_values);
+            
+            // Create new shuffled mapping for True/False
+            $shuffled_options = [
+                'A' => $option_values[0],
+                'B' => $option_values[1],
+                'C' => null,
+                'D' => null
+            ];
+            
+            // Find where the correct answer ended up after shuffling
+            $original_correct_answer = $question['correct_answer'];
+            $original_correct_text = $original_options[$original_correct_answer];
+            
+            $new_correct_answer = 'A';
+            foreach ($shuffled_options as $new_key => $text) {
+                if ($text === $original_correct_text) {
+                    $new_correct_answer = $new_key;
+                    break;
+                }
+            }
+        } else {
+            // For multiple choice questions, shuffle all four options
+            $original_options = [
+                'A' => $question['option_a'],
+                'B' => $question['option_b'], 
+                'C' => $question['option_c'],
+                'D' => $question['option_d']
+            ];
+            
+            // Filter out empty options before shuffling
+            $valid_options = array_filter($original_options, function($value) {
+                return !empty(trim($value));
+            });
+            
+            // Get the values and shuffle them
+            $option_values = array_values($valid_options);
+            shuffle($option_values);
+            
+            // Create new shuffled mapping, filling available slots
+            $shuffled_options = [
+                'A' => $option_values[0] ?? null,
+                'B' => $option_values[1] ?? null,
+                'C' => $option_values[2] ?? null,
+                'D' => $option_values[3] ?? null
+            ];
+            
+            // Find where the correct answer ended up after shuffling
+            $original_correct_answer = $question['correct_answer'];
+            $original_correct_text = $original_options[$original_correct_answer];
+            
+            $new_correct_answer = 'A';
+            foreach ($shuffled_options as $new_key => $text) {
+                if ($text === $original_correct_text) {
+                    $new_correct_answer = $new_key;
+                    break;
+                }
             }
         }
         
