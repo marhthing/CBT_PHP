@@ -71,7 +71,8 @@ function handleGet($db, $user) {
                 SELECT 
                     COUNT(*) as total_questions,
                     COUNT(DISTINCT s.name) as subjects_count,
-                    COUNT(CASE WHEN q.created_at >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as this_week
+                    COUNT(DISTINCT q.class_level) as class_levels_count,
+                    COUNT(DISTINCT q.question_type) as question_types_count
                 FROM questions q
                 JOIN subjects s ON q.subject_id = s.id
             ");
@@ -89,10 +90,37 @@ function handleGet($db, $user) {
             $subject_stmt->execute();
             $by_subject = $subject_stmt->fetchAll();
             
-            $stats['by_subject'] = array_column($by_subject, 'question_count', 'subject_name');
-            $stats['subjects_count'] = count($by_subject);
+            // Get questions by class level
+            $class_stmt = $db->prepare("
+                SELECT q.class_level, COUNT(*) as question_count
+                FROM questions q
+                GROUP BY q.class_level
+                ORDER BY q.class_level
+            ");
+            $class_stmt->execute();
+            $by_class = $class_stmt->fetchAll();
             
-            Response::success('Question stats retrieved', $stats);
+            // Get questions by type
+            $type_stmt = $db->prepare("
+                SELECT q.question_type, COUNT(*) as question_count
+                FROM questions q
+                GROUP BY q.question_type
+                ORDER BY q.question_type
+            ");
+            $type_stmt->execute();
+            $by_type = $type_stmt->fetchAll();
+            
+            $stats_data = [
+                'total_questions' => (int)$stats['total_questions'],
+                'subjects_count' => (int)$stats['subjects_count'],
+                'class_levels_count' => (int)$stats['class_levels_count'],
+                'question_types_count' => (int)$stats['question_types_count'],
+                'by_subject' => array_column($by_subject, 'question_count', 'subject_name'),
+                'by_class' => array_column($by_class, 'question_count', 'class_level'),
+                'by_type' => array_column($by_type, 'question_count', 'question_type')
+            ];
+            
+            Response::success('Question stats retrieved', $stats_data);
             return;
         }
         
@@ -115,7 +143,10 @@ function handleGet($db, $user) {
             $params[] = $_GET['class'];
         }
         
-        // Note: All questions are multiple choice type, so type filter is not needed
+        if (isset($_GET['type']) && !empty($_GET['type'])) {
+            $where_conditions[] = 'q.question_type = ?';
+            $params[] = $_GET['type'];
+        }
         
         $limit = min(100, max(1, intval($_GET['limit'] ?? 50)));
         $offset = max(0, intval($_GET['offset'] ?? 0));
@@ -132,11 +163,11 @@ function handleGet($db, $user) {
                 q.option_d,
                 q.correct_answer,
                 q.class_level,
+                q.question_type,
                 q.created_at,
                 s.name as subject_name,
                 s.id as subject_id,
-                u.full_name as created_by_name,
-                'multiple_choice' as question_type
+                u.full_name as created_by_name
             FROM questions q
             JOIN subjects s ON q.subject_id = s.id
             JOIN users u ON q.teacher_id = u.id
@@ -151,14 +182,21 @@ function handleGet($db, $user) {
         $stmt->execute($params);
         $questions = $stmt->fetchAll();
         
-        // Format options for each question
+        // Format options for each question based on type
         foreach ($questions as &$question) {
-            $question['options'] = [
-                ['label' => 'A', 'text' => $question['option_a']],
-                ['label' => 'B', 'text' => $question['option_b']],
-                ['label' => 'C', 'text' => $question['option_c']],
-                ['label' => 'D', 'text' => $question['option_d']]
-            ];
+            if ($question['question_type'] === 'true_false') {
+                $question['options'] = [
+                    ['label' => 'A', 'text' => $question['option_a']],
+                    ['label' => 'B', 'text' => $question['option_b']]
+                ];
+            } else {
+                $question['options'] = [
+                    ['label' => 'A', 'text' => $question['option_a']],
+                    ['label' => 'B', 'text' => $question['option_b']],
+                    ['label' => 'C', 'text' => $question['option_c']],
+                    ['label' => 'D', 'text' => $question['option_d']]
+                ];
+            }
         }
         
         Response::logRequest('admin/questions', 'GET', $user['id']);
@@ -178,15 +216,34 @@ function handlePost($db, $user) {
             Response::validationError('Invalid JSON input');
         }
         
-        // Validate required fields
-        Response::validateRequired($input, [
-            'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
-            'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
-        ]);
+        // Determine question type (default to multiple_choice if not specified)
+        $question_type = $input['question_type'] ?? 'multiple_choice';
         
-        // Validate correct answer
-        if (!in_array($input['correct_answer'], ['A', 'B', 'C', 'D'])) {
-            Response::validationError('Correct answer must be A, B, C, or D');
+        if (!in_array($question_type, ['multiple_choice', 'true_false'])) {
+            Response::validationError('Question type must be multiple_choice or true_false');
+        }
+        
+        // Validate required fields based on question type
+        if ($question_type === 'true_false') {
+            Response::validateRequired($input, [
+                'question_text', 'option_a', 'option_b',
+                'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
+            ]);
+            
+            // For true/false, correct answer must be A or B
+            if (!in_array($input['correct_answer'], ['A', 'B'])) {
+                Response::validationError('For True/False questions, correct answer must be A or B');
+            }
+        } else {
+            Response::validateRequired($input, [
+                'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
+                'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
+            ]);
+            
+            // For multiple choice, correct answer must be A, B, C, or D
+            if (!in_array($input['correct_answer'], ['A', 'B', 'C', 'D'])) {
+                Response::validationError('For Multiple Choice questions, correct answer must be A, B, C, or D');
+            }
         }
         
         // Validate class level
@@ -214,17 +271,18 @@ function handlePost($db, $user) {
         $stmt = $db->prepare("
             INSERT INTO questions (
                 question_text, option_a, option_b, option_c, option_d,
-                correct_answer, subject_id, class_level, term_id, session_id, teacher_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                correct_answer, question_type, subject_id, class_level, term_id, session_id, teacher_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
             $input['question_text'],
             $input['option_a'],
             $input['option_b'],
-            $input['option_c'],
-            $input['option_d'],
+            $question_type === 'true_false' ? null : $input['option_c'],
+            $question_type === 'true_false' ? null : $input['option_d'],
             $input['correct_answer'],
+            $question_type,
             $input['subject_id'],
             $input['class_level'],
             $input['term_id'],
@@ -313,52 +371,67 @@ function handlePut($db, $user) {
             Response::validationError('Invalid JSON input');
         }
         
-        // Check if question exists
-        $check_stmt = $db->prepare("SELECT id FROM questions WHERE id = ?");
+        // Check if question exists and get current data
+        $check_stmt = $db->prepare("SELECT id, question_type FROM questions WHERE id = ?");
         $check_stmt->execute([$question_id]);
+        $current_question = $check_stmt->fetch();
         
-        if (!$check_stmt->fetch()) {
+        if (!$current_question) {
             Response::notFound('Question not found');
         }
         
-        // Prepare update fields
-        $update_fields = [];
-        $params = [];
+        // Determine question type (use current if not changing)
+        $question_type = $input['question_type'] ?? $current_question['question_type'];
         
-        if (isset($input['question_text'])) {
-            $update_fields[] = "question_text = ?";
-            $params[] = $input['question_text'];
+        if (!in_array($question_type, ['multiple_choice', 'true_false'])) {
+            Response::validationError('Question type must be multiple_choice or true_false');
         }
         
-        // Update options if provided
-        if (isset($input['options']) && is_array($input['options'])) {
-            $correct_answer = null;
-            foreach ($input['options'] as $index => $option) {
-                if (isset($option['option_text'])) {
-                    $option_field = "option_" . chr(97 + $index); // a, b, c, d
-                    $update_fields[] = "$option_field = ?";
-                    $params[] = $option['option_text'];
-                    
-                    if ($option['is_correct'] ?? false) {
-                        $correct_answer = chr(65 + $index); // A, B, C, D
-                    }
-                }
-            }
+        // Validate required fields based on question type
+        if ($question_type === 'true_false') {
+            Response::validateRequired($input, [
+                'question_text', 'option_a', 'option_b', 'correct_answer'
+            ]);
             
-            if ($correct_answer) {
-                $update_fields[] = "correct_answer = ?";
-                $params[] = $correct_answer;
+            // For true/false, correct answer must be A or B
+            if (!in_array($input['correct_answer'], ['A', 'B'])) {
+                Response::validationError('For True/False questions, correct answer must be A or B');
+            }
+        } else {
+            Response::validateRequired($input, [
+                'question_text', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer'
+            ]);
+            
+            // For multiple choice, correct answer must be A, B, C, or D
+            if (!in_array($input['correct_answer'], ['A', 'B', 'C', 'D'])) {
+                Response::validationError('For Multiple Choice questions, correct answer must be A, B, C, or D');
             }
         }
         
-        if (!empty($update_fields)) {
-            $update_fields[] = "updated_at = CURRENT_TIMESTAMP";
-            $params[] = $question_id;
-            
-            $sql = "UPDATE questions SET " . implode(', ', $update_fields) . " WHERE id = ?";
-            $stmt = $db->prepare($sql);
-            $stmt->execute($params);
-        }
+        // Update question
+        $stmt = $db->prepare("
+            UPDATE questions SET 
+                question_text = ?,
+                option_a = ?,
+                option_b = ?,
+                option_c = ?,
+                option_d = ?,
+                correct_answer = ?,
+                question_type = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
+        
+        $stmt->execute([
+            $input['question_text'],
+            $input['option_a'],
+            $input['option_b'],
+            $question_type === 'true_false' ? null : $input['option_c'],
+            $question_type === 'true_false' ? null : $input['option_d'],
+            $input['correct_answer'],
+            $question_type,
+            $question_id
+        ]);
         
         Response::logRequest('admin/questions', 'PUT', $user['id']);
         Response::success('Question updated successfully');

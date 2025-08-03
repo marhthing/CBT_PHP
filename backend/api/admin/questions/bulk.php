@@ -49,11 +49,24 @@ try {
     foreach ($questions as $index => $question) {
         $question_errors = [];
         
-        // Required fields for each question
-        $required_question_fields = [
-            'question_text', 'option_a', 'option_b', 'option_c', 
-            'option_d', 'correct_answer'
-        ];
+        // Determine question type (default to multiple_choice if not specified)
+        $question_type = $question['question_type'] ?? 'multiple_choice';
+        
+        if (!in_array($question_type, ['multiple_choice', 'true_false'])) {
+            $question_errors[] = "Question " . ($index + 1) . ": Question type must be multiple_choice or true_false";
+        }
+        
+        // Required fields based on question type
+        if ($question_type === 'true_false') {
+            $required_question_fields = [
+                'question_text', 'option_a', 'option_b', 'correct_answer'
+            ];
+        } else {
+            $required_question_fields = [
+                'question_text', 'option_a', 'option_b', 'option_c', 
+                'option_d', 'correct_answer'
+            ];
+        }
         
         foreach ($required_question_fields as $field) {
             if (!isset($question[$field]) || trim($question[$field]) === '') {
@@ -61,12 +74,18 @@ try {
             }
         }
         
-
-        
-        // Validate correct answer
-        if (isset($question['correct_answer']) && 
-            !in_array(strtoupper($question['correct_answer']), ['A', 'B', 'C', 'D'])) {
-            $question_errors[] = "Question " . ($index + 1) . ": Correct answer must be A, B, C, or D";
+        // Validate correct answer based on question type
+        if (isset($question['correct_answer'])) {
+            $correct_answer = strtoupper($question['correct_answer']);
+            if ($question_type === 'true_false') {
+                if (!in_array($correct_answer, ['A', 'B'])) {
+                    $question_errors[] = "Question " . ($index + 1) . ": For True/False questions, correct answer must be A or B";
+                }
+            } else {
+                if (!in_array($correct_answer, ['A', 'B', 'C', 'D'])) {
+                    $question_errors[] = "Question " . ($index + 1) . ": For Multiple Choice questions, correct answer must be A, B, C, or D";
+                }
+            }
         }
         
         if (empty($question_errors)) {
@@ -74,9 +93,10 @@ try {
                 'question_text' => trim($question['question_text']),
                 'option_a' => trim($question['option_a']),
                 'option_b' => trim($question['option_b']),
-                'option_c' => trim($question['option_c']),
-                'option_d' => trim($question['option_d']),
-                'correct_answer' => strtoupper(trim($question['correct_answer']))
+                'option_c' => $question_type === 'true_false' ? null : trim($question['option_c']),
+                'option_d' => $question_type === 'true_false' ? null : trim($question['option_d']),
+                'correct_answer' => strtoupper(trim($question['correct_answer'])),
+                'question_type' => $question_type
             ];
         } else {
             $errors = array_merge($errors, $question_errors);
@@ -99,8 +119,8 @@ try {
         $stmt = $db->prepare("
             INSERT INTO questions (
                 question_text, option_a, option_b, option_c, option_d,
-                correct_answer, subject_id, class_level, term_id, session_id, teacher_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                correct_answer, question_type, subject_id, class_level, term_id, session_id, teacher_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $created_count = 0;
@@ -112,6 +132,7 @@ try {
                 $question['option_c'],
                 $question['option_d'],
                 $question['correct_answer'],
+                $question['question_type'],
                 $subject_id,
                 $class_level,
                 $term_id,

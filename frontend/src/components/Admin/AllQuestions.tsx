@@ -60,6 +60,7 @@ export default function AllQuestions() {
   const [showManualCreate, setShowManualCreate] = useState(false)
   const [manualQuestions, setManualQuestions] = useState<Array<{
     question_text: string
+    question_type: string
     option_a: string
     option_b: string
     option_c: string
@@ -99,7 +100,7 @@ export default function AllQuestions() {
   const fetchQuestionStats = useCallback(async () => {
     try {
       const response = await api.get('/admin/questions?stats=true')
-      setStats(response.data.data?.stats || null)
+      setStats(response.data.data || null)
     } catch (error: any) {
       console.error('Failed to fetch question stats:', error)
     }
@@ -155,6 +156,7 @@ export default function AllQuestions() {
     try {
       const response = await api.put(`/admin/questions/${updatedQuestion.id}`, {
         question_text: updatedQuestion.question_text,
+        question_type: updatedQuestion.question_type,
         option_a: updatedQuestion.option_a,
         option_b: updatedQuestion.option_b,
         option_c: updatedQuestion.option_c,
@@ -276,6 +278,7 @@ export default function AllQuestions() {
     if (manualQuestions.length === 0) {
       setManualQuestions([{
         question_text: '',
+        question_type: 'multiple_choice',
         option_a: '',
         option_b: '',
         option_c: '',
@@ -288,6 +291,7 @@ export default function AllQuestions() {
   const addAnotherQuestion = useCallback(() => {
     setManualQuestions(prev => [...prev, {
       question_text: '',
+      question_type: 'multiple_choice',
       option_a: '',
       option_b: '',
       option_c: '',
@@ -317,8 +321,25 @@ export default function AllQuestions() {
     // Validate all questions
     for (let i = 0; i < manualQuestions.length; i++) {
       const q = manualQuestions[i]
-      if (!q.question_text || !q.option_a || !q.option_b || !q.option_c || !q.option_d) {
-        setError(`Question ${i + 1} is incomplete. Please fill all fields.`)
+      if (!q.question_text || !q.option_a || !q.option_b) {
+        setError(`Question ${i + 1} is incomplete. Please fill required fields.`)
+        return
+      }
+      
+      // For multiple choice, also validate options C and D
+      if (q.question_type === 'multiple_choice' && (!q.option_c || !q.option_d)) {
+        setError(`Question ${i + 1} is Multiple Choice but missing options C or D.`)
+        return
+      }
+      
+      // Validate correct answer based on question type
+      if (q.question_type === 'true_false' && !['A', 'B'].includes(q.correct_answer)) {
+        setError(`Question ${i + 1} is True/False but correct answer is not A or B.`)
+        return
+      }
+      
+      if (q.question_type === 'multiple_choice' && !['A', 'B', 'C', 'D'].includes(q.correct_answer)) {
+        setError(`Question ${i + 1} is Multiple Choice but correct answer is not A, B, C, or D.`)
         return
       }
     }
@@ -377,19 +398,19 @@ export default function AllQuestions() {
     },
     {
       title: 'Subjects',
-      value: Object.keys(stats?.by_subject || {}).length,
+      value: stats?.subjects_count || 0,
       icon: BarChart3,
       color: '#8b5cf6'
     },
     {
       title: 'Class Levels',
-      value: Object.keys(stats?.by_class || {}).length,
+      value: stats?.class_levels_count || 0,
       icon: GraduationCap,
       color: '#10b981'
     },
     {
       title: 'Question Types',
-      value: Object.keys(stats?.by_type || {}).length,
+      value: stats?.question_types_count || 0,
       icon: FileText,
       color: '#f59e0b'
     }
@@ -684,7 +705,6 @@ export default function AllQuestions() {
             <option value="">All Types</option>
             <option value="multiple_choice">Multiple Choice</option>
             <option value="true_false">True/False</option>
-            <option value="short_answer">Short Answer</option>
           </select>
         </div>
       </div>
@@ -771,6 +791,16 @@ export default function AllQuestions() {
                       }}>
                         {question.subject_name} • {question.class_level}
                       </span>
+                      <span style={{
+                        fontSize: '12px',
+                        fontWeight: '500',
+                        color: question.question_type === 'true_false' ? '#7c3aed' : '#059669',
+                        background: question.question_type === 'true_false' ? '#f3f4f6' : '#ecfdf5',
+                        padding: '2px 6px',
+                        borderRadius: '4px'
+                      }}>
+                        {question.question_type === 'true_false' ? 'T/F' : 'MC'}
+                      </span>
                     </div>
                     <h4 style={{
                       fontSize: '16px',
@@ -830,11 +860,16 @@ export default function AllQuestions() {
 
                 <div style={{
                   display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gridTemplateColumns: question.question_type === 'true_false' ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(200px, 1fr))',
                   gap: '8px',
                   marginTop: '12px'
                 }}>
-                  {['A', 'B', 'C', 'D'].map(option => (
+                  {(question.question_type === 'true_false' ? ['A', 'B'] : ['A', 'B', 'C', 'D']).map(option => {
+                    const optionText = question[`option_${option.toLowerCase()}` as keyof Question] as string;
+                    if (!optionText && question.question_type === 'true_false' && (option === 'C' || option === 'D')) {
+                      return null; // Don't show empty C/D options for true/false
+                    }
+                    return (
                     <div
                       key={option}
                       style={{
@@ -857,7 +892,7 @@ export default function AllQuestions() {
                       <span style={{
                         color: question.correct_answer === option ? '#16a34a' : '#1f2937'
                       }}>
-                        {question[`option_${option.toLowerCase()}` as keyof Question] as string}
+                        {optionText}
                       </span>
                       {question.correct_answer === option && (
                         <span style={{
@@ -870,7 +905,8 @@ export default function AllQuestions() {
                         </span>
                       )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -957,7 +993,34 @@ export default function AllQuestions() {
                 />
               </div>
 
-              {['A', 'B', 'C', 'D'].map(option => (
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Question Type
+                </label>
+                <select
+                  value={editingQuestion.question_type}
+                  onChange={(e) => setEditingQuestion(prev => prev ? {...prev, question_type: e.target.value} : null)}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <option value="multiple_choice">Multiple Choice</option>
+                  <option value="true_false">True/False</option>
+                </select>
+              </div>
+
+              {(editingQuestion.question_type === 'true_false' ? ['A', 'B'] : ['A', 'B', 'C', 'D']).map(option => (
                 <div key={option}>
                   <label style={{
                     display: 'block',
@@ -970,7 +1033,7 @@ export default function AllQuestions() {
                   </label>
                   <input
                     type="text"
-                    value={editingQuestion[`option_${option.toLowerCase()}` as keyof Question] as string}
+                    value={editingQuestion[`option_${option.toLowerCase()}` as keyof Question] as string || ''}
                     onChange={(e) => setEditingQuestion(prev => prev ? {
                       ...prev,
                       [`option_${option.toLowerCase()}`]: e.target.value
@@ -1008,10 +1071,19 @@ export default function AllQuestions() {
                     backgroundColor: 'white'
                   }}
                 >
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                  <option value="C">C</option>
-                  <option value="D">D</option>
+                  {editingQuestion.question_type === 'true_false' ? (
+                    <>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </>
+                  )}
                 </select>
               </div>
 
@@ -1707,8 +1779,61 @@ export default function AllQuestions() {
                       />
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      {['A', 'B', 'C', 'D'].map(option => (
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: '4px'
+                      }}>
+                        Question Type *
+                      </label>
+                      <select
+                        value={question.question_type}
+                        onChange={(e) => updateManualQuestion(index, 'question_type', e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          fontSize: '14px'
+                        }}
+                      >
+                        <option value="multiple_choice">Multiple Choice</option>
+                        <option value="true_false">True/False</option>
+                      </select>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: question.question_type === 'true_false' ? '1fr 1fr' : '1fr 1fr', gap: '12px' }}>
+                      {question.question_type === 'true_false' ? 
+                        ['A', 'B'].map(option => (
+                        <div key={option}>
+                          <label style={{
+                            display: 'block',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            color: '#374151',
+                            marginBottom: '4px'
+                          }}>
+                            Option {option} *
+                          </label>
+                          <input
+                            type="text"
+                            value={question[`option_${option.toLowerCase()}` as keyof typeof question]}
+                            onChange={(e) => updateManualQuestion(index, `option_${option.toLowerCase()}`, e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '8px',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '6px',
+                              fontSize: '14px'
+                            }}
+                            placeholder={`Option ${option}`}
+                          />
+                        </div>
+                      )) :
+                        ['A', 'B', 'C', 'D'].map(option => (
                         <div key={option}>
                           <label style={{
                             display: 'block',
@@ -1757,10 +1882,19 @@ export default function AllQuestions() {
                           fontSize: '14px'
                         }}
                       >
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
+                        {question.question_type === 'true_false' ? (
+                          <>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                          </>
+                        )}
                       </select>
                     </div>
                   </div>
