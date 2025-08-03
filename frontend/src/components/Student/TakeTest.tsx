@@ -62,7 +62,11 @@ export default function TakeTest() {
     const hideBottomNav = testPreview || testStarted
     const bottomNav = document.querySelector('#mobile-bottom-nav')
     if (bottomNav) {
-      bottomNav.style.display = hideBottomNav ? 'none' : 'flex'
+      if (hideBottomNav) {
+        bottomNav.style.display = 'none'
+      } else {
+        bottomNav.style.display = 'flex'
+      }
     }
 
     // Cleanup on unmount
@@ -217,21 +221,21 @@ export default function TakeTest() {
           </div>
         </div>
 
-        <div className="p-4 sm:p-6">
-          <div className="max-w-2xl mx-auto">
+        <div className="p-4 sm:p-6 pb-20 sm:pb-6">
+          <div className="max-w-4xl mx-auto">
             {/* Test Details Card */}
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200 mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">
                 {testPreview.title}
               </h2>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6">
+                <div className="space-y-3 sm:space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Subject
                     </label>
-                    <div className="text-lg font-semibold text-gray-900">
+                    <div className="text-base sm:text-lg font-semibold text-gray-900">
                       {testPreview.subject}
                     </div>
                   </div>
@@ -240,19 +244,19 @@ export default function TakeTest() {
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Class Level
                     </label>
-                    <div className="text-lg font-semibold text-gray-900">
+                    <div className="text-base sm:text-lg font-semibold text-gray-900">
                       {testPreview.class_level}
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Duration
                     </label>
-                    <div className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      <Clock size={20} />
+                    <div className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <Clock size={18} className="sm:w-5 sm:h-5" />
                       {testPreview.duration_minutes} minutes
                     </div>
                   </div>
@@ -261,8 +265,8 @@ export default function TakeTest() {
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Questions
                     </label>
-                    <div className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                      <FileText size={20} />
+                    <div className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <FileText size={18} className="sm:w-5 sm:h-5" />
                       {testPreview.question_count} questions
                     </div>
                   </div>
@@ -323,12 +327,12 @@ export default function TakeTest() {
           </div>
         </div>
 
-        <div className="p-4 sm:p-6">
-          <div className="max-w-md mx-auto">
-            <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+        <div className="p-4 sm:p-6 pb-20 sm:pb-6">
+          <div className="max-w-lg mx-auto">
+            <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200">
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-                  <div className="text-red-800">{error}</div>
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                  <div className="text-red-800 text-sm sm:text-base">{error}</div>
                 </div>
               )}
 
@@ -341,7 +345,7 @@ export default function TakeTest() {
                   value={inputTestCode}
                   onChange={(e) => setInputTestCode(e.target.value.toUpperCase())}
                   placeholder="Enter test code (e.g., TEST123)"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg text-center text-lg font-semibold tracking-wider uppercase focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-lg text-center text-base sm:text-lg font-semibold tracking-wider uppercase focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   onKeyPress={(e) => e.key === 'Enter' && validateTestCode()}
                 />
               </div>
@@ -349,7 +353,7 @@ export default function TakeTest() {
               <button
                 onClick={validateTestCode}
                 disabled={loading || !inputTestCode.trim()}
-                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-3 px-6 rounded-lg font-semibold transition-colors"
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white py-3 px-4 sm:px-6 rounded-lg font-semibold transition-colors text-sm sm:text-base"
               >
                 {loading ? 'Validating...' : 'Continue'}
               </button>
@@ -376,20 +380,20 @@ export default function TakeTest() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Test Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200 p-4 sticky top-0 z-10">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex-1">
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900">
+      <div className="bg-white shadow-sm border-b border-gray-200 p-3 sm:p-4 sticky top-0 z-10">
+        <div className="flex items-start sm:items-center justify-between mb-3 sm:mb-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 truncate">
               {testData.title}
             </h1>
-            <div className="text-sm text-gray-600">
+            <div className="text-xs sm:text-sm text-gray-600 truncate">
               {testData.subject} • {testData.class_level}
             </div>
           </div>
 
-          <div className="text-right">
+          <div className="text-right ml-3">
             <div 
-              className="text-xl sm:text-2xl font-bold mb-1"
+              className="text-lg sm:text-xl lg:text-2xl font-bold mb-1"
               style={{ color: getTimeColor() }}
             >
               {formatTime(timeLeft)}
@@ -406,17 +410,17 @@ export default function TakeTest() {
           />
         </div>
 
-        <div className="flex justify-between text-sm text-gray-600">
+        <div className="flex justify-between text-xs sm:text-sm text-gray-600">
           <span>Question {currentQuestion + 1} of {testData.questions.length}</span>
           <span>{answeredCount} answered</span>
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 pb-24">
-        <div className="max-w-4xl mx-auto">
+      <div className="p-4 sm:p-6 pb-24 sm:pb-6">
+        <div className="max-w-5xl mx-auto">
           {/* Question Card */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 mb-6">
-            <div className="text-lg sm:text-xl font-semibold text-gray-900 mb-6 leading-relaxed">
+          <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200 mb-6">
+            <div className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 leading-relaxed">
               {question.question_text}
             </div>
 
@@ -434,20 +438,20 @@ export default function TakeTest() {
                   <button
                     key={letter}
                     onClick={() => selectAnswer(question.id, letter)}
-                    className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-all ${
+                    className={`w-full flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border-2 transition-all ${
                       isSelected 
                         ? 'border-blue-500 bg-blue-50 text-blue-900' 
                         : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                       isSelected 
                         ? 'bg-blue-500 text-white' 
                         : 'bg-gray-200 text-gray-600'
                     }`}>
                       {letter}
                     </div>
-                    <span className="text-left flex-1">{optionText}</span>
+                    <span className="text-left flex-1 text-sm sm:text-base">{optionText}</span>
                   </button>
                 )
               })}
@@ -455,32 +459,33 @@ export default function TakeTest() {
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-3 sm:gap-4">
             <button
               onClick={prevQuestion}
               disabled={currentQuestion === 0}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-sm sm:text-base"
             >
-              <ArrowLeft size={16} />
-              Previous
+              <ArrowLeft size={14} className="sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Previous</span>
+              <span className="sm:hidden">Prev</span>
             </button>
 
             {currentQuestion === testData.questions.length - 1 ? (
               <button
                 onClick={submitTest}
                 disabled={submitting}
-                className="flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors"
+                className="flex items-center gap-1 sm:gap-2 px-4 sm:px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white rounded-lg font-semibold transition-colors text-sm sm:text-base"
               >
-                <Send size={16} />
+                <Send size={14} className="sm:w-4 sm:h-4" />
                 {submitting ? 'Submitting...' : 'Submit Test'}
               </button>
             ) : (
               <button
                 onClick={nextQuestion}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm sm:text-base"
               >
                 Next
-                <ArrowRight size={16} />
+                <ArrowRight size={14} className="sm:w-4 sm:h-4" />
               </button>
             )}
           </div>
