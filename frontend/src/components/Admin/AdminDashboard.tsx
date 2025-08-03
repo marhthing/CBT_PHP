@@ -66,6 +66,7 @@ export default function AdminDashboard() {
     memoryUsage: '24.5 MB',
     cpuUsage: '~12%'
   })
+  const [apiResponseTime, setApiResponseTime] = useState('< 200ms')
 
   // Memoized fetch function with retry logic
   const fetchDashboardData = useCallback(async (retryCount = 0) => {
@@ -107,26 +108,44 @@ export default function AdminDashboard() {
     fetchDashboardData()
   }, [fetchDashboardData])
 
-  // Live metrics update every 30 seconds
+  // Live server time updates every second
   useEffect(() => {
-    const updateLiveMetrics = () => {
-      setLiveMetrics({
-        currentTime: new Date().toLocaleTimeString(),
+    const updateServerTime = () => {
+      setLiveMetrics(prev => ({
+        ...prev,
+        currentTime: new Date().toLocaleTimeString()
+      }))
+    }
+
+    // Update server time immediately
+    updateServerTime()
+    
+    // Then update every second
+    const timeInterval = setInterval(updateServerTime, 1000)
+    
+    return () => clearInterval(timeInterval)
+  }, [])
+
+  // Live metrics update every 30 seconds (except time)
+  useEffect(() => {
+    const updateOtherMetrics = () => {
+      setLiveMetrics(prev => ({
+        ...prev,
         uptime: calculateUptime(),
         memoryUsage: healthData?.memory_usage ? 
           `${(healthData.memory_usage / 1024 / 1024).toFixed(1)} MB` : 
           `${(Math.random() * 30 + 20).toFixed(1)} MB`, // Simulate changing memory
         cpuUsage: `~${Math.floor(Math.random() * 20 + 5)}%` // Simulate changing CPU
-      })
+      }))
     }
 
     // Update immediately
-    updateLiveMetrics()
+    updateOtherMetrics()
     
     // Then update every 30 seconds
-    const interval = setInterval(updateLiveMetrics, 30000)
+    const metricsInterval = setInterval(updateOtherMetrics, 30000)
     
-    return () => clearInterval(interval)
+    return () => clearInterval(metricsInterval)
   }, [healthData])
 
   const calculateUptime = useCallback(() => {
@@ -136,6 +155,40 @@ export default function AdminDashboard() {
     const hours = Math.floor(diffMs / (1000 * 60 * 60))
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
     return `${hours}h ${minutes}m`
+  }, [])
+
+  // API Response Time monitoring every 2 seconds
+  useEffect(() => {
+    const measureApiResponseTime = async () => {
+      try {
+        const startTime = performance.now()
+        // Use a lightweight endpoint for ping
+        await api.get('/health')
+        const endTime = performance.now()
+        const responseTime = Math.round(endTime - startTime)
+        
+        if (responseTime < 100) {
+          setApiResponseTime(`${responseTime}ms`)
+        } else if (responseTime < 200) {
+          setApiResponseTime(`${responseTime}ms`)
+        } else if (responseTime < 500) {
+          setApiResponseTime(`${responseTime}ms`)
+        } else {
+          setApiResponseTime(`${responseTime}ms`)
+        }
+      } catch (error) {
+        // If API is unreachable, show error state
+        setApiResponseTime('Error')
+      }
+    }
+
+    // Measure immediately
+    measureApiResponseTime()
+    
+    // Then measure every 2 seconds
+    const apiInterval = setInterval(measureApiResponseTime, 2000)
+    
+    return () => clearInterval(apiInterval)
   }, [])
 
   const quickToggleActivation = useCallback(async (testCodeId: number, isActivated: boolean) => {
@@ -976,10 +1029,12 @@ export default function AdminDashboard() {
                 <div style={{
                   fontSize: '20px',
                   fontWeight: 'bold',
-                  color: '#3b82f6',
+                  color: apiResponseTime === 'Error' ? '#ef4444' : 
+                        parseInt(apiResponseTime) > 500 ? '#f59e0b' :
+                        parseInt(apiResponseTime) > 200 ? '#8b5cf6' : '#10b981',
                   marginBottom: '4px'
                 }}>
-                  {healthData ? '< 200ms' : `${Math.floor(Math.random() * 100 + 120)}ms`}
+                  {apiResponseTime}
                 </div>
                 <div style={{
                   fontSize: '12px',
