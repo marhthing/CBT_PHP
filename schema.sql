@@ -858,9 +858,9 @@ SET row_security = off;
 --
 
 COPY public.users (id, username, email, reg_number, password, role, full_name, is_active, created_at, last_login, current_term, current_session) FROM stdin;
-2	teacher1	teacher1@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	teacher	John Doe	t	2025-08-03 11:46:51.454306	\N	First	2024/2025
-3	\N	student1@sfgs.edu.ng	2023001	$2y$10$N79EW3YvnfXujdvcy71GuOry7M4AKRDrL3SxYfZxgyDIJqMFHceBS	student	Jane Smith	t	2025-08-03 11:46:51.454306	\N	First	2024/2025
-1	admin	admin@sfgs.edu.ng	\N	$2y$10$XO4C03pHWyQ3ZE44D..aTuXReKbIasF9lQE4EyA3nd9Xgg2GbcaJK	admin	System Administrator	t	2025-08-03 11:46:51.454306	2025-08-03 11:48:08.781647	First	2024/2025
+2       teacher1        teacher1@sfgs.edu.ng    \N      $2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i    teacher John Doe        t       2025-08-03 11:46:51.454306      \N      First   2024/2025
+3       \N      student1@sfgs.edu.ng    2023001 $2y$10$N79EW3YvnfXujdvcy71GuOry7M4AKRDrL3SxYfZxgyDIJqMFHceBS    student Jane Smith      t       2025-08-03 11:46:51.454306      \N      First   2024/2025
+1       admin   admin@sfgs.edu.ng       \N      $2y$10$XO4C03pHWyQ3ZE44D..aTuXReKbIasF9lQE4EyA3nd9Xgg2GbcaJK    admin   System Administrator    t       2025-08-03 11:46:51.454306      2025-08-03 11:48:08.781647      First   2024/2025
 \.
 
 
@@ -869,6 +869,79 @@ COPY public.users (id, username, email, reg_number, password, role, full_name, i
 --
 
 SELECT pg_catalog.setval('public.users_id_seq', 3, true);
+
+
+--
+-- Data for Name: terms; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.terms (id, name, display_order, is_active, created_at) VALUES
+(1, 'First Term', 1, true, CURRENT_TIMESTAMP),
+(2, 'Second Term', 2, true, CURRENT_TIMESTAMP),
+(3, 'Third Term', 3, true, CURRENT_TIMESTAMP);
+
+--
+-- Data for Name: sessions; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.sessions (id, name, start_date, end_date, is_current, is_active, created_at) VALUES
+(1, '2023/2024', '2023-09-01', '2024-07-31', false, true, CURRENT_TIMESTAMP),
+(2, '2024/2025', '2024-09-01', '2025-07-31', true, true, CURRENT_TIMESTAMP),
+(3, '2025/2026', '2025-09-01', '2026-07-31', false, true, CURRENT_TIMESTAMP);
+
+--
+-- Data for Name: subjects; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.subjects (id, name, code, description, is_active, created_at) VALUES
+(1, 'Mathematics', 'MATH', 'Mathematics subject covering algebra, geometry, and calculus', true, CURRENT_TIMESTAMP),
+(2, 'English Language', 'ENG', 'English language and literature', true, CURRENT_TIMESTAMP),
+(3, 'Physics', 'PHY', 'Physics - study of matter, energy, and their interactions', true, CURRENT_TIMESTAMP),
+(4, 'Chemistry', 'CHEM', 'Chemistry - study of matter and chemical reactions', true, CURRENT_TIMESTAMP),
+(5, 'Biology', 'BIO', 'Biology - study of living organisms', true, CURRENT_TIMESTAMP),
+(6, 'Geography', 'GEO', 'Geography - study of Earth and its features', true, CURRENT_TIMESTAMP),
+(7, 'History', 'HIST', 'History - study of past events', true, CURRENT_TIMESTAMP),
+(8, 'Economics', 'ECON', 'Economics - study of production, distribution, and consumption of goods', true, CURRENT_TIMESTAMP),
+(9, 'Government', 'GOV', 'Government - study of political systems and governance', true, CURRENT_TIMESTAMP),
+(10, 'Literature', 'LIT', 'Literature - study of written works', true, CURRENT_TIMESTAMP),
+(11, 'Further Mathematics', 'FMATH', 'Advanced mathematics topics', true, CURRENT_TIMESTAMP),
+(12, 'Computer Science', 'CS', 'Computer science and programming', true, CURRENT_TIMESTAMP),
+(13, 'Agricultural Science', 'AGRIC', 'Agricultural science and farming practices', true, CURRENT_TIMESTAMP),
+(14, 'Technical Drawing', 'TD', 'Technical drawing and engineering graphics', true, CURRENT_TIMESTAMP),
+(15, 'French', 'FR', 'French language', true, CURRENT_TIMESTAMP);
+
+--
+-- Data for Name: teacher_assignments; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+INSERT INTO public.teacher_assignments (id, teacher_id, subject_id, class_level, term_id, session_id, created_at) VALUES
+(1, 2, 1, 'SS1', 1, 2, CURRENT_TIMESTAMP),
+(2, 2, 1, 'SS2', 1, 2, CURRENT_TIMESTAMP),
+(3, 2, 3, 'SS1', 1, 2, CURRENT_TIMESTAMP);
+
+--
+-- Name: terms_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.terms_id_seq', 3, true);
+
+--
+-- Name: sessions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.sessions_id_seq', 3, true);
+
+--
+-- Name: subjects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.subjects_id_seq', 15, true);
+
+--
+-- Name: teacher_assignments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.teacher_assignments_id_seq', 3, true);
 
 
 --

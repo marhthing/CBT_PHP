@@ -5,6 +5,12 @@ This project is a Computer-Based Testing (CBT) Portal designed for secondary sch
 ## Migration Status: COMPLETED (August 3, 2025)
 Successfully migrated from Replit Agent to standard Replit environment with PostgreSQL database integration. Database schema deployed with proper password hashing and all authentication verified working.
 
+### Latest Data Setup (August 3, 2025 - 12:48 PM)
+✓ **Complete Sample Data**: Added 15 subjects, 3 terms, 3 sessions, and 3 teacher assignments
+✓ **Updated Schema File**: schema.sql now includes all sample data for fresh installations
+✓ **Database Verified**: All tables populated with proper relationships and foreign keys
+✓ **Application Ready**: Frontend and backend fully operational with complete data structure
+
 ### Latest Migration Update (August 3, 2025 - 11:54 AM)
 ✓ **Fresh Database Setup**: Created new PostgreSQL database with complete schema
 ✓ **Secure Password Hashing**: All user passwords properly hashed using PHP password_hash()
