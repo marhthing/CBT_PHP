@@ -1294,11 +1294,18 @@ export default function TestCodeManager() {
                 Number of Questions *
               </label>
               <input
-                type="number"
-                min="1"
-                max={availableQuestions || 50}
+                type="text"
                 value={createForm.total_questions}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, total_questions: parseInt(e.target.value) || 1 }))}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '')
+                  const num = parseInt(value) || 0
+                  if (num >= 1 && num <= (availableQuestions || 50)) {
+                    setCreateForm(prev => ({ ...prev, total_questions: num }))
+                  } else if (value === '') {
+                    setCreateForm(prev => ({ ...prev, total_questions: 1 }))
+                  }
+                }}
+                placeholder="Enter number of questions"
                 style={{
                   width: '100%',
                   padding: '10px 12px',
@@ -1330,11 +1337,18 @@ export default function TestCodeManager() {
                 Score per Question *
               </label>
               <input
-                type="number"
-                min="1"
-                max="10"
+                type="text"
                 value={createForm.score_per_question}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, score_per_question: parseInt(e.target.value) || 1 }))}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '')
+                  const num = parseInt(value) || 0
+                  if (num >= 1 && num <= 10) {
+                    setCreateForm(prev => ({ ...prev, score_per_question: num }))
+                  } else if (value === '') {
+                    setCreateForm(prev => ({ ...prev, score_per_question: 1 }))
+                  }
+                }}
+                placeholder="Enter score per question (1-10)"
                 style={{
                   width: '100%',
                   padding: '10px 12px',
@@ -1364,11 +1378,18 @@ export default function TestCodeManager() {
                 Number of Codes *
               </label>
               <input
-                type="number"
-                min="1"
-                max="100"
+                type="text"
                 value={createForm.count}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, count: parseInt(e.target.value) || 1 }))}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '')
+                  const num = parseInt(value) || 0
+                  if (num >= 1 && num <= 100) {
+                    setCreateForm(prev => ({ ...prev, count: num }))
+                  } else if (value === '') {
+                    setCreateForm(prev => ({ ...prev, count: 1 }))
+                  }
+                }}
+                placeholder="Enter number of codes (1-100)"
                 style={{
                   width: '100%',
                   padding: '10px 12px',
