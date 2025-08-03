@@ -1,8 +1,8 @@
 -- PostgreSQL Database Schema for CBT Portal
--- Generated: August 3, 2025 at 4:13 PM
+-- Generated: August 3, 2025 at 5:06 PM
 -- Extracted from database: neondb
 -- Structure: All tables
--- Data: users table only
+-- Data: users, class_levels, sessions, terms, subjects tables only
 
 --
 -- PostgreSQL database dump
@@ -65,6 +65,8 @@ ALTER TABLE IF EXISTS ONLY public.subjects DROP CONSTRAINT IF EXISTS subjects_co
 ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_pkey;
 ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_name_key;
 ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_pkey;
+ALTER TABLE IF EXISTS ONLY public.class_levels DROP CONSTRAINT IF EXISTS class_levels_pkey;
+ALTER TABLE IF EXISTS ONLY public.class_levels DROP CONSTRAINT IF EXISTS class_levels_name_key;
 ALTER TABLE IF EXISTS public.users ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.test_results ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.test_codes ALTER COLUMN id DROP DEFAULT;
@@ -74,6 +76,7 @@ ALTER TABLE IF EXISTS public.teacher_assignments ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.subjects ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.sessions ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.questions ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.class_levels ALTER COLUMN id DROP DEFAULT;
 DROP SEQUENCE IF EXISTS public.users_id_seq;
 DROP TABLE IF EXISTS public.users;
 DROP SEQUENCE IF EXISTS public.test_results_id_seq;
@@ -92,9 +95,47 @@ DROP SEQUENCE IF EXISTS public.sessions_id_seq;
 DROP TABLE IF EXISTS public.sessions;
 DROP SEQUENCE IF EXISTS public.questions_id_seq;
 DROP TABLE IF EXISTS public.questions;
+DROP SEQUENCE IF EXISTS public.class_levels_id_seq;
+DROP TABLE IF EXISTS public.class_levels;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: class_levels; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.class_levels (
+    id integer NOT NULL,
+    name character varying(50) NOT NULL,
+    display_name character varying(100) NOT NULL,
+    display_order integer NOT NULL,
+    level_type character varying(20) NOT NULL,
+    is_active boolean DEFAULT true,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT class_levels_level_type_check CHECK (((level_type)::text = ANY ((ARRAY['junior'::character varying, 'senior'::character varying])::text[])))
+);
+
+
+--
+-- Name: class_levels_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.class_levels_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: class_levels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.class_levels_id_seq OWNED BY public.class_levels.id;
+
 
 --
 -- Name: questions; Type: TABLE; Schema: public; Owner: -
@@ -442,6 +483,13 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
+-- Name: class_levels id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.class_levels ALTER COLUMN id SET DEFAULT nextval('public.class_levels_id_seq'::regclass);
+
+
+--
 -- Name: questions id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -502,6 +550,22 @@ ALTER TABLE ONLY public.test_results ALTER COLUMN id SET DEFAULT nextval('public
 --
 
 ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- Name: class_levels class_levels_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.class_levels
+    ADD CONSTRAINT class_levels_name_key UNIQUE (name);
+
+
+--
+-- Name: class_levels class_levels_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.class_levels
+    ADD CONSTRAINT class_levels_pkey PRIMARY KEY (id);
 
 
 --
@@ -871,9 +935,9 @@ SET row_security = off;
 --
 
 COPY public.users (id, username, email, reg_number, password, role, full_name, is_active, created_at, last_login, current_term, current_session) FROM stdin;
-2	teacher1	teacher1@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	teacher	John Doe	t	2025-08-03 11:46:51.454306	2025-08-03 15:27:36.278881	First	2024/2025
-1	admin	admin@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	admin	System Administrator	t	2025-08-03 11:46:51.454306	2025-08-03 16:01:20.533663	First	2024/2025
-3	2023001	student1@sfgs.edu.ng	2023001	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	student	Jane Smith	t	2025-08-03 11:46:51.454306	2025-08-03 16:05:56.424404	First	2024/2025
+2	teacher1	teacher1@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	teacher	John Doe	t	2025-08-03 11:46:51.454306	2025-08-03 16:36:37.894875	First	2024/2025
+1	admin	admin@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	admin	System Administrator	t	2025-08-03 11:46:51.454306	2025-08-03 16:38:39.337973	First	2024/2025
+3	2023001	student1@sfgs.edu.ng	2023001	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	student	Jane Smith	t	2025-08-03 11:46:51.454306	2025-08-03 16:41:12.677737	First	2024/2025
 \.
 
 
@@ -882,6 +946,201 @@ COPY public.users (id, username, email, reg_number, password, role, full_name, i
 --
 
 SELECT pg_catalog.setval('public.users_id_seq', 3, true);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+
+--
+-- Data for Name: class_levels; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.9
+-- Dumped by pg_dump version 16.9
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Data for Name: class_levels; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.class_levels (id, name, display_name, display_order, level_type, is_active, created_at) FROM stdin;
+1	JSS1	JSS 1	1	junior	t	2025-08-03 16:24:08.784969
+2	JSS2	JSS 2	2	junior	t	2025-08-03 16:24:08.784969
+3	JSS3	JSS 3	3	junior	t	2025-08-03 16:24:08.784969
+6	SS3	SSS 3	6	senior	t	2025-08-03 16:24:08.784969
+4	SS1	SSS 1	4	senior	t	2025-08-03 16:24:08.784969
+5	SS2	SSS 2	5	senior	t	2025-08-03 16:24:08.784969
+\.
+
+
+--
+-- Name: class_levels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.class_levels_id_seq', 6, true);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+
+--
+-- Data for Name: sessions; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.9
+-- Dumped by pg_dump version 16.9
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Data for Name: sessions; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.sessions (id, name, start_date, end_date, is_current, is_active, created_at) FROM stdin;
+1	2023/2024	2023-09-01	2024-08-31	f	t	2025-08-03 16:23:19.029861
+2	2024/2025	2024-09-01	2025-08-31	t	t	2025-08-03 16:23:19.029861
+3	2025/2026	2025-09-01	2026-08-31	f	t	2025-08-03 16:23:19.029861
+\.
+
+
+--
+-- Name: sessions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.sessions_id_seq', 3, true);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+
+--
+-- Data for Name: terms; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.9
+-- Dumped by pg_dump version 16.9
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Data for Name: terms; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.terms (id, name, display_order, is_active, created_at) FROM stdin;
+1	First Term	1	t	2025-08-03 16:23:17.091241
+2	Second Term	2	t	2025-08-03 16:23:17.091241
+3	Third Term	3	t	2025-08-03 16:23:17.091241
+\.
+
+
+--
+-- Name: terms_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.terms_id_seq', 3, true);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+
+--
+-- Data for Name: subjects; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.9
+-- Dumped by pg_dump version 16.9
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Data for Name: subjects; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.subjects (id, name, code, description, is_active, created_at) FROM stdin;
+1	Mathematics	MATH	Core Mathematics including Algebra, Geometry, and Statistics	t	2025-08-03 16:23:03.281244
+2	English Language	ENG	English Language and Literature	t	2025-08-03 16:23:03.281244
+3	Physics	PHY	General Physics and Applied Physics	t	2025-08-03 16:23:03.281244
+4	Chemistry	CHEM	General Chemistry and Applied Chemistry	t	2025-08-03 16:23:03.281244
+5	Biology	BIO	General Biology and Applied Biology	t	2025-08-03 16:23:03.281244
+6	Geography	GEO	Physical and Human Geography	t	2025-08-03 16:23:03.281244
+7	History	HIST	Nigerian and World History	t	2025-08-03 16:23:03.281244
+8	Economics	ECON	Principles of Economics	t	2025-08-03 16:23:03.281244
+9	Government	GOV	Government and Civic Education	t	2025-08-03 16:23:03.281244
+10	Literature in English	LIT	Literature in English	t	2025-08-03 16:23:03.281244
+11	Agricultural Science	AGRIC	Agricultural Science and Practice	t	2025-08-03 16:23:03.281244
+12	Computer Science	CS	Computer Science and ICT	t	2025-08-03 16:23:03.281244
+13	Further Mathematics	FMATH	Advanced Mathematics	t	2025-08-03 16:23:03.281244
+14	Accounting	ACCT	Financial Accounting and Cost Accounting	t	2025-08-03 16:23:03.281244
+15	Commerce	COMM	Principles of Commerce	t	2025-08-03 16:23:03.281244
+\.
+
+
+--
+-- Name: subjects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.subjects_id_seq', 15, true);
 
 
 --
