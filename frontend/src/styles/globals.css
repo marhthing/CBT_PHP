@@ -309,3 +309,62 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+
+/* TeacherAllQuestions specific styles */
+.teacher-all-questions {
+  padding: 1.5rem;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+.teacher-all-questions .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.teacher-all-questions .search-filters {
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.teacher-all-questions .questions-table {
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.teacher-all-questions .modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 50;
+}
+
+.teacher-all-questions .modal-content {
+  background: white;
+  border-radius: 0.5rem;
+  max-width: 42rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .teacher-all-questions {
+    padding: 1rem;
+  }
+  
+  .teacher-all-questions .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

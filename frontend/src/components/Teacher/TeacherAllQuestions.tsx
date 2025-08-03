@@ -442,7 +442,7 @@ export default function TeacherAllQuestions() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="teacher-all-questions p-6 space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -481,7 +481,7 @@ export default function TeacherAllQuestions() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="stats-grid grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="bg-white rounded-lg border p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-blue-100">
@@ -533,7 +533,7 @@ export default function TeacherAllQuestions() {
       )}
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-lg border p-6">
+      <div className="search-filters bg-white rounded-lg border p-6">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-6 md:gap-4">
           <div className="md:col-span-2">
             <div className="relative">
@@ -595,7 +595,7 @@ export default function TeacherAllQuestions() {
       </div>
 
       {/* Questions Table */}
-      <div className="bg-white rounded-lg border overflow-hidden">
+      <div className="questions-table bg-white rounded-lg border overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50">
