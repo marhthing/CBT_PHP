@@ -1,5 +1,5 @@
 -- PostgreSQL Database Schema for CBT Portal
--- Generated: August 3, 2025 at 10:11 AM
+-- Generated: August 3, 2025 at 11:20 AM
 -- Extracted from database: neondb
 
 --
@@ -102,8 +102,8 @@ CREATE TABLE public.questions (
     question_text text NOT NULL,
     option_a text NOT NULL,
     option_b text NOT NULL,
-    option_c text NOT NULL,
-    option_d text NOT NULL,
+    option_c text,
+    option_d text,
     correct_answer character(1) NOT NULL,
     subject_id integer NOT NULL,
     class_level character varying(10) NOT NULL,
@@ -112,6 +112,7 @@ CREATE TABLE public.questions (
     teacher_id integer NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    question_type character varying(20) DEFAULT 'multiple_choice'::character varying NOT NULL,
     CONSTRAINT questions_correct_answer_check CHECK ((correct_answer = ANY (ARRAY['A'::bpchar, 'B'::bpchar, 'C'::bpchar, 'D'::bpchar])))
 );
 
@@ -408,7 +409,7 @@ CREATE TABLE public.users (
     last_login timestamp without time zone,
     current_term character varying(20) DEFAULT 'First'::character varying,
     current_session character varying(20) DEFAULT '2024/2025'::character varying,
-    CONSTRAINT users_role_check CHECK (((role)::text = ANY ((ARRAY['admin'::character varying, 'teacher'::character varying, 'student'::character varying])::text[])))
+    CONSTRAINT users_role_check CHECK (((role)::text = ANY (ARRAY[('admin'::character varying)::text, ('teacher'::character varying)::text, ('student'::character varying)::text])))
 );
 
 
