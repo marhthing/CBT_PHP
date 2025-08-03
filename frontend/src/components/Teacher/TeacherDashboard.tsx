@@ -288,7 +288,18 @@ export default function TeacherDashboard() {
                     }}>
                       {question.question_type === 'multiple_choice' ? 'MC' : 'T/F'}
                     </span>
-
+                    <span style={{
+                      background: question.difficulty_level === 'Easy' ? '#dcfce7' : 
+                                 question.difficulty_level === 'Medium' ? '#fef3c7' : '#fef2f2',
+                      color: question.difficulty_level === 'Easy' ? '#166534' : 
+                             question.difficulty_level === 'Medium' ? '#92400e' : '#dc2626',
+                      padding: '2px 4px',
+                      borderRadius: '3px',
+                      fontSize: '10px',
+                      fontWeight: '500'
+                    }}>
+                      {question.difficulty_level}
+                    </span>
                   </div>
                 </div>
               </div>
