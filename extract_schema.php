@@ -45,7 +45,7 @@ function extractDatabaseSchema() {
         }
         
         // Tables to extract data for
-        $data_tables = ['users', 'class_levels', 'sessions', 'terms'];
+        $data_tables = ['users', 'class_levels', 'sessions', 'terms', 'subjects'];
         $data_content = '';
         
         // Extract data for specified tables
