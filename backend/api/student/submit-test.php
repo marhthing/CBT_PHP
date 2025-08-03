@@ -98,29 +98,41 @@ try {
     $db->beginTransaction();
     
     try {
-        // Get correct answers for submitted questions
-        $question_ids = array_keys($answers);
-        $placeholders = implode(',', array_fill(0, count($question_ids), '?'));
+        // Get shuffled answer mappings from session
+        session_start();
+        $session_key = 'answer_mappings_' . $test['id'] . '_' . $user['id'];
+        $answer_mappings = $_SESSION[$session_key] ?? null;
         
-        $correct_stmt = $db->prepare("
-            SELECT id, correct_answer 
-            FROM questions 
-            WHERE id IN ($placeholders)
-        ");
+        if (!$answer_mappings) {
+            // Fallback to original method if session data is missing
+            $question_ids = array_keys($answers);
+            $placeholders = implode(',', array_fill(0, count($question_ids), '?'));
+            
+            $correct_stmt = $db->prepare("
+                SELECT id, correct_answer 
+                FROM questions 
+                WHERE id IN ($placeholders)
+            ");
+            
+            $correct_stmt->execute($question_ids);
+            $answer_mappings = $correct_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+        }
         
-        $correct_stmt->execute($question_ids);
-        $correct_answers = $correct_stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-        
-        // Calculate score using score_per_question
+        // Calculate score using score_per_question and shuffled answers
         $correct_count = 0;
         $total_questions = count($answers);
         $score_per_question = (int)$test['score_per_question'];
         
         foreach ($answers as $question_id => $student_answer) {
-            if (isset($correct_answers[$question_id]) && 
-                strtoupper($student_answer) === strtoupper($correct_answers[$question_id])) {
+            if (isset($answer_mappings[$question_id]) && 
+                strtoupper($student_answer) === strtoupper($answer_mappings[$question_id])) {
                 $correct_count++;
             }
+        }
+        
+        // Clean up session data after use
+        if (isset($_SESSION[$session_key])) {
+            unset($_SESSION[$session_key]);
         }
         
         $score = $correct_count * $score_per_question;
@@ -141,8 +153,8 @@ try {
         ");
         
         foreach ($answers as $question_id => $student_answer) {
-            $is_correct = isset($correct_answers[$question_id]) && 
-                         strtoupper($student_answer) === strtoupper($correct_answers[$question_id]);
+            $is_correct = isset($answer_mappings[$question_id]) && 
+                         strtoupper($student_answer) === strtoupper($answer_mappings[$question_id]);
             
             $answer_stmt->execute([$result_id, $question_id, strtoupper($student_answer), $is_correct ? 'true' : 'false']);
         }

@@ -14,6 +14,9 @@ Successfully migrated from Replit Agent to standard Replit environment with Post
 ✓ **Consistent Data Structure**: All academic data now follows the same pattern of database-driven dynamic loading
 ✓ **Test Duration System**: Added duration input field to test code creation form, backend already supports configurable duration
 ✓ **Score Calculation Fix**: Fixed student results to show proper score using score_per_question (e.g., 20/20 instead of 20/4)
+✓ **Question Randomization**: Implemented complete question and option shuffling system for unique test experience per student
+✓ **Dynamic Question Selection**: Each student gets randomly selected questions from available pool (e.g., 20 from 60 questions)
+✓ **Option Shuffling**: A, B, C, D options randomly reordered for each question per student with proper answer mapping
 
 ### Latest Data Setup (August 3, 2025 - 4:26 PM)
 ✓ **Complete Sample Data**: Added 15 subjects, 3 terms, 3 sessions, 6 class levels, and 8 teacher assignments

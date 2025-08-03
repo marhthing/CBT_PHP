@@ -56,9 +56,9 @@ try {
         Response::error('You have already completed this test', 409);
     }
     
-    // Get random questions for the test
+    // Get random questions for the test with correct answers for shuffling
     $questions_stmt = $db->prepare("
-        SELECT id, question_text, option_a, option_b, option_c, option_d, question_type
+        SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
         FROM questions 
         WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
         ORDER BY RANDOM()
@@ -66,11 +66,67 @@ try {
     ");
     
     $questions_stmt->execute([$test['subject_id'], $test['class_level'], $test['term_id'], $test['session_id'], $test['question_count']]);
-    $questions = $questions_stmt->fetchAll();
+    $raw_questions = $questions_stmt->fetchAll();
     
-    if (count($questions) < $test['question_count']) {
+    if (count($raw_questions) < $test['question_count']) {
         Response::error('Insufficient questions available for this test');
     }
+    
+    // Shuffle options for each question and create answer mapping
+    $questions = [];
+    $answer_mappings = [];
+    
+    foreach ($raw_questions as $question) {
+        // Create options array with original mapping
+        $original_options = [
+            'A' => $question['option_a'],
+            'B' => $question['option_b'], 
+            'C' => $question['option_c'],
+            'D' => $question['option_d']
+        ];
+        
+        // Get the values and shuffle them
+        $option_values = array_values($original_options);
+        shuffle($option_values);
+        
+        // Create new shuffled mapping
+        $shuffled_options = [
+            'A' => $option_values[0],
+            'B' => $option_values[1],
+            'C' => $option_values[2],
+            'D' => $option_values[3]
+        ];
+        
+        // Find where the correct answer ended up after shuffling
+        $original_correct_answer = $question['correct_answer'];
+        $original_correct_text = $original_options[$original_correct_answer];
+        
+        $new_correct_answer = 'A';
+        foreach ($shuffled_options as $new_key => $text) {
+            if ($text === $original_correct_text) {
+                $new_correct_answer = $new_key;
+                break;
+            }
+        }
+        
+        // Store the answer mapping for this question (for submission validation)
+        $answer_mappings[$question['id']] = $new_correct_answer;
+        
+        // Add processed question to final array
+        $questions[] = [
+            'id' => $question['id'],
+            'question_text' => $question['question_text'],
+            'option_a' => $shuffled_options['A'],
+            'option_b' => $shuffled_options['B'],
+            'option_c' => $shuffled_options['C'], 
+            'option_d' => $shuffled_options['D'],
+            'question_type' => $question['question_type']
+        ];
+    }
+    
+    // Store answer mappings in session for later validation during submission
+    session_start();
+    $_SESSION['answer_mappings_' . $test['id'] . '_' . $user['id']] = $answer_mappings;
     
     Response::logRequest('student/take-test', 'GET', $user['id']);
     
