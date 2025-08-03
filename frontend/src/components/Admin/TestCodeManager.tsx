@@ -45,6 +45,7 @@ interface CreateForm {
   session_id: string
   expires_at: string
   count: number
+  test_type: string
 }
 
 export default function TestCodeManager() {
@@ -76,7 +77,8 @@ export default function TestCodeManager() {
     term_id: '',
     session_id: '',
     expires_at: '',
-    count: 1
+    count: 1,
+    test_type: 'test'
   })
 
   // Fetch test codes
@@ -259,11 +261,12 @@ export default function TestCodeManager() {
         subject_id: '',
         class_level: '',
         duration_minutes: 60,
-        total_questions: 20,
+        total_questions: 10,
         term_id: '',
         session_id: '',
         expires_at: '',
-        count: 1
+        count: 1,
+        test_type: 'test'
       })
       setAvailableQuestions(0)
       
@@ -1250,14 +1253,41 @@ export default function TestCodeManager() {
                 marginBottom: '6px',
                 color: '#374151'
               }}>
-                Number of Codes *
+                Test Type *
+              </label>
+              <select
+                value={createForm.test_type}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, test_type: e.target.value }))}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+                required
+              >
+                <option value="test">Test</option>
+                <option value="examination">Examination</option>
+              </select>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: '#374151'
+              }}>
+                Number of Questions *
               </label>
               <input
                 type="number"
                 min="1"
-                max="100"
-                value={createForm.count}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, count: parseInt(e.target.value) || 1 }))}
+                max={availableQuestions || 50}
+                value={createForm.total_questions}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, total_questions: parseInt(e.target.value) || 1 }))}
                 style={{
                   width: '100%',
                   padding: '10px 12px',
@@ -1276,6 +1306,33 @@ export default function TestCodeManager() {
                   {availableQuestions} questions available for this combination
                 </p>
               )}
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: '#374151'
+              }}>
+                Number of Codes *
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={createForm.count}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, count: parseInt(e.target.value) || 1 }))}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+                required
+              />
             </div>
 
             <div style={{
