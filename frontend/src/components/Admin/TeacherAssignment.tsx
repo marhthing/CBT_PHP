@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
 import { Users, UserPlus, BookOpen, GraduationCap, Search, Plus, X, Save, Trash2 } from 'lucide-react'
+import ConfirmationModal from '../ui/ConfirmationModal'
 
 interface Teacher {
   id: number
@@ -33,6 +34,8 @@ interface CreateAssignmentForm {
   teacher_id: string
   subject_id: string
   class_level: string
+  term_id: string
+  session_id: string
 }
 
 export default function TeacherAssignment() {
@@ -54,8 +57,15 @@ export default function TeacherAssignment() {
   const [createForm, setCreateForm] = useState<CreateAssignmentForm>({
     teacher_id: '',
     subject_id: '',
-    class_level: ''
+    class_level: '',
+    term_id: '',
+    session_id: ''
   })
+
+  // Confirmation modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [assignmentToDelete, setAssignmentToDelete] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   // Memoized fetch functions to prevent unnecessary re-renders
   const fetchAssignments = useCallback(async () => {
@@ -100,40 +110,55 @@ export default function TeacherAssignment() {
   }, [fetchAssignments, fetchTeachers, fetchLookupData])
 
   const createAssignment = useCallback(async () => {
-    if (!createForm.teacher_id || !createForm.subject_id || !createForm.class_level) {
-      alert('Please fill in all required fields')
+    if (!createForm.teacher_id || !createForm.subject_id || !createForm.class_level || !createForm.term_id || !createForm.session_id) {
+      setError('Please fill in all required fields')
       return
     }
 
     setCreating(true)
+    setError('')
     try {
       const response = await api.post('/admin/assignments', createForm)
       if (response.data.success) {
         await fetchAssignments()
         setShowCreateModal(false)
-        setCreateForm({ teacher_id: '', subject_id: '', class_level: '' })
+        setCreateForm({ teacher_id: '', subject_id: '', class_level: '', term_id: '', session_id: '' })
+        setSuccessMessage('Assignment created successfully')
+        setTimeout(() => setSuccessMessage(''), 3000)
       }
     } catch (error: any) {
       console.error('Failed to create assignment:', error)
-      alert('Failed to create assignment: ' + (error.response?.data?.message || error.message))
+      setError('Failed to create assignment: ' + (error.response?.data?.message || error.message))
     } finally {
       setCreating(false)
     }
   }, [createForm, fetchAssignments])
 
-  const deleteAssignment = useCallback(async (assignmentId: number) => {
-    if (!confirm('Are you sure you want to delete this assignment?')) return
+  const handleDeleteAssignment = useCallback((assignmentId: number) => {
+    setAssignmentToDelete(assignmentId)
+    setShowDeleteModal(true)
+  }, [])
+
+  const confirmDeleteAssignment = useCallback(async () => {
+    if (!assignmentToDelete) return
     
+    setDeleting(true)
     try {
-      const response = await api.delete(`/admin/assignments/${assignmentId}`)
+      const response = await api.delete(`/admin/assignments/${assignmentToDelete}`)
       if (response.data.success) {
         await fetchAssignments()
+        setSuccessMessage('Assignment deleted successfully')
+        setTimeout(() => setSuccessMessage(''), 3000)
       }
     } catch (error: any) {
       console.error('Failed to delete assignment:', error)
-      alert('Failed to delete assignment: ' + (error.response?.data?.message || error.message))
+      setError('Failed to delete assignment: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setDeleting(false)
+      setShowDeleteModal(false)
+      setAssignmentToDelete(null)
     }
-  }, [fetchAssignments])
+  }, [assignmentToDelete, fetchAssignments])
 
   // Memoized filtered assignments for performance
   const filteredAssignments = useMemo(() => {
@@ -518,7 +543,7 @@ export default function TeacherAssignment() {
                     </p>
                   </div>
                   <button
-                    onClick={() => deleteAssignment(assignment.id)}
+                    onClick={() => handleDeleteAssignment(assignment.id)}
                     style={{
                       padding: '8px',
                       background: '#ef4444',
@@ -731,6 +756,94 @@ export default function TeacherAssignment() {
                 </select>
               </div>
 
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Term *
+                </label>
+                <select
+                  value={createForm.term_id}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, term_id: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <option value="">Select Term</option>
+                  {(lookupData.terms || []).map(term => (
+                    <option key={term.id} value={term.id}>
+                      {term.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Session *
+                </label>
+                <select
+                  value={createForm.session_id}
+                  onChange={(e) => setCreateForm(prev => ({ ...prev, session_id: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <option value="">Select Session</option>
+                  {(lookupData.sessions || []).map(session => (
+                    <option key={session.id} value={session.id}>
+                      {session.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {error && (
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: '8px',
+                  color: '#dc2626',
+                  fontSize: '14px'
+                }}>
+                  {error}
+                </div>
+              )}
+
+              {successMessage && (
+                <div style={{
+                  padding: '12px',
+                  backgroundColor: '#f0fdf4',
+                  border: '1px solid #bbf7d0',
+                  borderRadius: '8px',
+                  color: '#166534',
+                  fontSize: '14px'
+                }}>
+                  {successMessage}
+                </div>
+              )}
+
               <div style={{
                 display: 'flex',
                 gap: '12px',
@@ -793,6 +906,22 @@ export default function TeacherAssignment() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setAssignmentToDelete(null)
+        }}
+        onConfirm={confirmDeleteAssignment}
+        title="Delete Assignment"
+        message="Are you sure you want to delete this teacher assignment? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
+        loading={deleting}
+      />
     </div>
   )
 }

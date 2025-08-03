@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
 import ErrorNotification from '../ui/ErrorNotification'
+import ConfirmationModal from '../ui/ConfirmationModal'
 import { 
   Plus, 
   Copy
@@ -71,6 +72,11 @@ export default function TestCodeManager() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showViewModal, setShowViewModal] = useState(false)
   const [selectedBatch, setSelectedBatch] = useState<any>(null)
+  
+  // Confirmation modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [batchToDelete, setBatchToDelete] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [createForm, setCreateForm] = useState<CreateForm>({
     title: '',
     subject_id: '',
@@ -322,15 +328,23 @@ export default function TestCodeManager() {
   }
 
   // Handle batch deletion
-  const handleDeleteBatch = async (batchId: string) => {
+  const handleDeleteBatch = (batchId: string) => {
+    setBatchToDelete(batchId)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDeleteBatch = async () => {
+    if (!batchToDelete) return
+    
+    setDeleting(true)
     try {
-      await api.delete(`/admin/test-codes/batch/${batchId}`)
+      await api.delete(`/admin/test-codes/batch/${batchToDelete}`)
       
       // Remove all codes from this batch locally
-      setTestCodes(prevCodes => prevCodes.filter(code => code.batch_id !== batchId))
+      setTestCodes(prevCodes => prevCodes.filter(code => code.batch_id !== batchToDelete))
       
       // Close modal if currently viewing this batch
-      if (selectedBatch && selectedBatch.batchId === batchId) {
+      if (selectedBatch && selectedBatch.batchId === batchToDelete) {
         setShowViewModal(false)
         setSelectedBatch(null)
       }
@@ -340,6 +354,10 @@ export default function TestCodeManager() {
     } catch (error: any) {
       console.error('Failed to delete test code batch:', error)
       setError(error.response?.data?.message || 'Failed to delete test code batch')
+    } finally {
+      setDeleting(false)
+      setShowDeleteModal(false)
+      setBatchToDelete(null)
     }
   }
 
@@ -754,9 +772,7 @@ export default function TestCodeManager() {
                 <button
                   onClick={(e) => {
                     e.preventDefault()
-                    if (confirm(`Are you sure you want to delete this entire batch of ${batch.codes.length} test codes? This action cannot be undone.`)) {
-                      handleDeleteBatch(batch.batchId)
-                    }
+                    handleDeleteBatch(batch.batchId)
                   }}
                   style={{
                     padding: '8px 12px',
@@ -1447,6 +1463,22 @@ export default function TestCodeManager() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setBatchToDelete(null)
+        }}
+        onConfirm={confirmDeleteBatch}
+        title="Delete Test Code Batch"
+        message={batchToDelete ? `Are you sure you want to delete this entire batch of test codes? This action cannot be undone.` : ""}
+        confirmText="Delete Batch"
+        cancelText="Cancel"
+        isDestructive={true}
+        loading={deleting}
+      />
     </div>
   )
 }
