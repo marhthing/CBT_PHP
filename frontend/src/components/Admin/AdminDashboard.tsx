@@ -135,10 +135,17 @@ export default function AdminDashboard() {
     }
   }, [])
 
-  // Load components independently on mount
+  // Load components independently on mount with staggered timing
   useEffect(() => {
+    // Load stats first
     fetchStats()
-    fetchActivities()
+    
+    // Load activities after a short delay to avoid overwhelming the backend
+    const activitiesTimeout = setTimeout(() => {
+      fetchActivities()
+    }, 1000)
+
+    return () => clearTimeout(activitiesTimeout)
   }, [])
 
   // Live server time updates every second
@@ -159,7 +166,7 @@ export default function AdminDashboard() {
     return () => clearInterval(timeInterval)
   }, [])
 
-  // Live metrics update every 30 seconds (except time)
+  // Live metrics update every 2 minutes (increased from 30 seconds)
   useEffect(() => {
     const updateOtherMetrics = () => {
       setLiveMetrics(prev => ({
@@ -175,8 +182,8 @@ export default function AdminDashboard() {
     // Update immediately
     updateOtherMetrics()
 
-    // Then update every 30 seconds
-    const metricsInterval = setInterval(updateOtherMetrics, 30000)
+    // Then update every 2 minutes (120 seconds)
+    const metricsInterval = setInterval(updateOtherMetrics, 120000)
 
     return () => clearInterval(metricsInterval)
   }, [healthData])
@@ -190,40 +197,54 @@ export default function AdminDashboard() {
     return `${hours}h ${minutes}m`
   }, [])
 
-  // API Response Time monitoring every 10 seconds (reduced frequency to avoid spam)
+  // API Response Time monitoring every 30 seconds (increased from 10 seconds)
   useEffect(() => {
+    let isMounting = true
+
     const measureApiResponseTime = async () => {
+      // Skip if component is unmounting
+      if (!isMounting) return
+
       try {
         const startTime = performance.now()
-        // Use a lightweight endpoint for ping
-        const response = await api.get('/health')
+        // Use a lightweight endpoint for ping with shorter timeout
+        const response = await api.get('/health', { timeout: 10000 })
         const endTime = performance.now()
         const responseTime = Math.round(endTime - startTime)
 
         console.log('Health check response time:', responseTime + 'ms')
 
-        // Only update if we got a successful response
-        if (response && response.status === 200) {
-          // Don't override if activities API already set the response time
-          if (apiResponseTime === 'Error' || apiResponseTime === '< 200ms') {
-            setApiResponseTime(`${responseTime}ms`)
-          }
-        } else {
-          setApiResponseTime('Slow')
+        // Only update if we got a successful response and component is still mounted
+        if (response && response.status === 200 && isMounting) {
+          setApiResponseTime(`${responseTime}ms`)
         }
       } catch (error) {
         console.log('API health check failed:', error)
-        setApiResponseTime('Error')
+        if (isMounting) {
+          setApiResponseTime('Error')
+        }
       }
     }
 
-    // Measure immediately
-    measureApiResponseTime()
+    // Measure after initial delay to let other requests complete first
+    const initialTimeout = setTimeout(() => {
+      if (isMounting) {
+        measureApiResponseTime()
+      }
+    }, 5000)
 
-    // Then measure every 10 seconds (reduced frequency)
-    const apiInterval = setInterval(measureApiResponseTime, 10000)
+    // Then measure every 30 seconds
+    const apiInterval = setInterval(() => {
+      if (isMounting) {
+        measureApiResponseTime()
+      }
+    }, 30000)
 
-    return () => clearInterval(apiInterval)
+    return () => {
+      isMounting = false
+      clearTimeout(initialTimeout)
+      clearInterval(apiInterval)
+    }
   }, [])
 
 
