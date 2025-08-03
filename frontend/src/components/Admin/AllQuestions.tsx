@@ -301,9 +301,26 @@ export default function AllQuestions() {
   }, [])
 
   const updateManualQuestion = useCallback((index: number, field: string, value: string) => {
-    setManualQuestions(prev => prev.map((q, i) => 
-      i === index ? { ...q, [field]: value } : q
-    ))
+    setManualQuestions(prev => prev.map((q, i) => {
+      if (i === index) {
+        const updatedQuestion = { ...q, [field]: value }
+        
+        // Auto-set True/False options when question type changes to true_false
+        if (field === 'question_type' && value === 'true_false') {
+          updatedQuestion.option_a = 'True'
+          updatedQuestion.option_b = 'False'
+          updatedQuestion.option_c = ''
+          updatedQuestion.option_d = ''
+          // Reset correct answer to A if it was C or D
+          if (updatedQuestion.correct_answer === 'C' || updatedQuestion.correct_answer === 'D') {
+            updatedQuestion.correct_answer = 'A'
+          }
+        }
+        
+        return updatedQuestion
+      }
+      return q
+    }))
   }, [])
 
   const removeManualQuestion = useCallback((index: number) => {
@@ -950,7 +967,7 @@ export default function AllQuestions() {
                 color: '#1f2937',
                 margin: 0
               }}>
-                Edit Question
+                Edit Question #{editingQuestion.id}
               </h3>
               <button
                 onClick={() => setEditingQuestion(null)}
@@ -1005,7 +1022,27 @@ export default function AllQuestions() {
                 </label>
                 <select
                   value={editingQuestion.question_type}
-                  onChange={(e) => setEditingQuestion(prev => prev ? {...prev, question_type: e.target.value} : null)}
+                  onChange={(e) => {
+                    const newType = e.target.value
+                    setEditingQuestion(prev => {
+                      if (!prev) return null
+                      const updated = { ...prev, question_type: newType }
+                      
+                      // Auto-set True/False options when changing to true_false
+                      if (newType === 'true_false') {
+                        updated.option_a = 'True'
+                        updated.option_b = 'False'
+                        updated.option_c = ''
+                        updated.option_d = ''
+                        // Reset correct answer if it was C or D
+                        if (updated.correct_answer === 'C' || updated.correct_answer === 'D') {
+                          updated.correct_answer = 'A'
+                        }
+                      }
+                      
+                      return updated
+                    })
+                  }}
                   style={{
                     width: '100%',
                     padding: '12px',
@@ -1029,7 +1066,7 @@ export default function AllQuestions() {
                     color: '#374151',
                     marginBottom: '4px'
                   }}>
-                    Option {option}
+                    Option {option} {editingQuestion.question_type === 'true_false' ? (option === 'A' ? '(True)' : '(False)') : ''}
                   </label>
                   <input
                     type="text"
@@ -1038,12 +1075,15 @@ export default function AllQuestions() {
                       ...prev,
                       [`option_${option.toLowerCase()}`]: e.target.value
                     } : null)}
+                    readOnly={editingQuestion.question_type === 'true_false'}
                     style={{
                       width: '100%',
                       padding: '12px',
                       border: '1px solid #d1d5db',
                       borderRadius: '8px',
-                      fontSize: '14px'
+                      fontSize: '14px',
+                      backgroundColor: editingQuestion.question_type === 'true_false' ? '#f9fafb' : 'white',
+                      cursor: editingQuestion.question_type === 'true_false' ? 'not-allowed' : 'text'
                     }}
                   />
                 </div>
@@ -1073,8 +1113,8 @@ export default function AllQuestions() {
                 >
                   {editingQuestion.question_type === 'true_false' ? (
                     <>
-                      <option value="A">A</option>
-                      <option value="B">B</option>
+                      <option value="A">A (True)</option>
+                      <option value="B">B (False)</option>
                     </>
                   ) : (
                     <>
@@ -1110,22 +1150,39 @@ export default function AllQuestions() {
                 </button>
                 <button
                   onClick={() => editingQuestion && updateQuestion(editingQuestion)}
+                  disabled={loading}
                   style={{
                     padding: '12px 20px',
-                    background: '#3b82f6',
+                    background: loading ? '#9ca3af' : '#3b82f6',
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '14px',
                     fontWeight: '500',
-                    cursor: 'pointer',
+                    cursor: loading ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px'
                   }}
                 >
-                  <Save size={16} />
-                  Save Changes
+                  {loading ? (
+                    <>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid white',
+                        borderTop: '2px solid transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }}></div>
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      Save Changes
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -1816,20 +1873,23 @@ export default function AllQuestions() {
                             color: '#374151',
                             marginBottom: '4px'
                           }}>
-                            Option {option} *
+                            Option {option} {option === 'A' ? '(True)' : '(False)'} *
                           </label>
                           <input
                             type="text"
                             value={question[`option_${option.toLowerCase()}` as keyof typeof question]}
                             onChange={(e) => updateManualQuestion(index, `option_${option.toLowerCase()}`, e.target.value)}
+                            readOnly={true}
                             style={{
                               width: '100%',
                               padding: '8px',
                               border: '1px solid #d1d5db',
                               borderRadius: '6px',
-                              fontSize: '14px'
+                              fontSize: '14px',
+                              backgroundColor: '#f9fafb',
+                              cursor: 'not-allowed'
                             }}
-                            placeholder={`Option ${option}`}
+                            placeholder={option === 'A' ? 'True' : 'False'}
                           />
                         </div>
                       )) :
@@ -1884,8 +1944,8 @@ export default function AllQuestions() {
                       >
                         {question.question_type === 'true_false' ? (
                           <>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
+                            <option value="A">A (True)</option>
+                            <option value="B">B (False)</option>
                           </>
                         ) : (
                           <>
