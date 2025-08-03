@@ -59,7 +59,6 @@ export default function AdminDashboard() {
   const [retrying, setRetrying] = useState(false)
   const [showHealthModal, setShowHealthModal] = useState(false)
   const [healthData, setHealthData] = useState<any>(null)
-  const [loadingHealth, setLoadingHealth] = useState(false)
   const [liveMetrics, setLiveMetrics] = useState({
     currentTime: new Date().toLocaleTimeString(),
     uptime: '24h 15m',
@@ -67,6 +66,18 @@ export default function AdminDashboard() {
     cpuUsage: '~12%'
   })
   const [apiResponseTime, setApiResponseTime] = useState('< 200ms')
+
+  // Health data fetch function
+  const fetchHealthData = useCallback(async () => {
+    try {
+      const response = await api.get('/health')
+      setHealthData(response.data)
+      setShowHealthModal(true)
+    } catch (error) {
+      console.error('Failed to fetch health data:', error)
+      setError('Failed to fetch system health data')
+    }
+  }, [])
 
   // Memoized fetch function with retry logic
   const fetchDashboardData = useCallback(async (retryCount = 0) => {
@@ -366,20 +377,6 @@ export default function AdminDashboard() {
       color: '#f59e0b'
     }
   ], [navigate, fetchHealthData])
-
-  const fetchHealthData = useCallback(async () => {
-    setLoadingHealth(true)
-    try {
-      const response = await api.get('/health')
-      setHealthData(response.data)
-      setShowHealthModal(true)
-    } catch (error) {
-      console.error('Failed to fetch health data:', error)
-      setError('Failed to fetch system health data')
-    } finally {
-      setLoadingHealth(false)
-    }
-  }, [])
 
   const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {

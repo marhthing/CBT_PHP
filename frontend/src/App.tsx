@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
-import Layout from './components/Layout/ResponsiveLayout'
+import Layout from './components/Layout/MobileBottomBar'
 import SimpleLogin from './components/Auth/SimpleLogin'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 import StudentDashboard from './components/Student/StudentDashboard'
