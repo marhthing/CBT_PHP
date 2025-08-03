@@ -66,6 +66,9 @@ export default function AdminDashboard() {
     cpuUsage: '~12%'
   })
   const [apiResponseTime, setApiResponseTime] = useState('< 200ms')
+  
+  // Request tracking to prevent duplicates
+  const [activeRequests, setActiveRequests] = useState(new Set<string>())
 
   // Health data fetch function
   const fetchHealthData = useCallback(async () => {
@@ -81,7 +84,14 @@ export default function AdminDashboard() {
 
   // Standalone fetch functions for each component
   const fetchStats = useCallback(async (signal?: AbortSignal) => {
+    // Prevent duplicate requests
+    if (activeRequests.has('stats')) {
+      console.log('Stats request already in progress, skipping...')
+      return
+    }
+    
     try {
+      setActiveRequests(prev => new Set(prev).add('stats'))
       setLoadingStats(true)
       console.log('Fetching dashboard stats...')
       const response = await api.get('/admin/dashboard-stats', { 
@@ -116,11 +126,23 @@ export default function AdminDashboard() {
       })
     } finally {
       setLoadingStats(false)
+      setActiveRequests(prev => {
+        const newSet = new Set(prev)
+        newSet.delete('stats')
+        return newSet
+      })
     }
-  }, [])
+  }, [activeRequests])
 
   const fetchActivities = useCallback(async (signal?: AbortSignal) => {
+    // Prevent duplicate requests
+    if (activeRequests.has('activities')) {
+      console.log('Activities request already in progress, skipping...')
+      return
+    }
+    
     try {
+      setActiveRequests(prev => new Set(prev).add('activities'))
       setLoadingActivities(true)
       const startTime = performance.now()
       const response = await api.get('/admin/test-codes?limit=8', { 
@@ -149,8 +171,13 @@ export default function AdminDashboard() {
       }
     } finally {
       setLoadingActivities(false)
+      setActiveRequests(prev => {
+        const newSet = new Set(prev)
+        newSet.delete('activities')
+        return newSet
+      })
     }
-  }, [])
+  }, [activeRequests])
 
   // Load components independently on mount with staggered timing
   useEffect(() => {
@@ -225,10 +252,11 @@ export default function AdminDashboard() {
     const controller = new AbortController()
 
     const measureApiResponseTime = async () => {
-      // Skip if component is unmounting
-      if (!isMounting) return
+      // Skip if component is unmounting or request already in progress
+      if (!isMounting || activeRequests.has('health')) return
 
       try {
+        setActiveRequests(prev => new Set(prev).add('health'))
         const startTime = performance.now()
         // Use a lightweight endpoint for ping with longer timeout for slow backend
         const response = await api.get('/health', { 
@@ -252,6 +280,12 @@ export default function AdminDashboard() {
         if (isMounting) {
           setApiResponseTime('Slow')
         }
+      } finally {
+        setActiveRequests(prev => {
+          const newSet = new Set(prev)
+          newSet.delete('health')
+          return newSet
+        })
       }
     }
 
