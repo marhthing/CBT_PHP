@@ -4,7 +4,7 @@ class CORS {
     
     public static function handle() {
         // Get allowed origins from environment or use defaults
-        $allowed_origins = $_ENV['CORS_ALLOWED_ORIGINS'] ?? 'http://localhost:5000,http://localhost:3000';
+        $allowed_origins = $_ENV['CORS_ALLOWED_ORIGINS'] ?? 'http://localhost:5000,http://localhost:3000,http://0.0.0.0:5000';
         $origins = array_map('trim', explode(',', $allowed_origins));
         
         $allowed_methods = $_ENV['CORS_ALLOWED_METHODS'] ?? 'GET,POST,PUT,DELETE,OPTIONS,PATCH';
@@ -13,12 +13,17 @@ class CORS {
         // Get the origin of the request
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
         
-        // For development, allow localhost origins more broadly
-        if (strpos($origin, 'http://localhost:') === 0 || in_array($origin, $origins) || in_array('*', $origins)) {
-            header("Access-Control-Allow-Origin: " . ($origin ?: 'http://localhost:5000'));
+        // For Replit environment, allow broader origins
+        if (strpos($origin, 'http://localhost:') === 0 || 
+            strpos($origin, 'http://0.0.0.0:') === 0 || 
+            strpos($origin, '.replit.dev') !== false ||
+            strpos($origin, '.replit.app') !== false ||
+            in_array($origin, $origins) || 
+            in_array('*', $origins)) {
+            header("Access-Control-Allow-Origin: " . ($origin ?: 'http://0.0.0.0:5000'));
         } else {
-            // Default to localhost:5000 for development
-            header("Access-Control-Allow-Origin: http://localhost:5000");
+            // Default to 0.0.0.0:5000 for Replit development
+            header("Access-Control-Allow-Origin: http://0.0.0.0:5000");
         }
         
         // Set other CORS headers
