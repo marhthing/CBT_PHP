@@ -58,6 +58,9 @@ if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
 
 // Handle health check endpoint
 if ($path === '/health' || $path === 'health') {
+    header('Access-Control-Allow-Origin: *');
+    header('Access-Control-Allow-Methods: GET, OPTIONS');
+    header('Access-Control-Allow-Headers: *');
     handleHealthCheck();
     exit();
 }

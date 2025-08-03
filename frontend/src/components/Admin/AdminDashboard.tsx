@@ -168,27 +168,24 @@ export default function AdminDashboard() {
     return `${hours}h ${minutes}m`
   }, [])
 
-  // API Response Time monitoring every 2 seconds
+  // API Response Time monitoring every 5 seconds (reduced frequency)
   useEffect(() => {
     const measureApiResponseTime = async () => {
       try {
         const startTime = performance.now()
         // Use a lightweight endpoint for ping
-        await api.get('/health')
+        const response = await api.get('/health')
         const endTime = performance.now()
         const responseTime = Math.round(endTime - startTime)
 
-        if (responseTime < 100) {
-          setApiResponseTime(`${responseTime}ms`)
-        } else if (responseTime < 200) {
-          setApiResponseTime(`${responseTime}ms`)
-        } else if (responseTime < 500) {
+        // Only update if we got a successful response
+        if (response && response.status === 200) {
           setApiResponseTime(`${responseTime}ms`)
         } else {
-          setApiResponseTime(`${responseTime}ms`)
+          setApiResponseTime('Slow')
         }
       } catch (error) {
-        // If API is unreachable, show error state
+        console.log('API health check failed:', error)
         setApiResponseTime('Error')
       }
     }
@@ -196,8 +193,8 @@ export default function AdminDashboard() {
     // Measure immediately
     measureApiResponseTime()
 
-    // Then measure every 2 seconds
-    const apiInterval = setInterval(measureApiResponseTime, 2000)
+    // Then measure every 5 seconds (reduced from 2 seconds)
+    const apiInterval = setInterval(measureApiResponseTime, 5000)
 
     return () => clearInterval(apiInterval)
   }, [])
