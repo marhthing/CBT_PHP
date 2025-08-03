@@ -121,15 +121,7 @@ export default function TeacherAllQuestions() {
     return lookupData.sessions?.filter(s => sessionIds.has(s.id)) || []
   }, [assignments, lookupData.sessions])
 
-  // Filtered assignments based on current selection
-  const filteredAssignments = useMemo(() => {
-    return assignments.filter(assignment => {
-      return (!subjectFilter || assignment.subject_id.toString() === subjectFilter) &&
-             (!classFilter || assignment.class_level === classFilter) &&
-             (!termFilter || assignment.term_id.toString() === termFilter) &&
-             (!sessionFilter || assignment.session_id.toString() === sessionFilter)
-    })
-  }, [assignments, subjectFilter, classFilter, termFilter, sessionFilter])
+
 
   // Fetch functions
   const fetchQuestions = useCallback(async () => {
@@ -1113,8 +1105,8 @@ export default function TeacherAllQuestions() {
         message="Are you sure you want to delete this question? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
-        type="danger"
-        isLoading={deleting}
+        isDestructive={true}
+        loading={deleting}
       />
     </div>
   )

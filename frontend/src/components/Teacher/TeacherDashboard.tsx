@@ -379,7 +379,7 @@ export default function TeacherDashboard() {
       {/* Quick Actions */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
         gap: '12px'
       }}>
         <button
@@ -396,24 +396,7 @@ export default function TeacherDashboard() {
             textAlign: 'center'
           }}
         >
-          📝 Manage Questions
-        </button>
-
-        <button
-          onClick={() => navigate('/teacher/upload')}
-          style={{
-            background: 'linear-gradient(135deg, #059669, #10b981)',
-            color: 'white',
-            border: 'none',
-            padding: '16px 12px',
-            borderRadius: '8px',
-            fontSize: '13px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            textAlign: 'center'
-          }}
-        >
-          📤 Upload Questions
+          📚 Question Bank
         </button>
       </div>
     </div>
