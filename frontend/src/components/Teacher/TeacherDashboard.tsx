@@ -62,7 +62,7 @@ const TeacherDashboard: React.FC = () => {
       
       setAssignments(assignmentsResponse.data.data || [])
     } catch (error) {
-      console.error('Failed to fetch teacher data:', error)
+      // Failed to fetch teacher data
     } finally {
       setLoading(false)
     }

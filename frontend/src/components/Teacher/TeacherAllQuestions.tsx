@@ -157,7 +157,7 @@ export default function TeacherAllQuestions() {
       const response = await api.get('/teacher/classes')
       setAssignments(response.data.data?.classes || [])
     } catch (error: any) {
-      console.error('Failed to fetch assignments:', error)
+      // Failed to fetch assignments
     }
   }, [])
 
@@ -166,7 +166,7 @@ export default function TeacherAllQuestions() {
       const response = await api.get('/system/lookup')
       setLookupData(response.data.data || {})
     } catch (error) {
-      console.error('Failed to fetch lookup data:', error)
+      // Failed to fetch lookup data
     }
   }, [])
 
