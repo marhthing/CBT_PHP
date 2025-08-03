@@ -24,7 +24,9 @@ switch ($_SERVER['REQUEST_METHOD']) {
     case 'DELETE':
         // Check if this is a bulk delete request
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        if (strpos($path, '/bulk') !== false) {
+        $path_segments = explode('/', trim($path, '/'));
+        
+        if (end($path_segments) === 'bulk' || strpos($path, '/bulk') !== false) {
             handleBulkDelete($db, $user);
         } else {
             handleDelete($db, $user);

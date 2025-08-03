@@ -582,45 +582,6 @@ export default function AllQuestions() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          {selectedQuestions.size > 0 && (
-            <button
-              onClick={bulkDeleteQuestions}
-              disabled={bulkDeleting}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: bulkDeleting ? '#9ca3af' : '#ef4444',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '12px 20px',
-                fontSize: '14px',
-                fontWeight: '500',
-                cursor: bulkDeleting ? 'not-allowed' : 'pointer',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              {bulkDeleting ? (
-                <>
-                  <div style={{
-                    width: '16px',
-                    height: '16px',
-                    border: '2px solid white',
-                    borderTop: '2px solid transparent',
-                    borderRadius: '50%',
-                    animation: 'spin 1s linear infinite'
-                  }}></div>
-                  Deleting...
-                </>
-              ) : (
-                <>
-                  <Trash2 size={16} />
-                  Delete Selected ({selectedQuestions.size})
-                </>
-              )}
-            </button>
-          )}
           <button
             onClick={() => setShowManualCreate(true)}
             style={{
@@ -869,25 +830,70 @@ export default function AllQuestions() {
             <div style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px'
+              gap: '16px'
             }}>
-              <input
-                type="checkbox"
-                checked={selectedQuestions.size === filteredQuestions.length && filteredQuestions.length > 0}
-                onChange={(e) => handleSelectAll(e.target.checked)}
-                style={{
-                  width: '16px',
-                  height: '16px',
-                  cursor: 'pointer'
-                }}
-              />
-              <label style={{
-                fontSize: '14px',
-                color: '#6b7280',
-                cursor: 'pointer'
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
               }}>
-                Select All
-              </label>
+                <input
+                  type="checkbox"
+                  checked={selectedQuestions.size === filteredQuestions.length && filteredQuestions.length > 0}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    cursor: 'pointer'
+                  }}
+                />
+                <label style={{
+                  fontSize: '14px',
+                  color: '#6b7280',
+                  cursor: 'pointer'
+                }}>
+                  Select All
+                </label>
+              </div>
+              {selectedQuestions.size > 0 && (
+                <button
+                  onClick={bulkDeleteQuestions}
+                  disabled={bulkDeleting}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: bulkDeleting ? '#9ca3af' : '#ef4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: bulkDeleting ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {bulkDeleting ? (
+                    <>
+                      <div style={{
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid white',
+                        borderTop: '2px solid transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }}></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={16} />
+                      Delete Selected ({selectedQuestions.size})
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           )}
         </div>
