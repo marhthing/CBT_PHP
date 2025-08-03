@@ -750,12 +750,11 @@ export default function TeacherAssignment() {
                   }}
                 >
                   <option value="">Select Class</option>
-                  <option value="JSS1">JSS 1</option>
-                  <option value="JSS2">JSS 2</option>
-                  <option value="JSS3">JSS 3</option>
-                  <option value="SS1">SS 1</option>
-                  <option value="SS2">SS 2</option>
-                  <option value="SS3">SS 3</option>
+                  {(lookupData.class_levels || []).map(classLevel => (
+                    <option key={classLevel.id} value={classLevel.id}>
+                      {classLevel.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 

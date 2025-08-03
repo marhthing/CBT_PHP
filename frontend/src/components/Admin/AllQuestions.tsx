@@ -21,9 +21,11 @@ interface Question {
 
 interface QuestionStats {
   total_questions: number
+  subjects_count: number
+  class_levels_count: number
+  question_types_count: number
   by_subject: Record<string, number>
   by_class: Record<string, number>
-  by_difficulty: Record<string, number>
   by_type: Record<string, number>
 }
 
@@ -279,7 +281,8 @@ export default function AllQuestions() {
       '',
       'question_text,subject_id,class_level,option_a,option_b,option_c,option_d,correct_answer',
       '"What is the capital of Nigeria?",1,"JSS1","Lagos","Abuja","Kano","Port Harcourt","B"',
-      '"Which of the following is a prime number?",1,"JSS2","4","6","7","8","C"'
+      '"Which of the following is a prime number?",1,"JSS2","4","6","7","8","C"',
+      '# Note: Use actual class level values from your system (JSS1, JSS2, JSS3, SS1, SS2, SS3, etc.)'
     ].join('\n')
     
     const blob = new Blob([subjectReference], { type: 'text/csv' })
