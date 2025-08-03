@@ -107,19 +107,15 @@ function handlePost($db, $user) {
             Response::validationError('Teacher is already assigned to this subject and class');
         }
         
-        // Validate subject and class level (basic validation)
-        $valid_subjects = [
-            'Mathematics', 'English Language', 'Physics', 'Chemistry', 'Biology',
-            'Geography', 'History', 'Economics', 'Government', 'Literature',
-            'Agricultural Science', 'Computer Science', 'Further Mathematics',
-            'Civic Education', 'Trade/Business Studies'
-        ];
+        // Validate subject exists in database
+        $subject_check = $db->prepare("SELECT id FROM subjects WHERE id = ?");
+        $subject_check->execute([$input['subject_id']]);
         
-        $valid_classes = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
-        
-        if (!in_array($input['subject'], $valid_subjects)) {
+        if (!$subject_check->fetch()) {
             Response::validationError('Invalid subject selected');
         }
+        
+        $valid_classes = ['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'];
         
         if (!in_array($input['class_level'], $valid_classes)) {
             Response::validationError('Invalid class level selected');
@@ -159,25 +155,12 @@ function handleDelete($db, $user) {
         }
         
         // Check if assignment exists
-        $check_stmt = $db->prepare("SELECT teacher_id, subject, class_level FROM teacher_assignments WHERE id = ?");
+        $check_stmt = $db->prepare("SELECT id FROM teacher_assignments WHERE id = ?");
         $check_stmt->execute([$assignment_id]);
         $assignment = $check_stmt->fetch();
         
         if (!$assignment) {
             Response::notFound('Assignment not found');
-        }
-        
-        // Check if teacher has questions for this subject/class
-        $question_check = $db->prepare("
-            SELECT COUNT(*) as question_count 
-            FROM questions 
-            WHERE teacher_id = ? AND subject = ? AND class_level = ?
-        ");
-        $question_check->execute([$assignment['teacher_id'], $assignment['subject'], $assignment['class_level']]);
-        $question_result = $question_check->fetch();
-        
-        if ($question_result['question_count'] > 0) {
-            Response::error('Cannot remove assignment. Teacher has existing questions for this subject/class.');
         }
         
         // Delete assignment

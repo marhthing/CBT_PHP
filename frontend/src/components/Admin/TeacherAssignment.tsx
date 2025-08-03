@@ -78,7 +78,6 @@ export default function TeacherAssignment() {
     } catch (error) {
       console.error('Failed to fetch assignments:', error)
       setAssignments([]) // Set empty array on error
-      setError('Failed to load assignments')
     } finally {
       setLoading(false)
     }
@@ -149,7 +148,7 @@ export default function TeacherAssignment() {
     
     setDeleting(true)
     try {
-      const response = await api.delete(`/admin/assignments/${assignmentToDelete}`)
+      const response = await api.delete(`/admin/assignments?id=${assignmentToDelete}`)
       if (response.data.success) {
         await fetchAssignments()
         setSuccessMessage('Assignment deleted successfully')
@@ -395,8 +394,7 @@ export default function TeacherAssignment() {
               borderRadius: '8px',
               fontSize: '14px',
               background: 'rgba(255, 255, 255, 0.1)',
-              color: 'white',
-              placeholder: 'rgba(255, 255, 255, 0.7)'
+              color: 'white'
             }}
           />
 
