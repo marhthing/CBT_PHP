@@ -159,10 +159,10 @@ export default function AdminDashboard() {
     // Load stats first
     fetchStats(controller.signal)
     
-    // Load activities after a short delay to avoid overwhelming the backend
+    // Load activities after a longer delay to avoid overwhelming the backend
     const activitiesTimeout = setTimeout(() => {
       fetchActivities(controller.signal)
-    }, 2000) // Increased delay to 2 seconds
+    }, 5000) // Increased delay to 5 seconds to allow stats to complete
 
     return () => {
       controller.abort()
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
     return `${hours}h ${minutes}m`
   }, [])
 
-  // API Response Time monitoring every 60 seconds (increased from 30 seconds)
+  // API Response Time monitoring every 2 minutes (reduced frequency for slow backend)
   useEffect(() => {
     let isMounting = true
     const controller = new AbortController()
@@ -230,9 +230,9 @@ export default function AdminDashboard() {
 
       try {
         const startTime = performance.now()
-        // Use a lightweight endpoint for ping with shorter timeout
+        // Use a lightweight endpoint for ping with longer timeout for slow backend
         const response = await api.get('/health', { 
-          timeout: 15000, // 15 second timeout for health check
+          timeout: 30000, // 30 second timeout for health check (increased)
           signal: controller.signal 
         })
         const endTime = performance.now()
@@ -255,19 +255,19 @@ export default function AdminDashboard() {
       }
     }
 
-    // Measure after initial delay to let other requests complete first
+    // Measure after longer initial delay to let other requests complete first
     const initialTimeout = setTimeout(() => {
       if (isMounting) {
         measureApiResponseTime()
       }
-    }, 10000) // Wait 10 seconds before first health check
+    }, 15000) // Wait 15 seconds before first health check
 
-    // Then measure every 60 seconds
+    // Then measure every 2 minutes (reduced frequency)
     const apiInterval = setInterval(() => {
       if (isMounting) {
         measureApiResponseTime()
       }
-    }, 60000)
+    }, 120000) // 2 minutes
 
     return () => {
       isMounting = false
