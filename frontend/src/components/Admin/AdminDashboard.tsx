@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
 import ErrorNotification from '../ui/ErrorNotification'
-import { BarChart3, FileText, PlayCircle, Users, GraduationCap, Clock, Plus, UserPlus, BookOpen, Activity, Database, Shield } from 'lucide-react'
+import { BarChart3, FileText, PlayCircle, Users, GraduationCap, Clock, Plus, UserPlus, BookOpen, Activity, Shield } from 'lucide-react'
 
 interface DashboardStats {
   total_questions: number
@@ -56,41 +56,34 @@ export default function AdminDashboard() {
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [retrying, setRetrying] = useState(false)
-  const [liveMetrics, setLiveMetrics] = useState({
-    currentTime: new Date().toLocaleTimeString(),
-    uptime: '24h 15m',
-    memoryUsage: '24.5 MB',
-    cpuUsage: '~12%'
-  })
   const [apiResponseTime, setApiResponseTime] = useState('< 200ms')
 
-  // Memoized fetch function with retry logic
+  // Optimized fetch function with parallel requests
   const fetchDashboardData = useCallback(async (retryCount = 0) => {
     const maxRetries = 3
 
     try {
-      const statsResponse = await api.get('/admin/dashboard-stats')
-      await new Promise(resolve => setTimeout(resolve, 500)) // Small delay
-      const activitiesResponse = await api.get('/admin/test-codes?limit=8')
+      const startTime = Date.now()
+      const [statsResponse, activitiesResponse] = await Promise.all([
+        api.get('/admin/dashboard-stats'),
+        api.get('/admin/test-codes?limit=8')
+      ])
+      const endTime = Date.now()
+      setApiResponseTime(`${endTime - startTime}ms`)
 
       setStats(statsResponse.data.data || statsResponse.data || {})
       setRecentActivities(activitiesResponse.data.data || activitiesResponse.data || [])
-      setError('') // Clear any previous errors
+      setError('')
     } catch (error: any) {
-      console.error(`Failed to fetch dashboard data (attempt ${retryCount + 1}):`, error.message)
-
-      if (retryCount < maxRetries && error.code === 'ECONNABORTED') {
-        setRetrying(true)
-        const delay = Math.min(1000 * Math.pow(2, retryCount), 5000)
-        setTimeout(() => {
-          setRetrying(false)
-          fetchDashboardData(retryCount + 1)
-        }, delay)
-        return
+      console.error('Dashboard fetch error:', error)
+      
+      if (retryCount < maxRetries) {
+        console.log(`Retrying... (${retryCount + 1}/${maxRetries})`)
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)))
+        return fetchDashboardData(retryCount + 1)
       }
-
-      setError('Failed to load dashboard data. Please try refreshing the page.')
+      
+      setError(error.response?.data?.message || error.message || 'Failed to load dashboard data')
     } finally {
       setLoading(false)
     }
@@ -98,333 +91,264 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchDashboardData()
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      fetchDashboardData()
+    }, 30000)
+
+    return () => clearInterval(interval)
   }, [fetchDashboardData])
 
-  // Live server time updates every second
-  useEffect(() => {
-    const updateServerTime = () => {
-      setLiveMetrics(prev => ({
-        ...prev,
-        currentTime: new Date().toLocaleTimeString()
-      }))
-    }
+  const handleRetry = () => {
+    setLoading(true)
+    setError('')
+    fetchDashboardData()
+  }
 
-    updateServerTime()
-    const timeInterval = setInterval(updateServerTime, 1000)
-
-    const measureApiResponseTime = async () => {
-      try {
-        const startTime = performance.now()
-        await api.get('/health')
-        const responseTime = Math.round(performance.now() - startTime)
-        setApiResponseTime(`${responseTime}ms`)
-      } catch (error) {
-        setApiResponseTime('Error')
-      }
-    }
-
-    measureApiResponseTime()
-    const apiInterval = setInterval(measureApiResponseTime, 2000)
-
-    return () => {
-      clearInterval(timeInterval)
-      clearInterval(apiInterval)
-    }
-  }, [])
-
-  const quickToggleActivation = useCallback(async (testCodeId: number, isActivated: boolean) => {
-    try {
-      await api.patch(`/admin/test-codes/${testCodeId}/toggle-activation`, {
-        is_activated: !isActivated
-      })
-
-      setRecentActivities(prev => prev.map(activity => 
-        activity.id === testCodeId 
-          ? { ...activity, is_activated: !isActivated }
-          : activity
-      ))
-    } catch (error: any) {
-      console.error('Failed to toggle activation:', error)
-      setError('Failed to toggle test code activation')
-      await fetchDashboardData()
-    }
-  }, [fetchDashboardData])
-
-  // Primary dashboard cards for core metrics
-  const primaryCards = useMemo(() => [
-    {
-      title: 'Total Questions',
-      value: stats.total_questions,
+  const statCards = [
+    { 
+      title: 'Total Questions', 
+      value: stats.total_questions, 
+      icon: FileText, 
       color: '#3b82f6',
-      icon: BarChart3,
-      description: 'Questions in database',
-      onClick: () => navigate('/admin/questions')
+      bgColor: 'bg-blue-50',
+      route: '/admin/questions'
     },
-    {
-      title: 'Test Codes',
-      value: stats.total_test_codes,
-      color: '#8b5cf6',
-      icon: FileText,
-      description: 'Available test codes',
-      onClick: () => navigate('/admin/testcodes')
-    },
-    {
-      title: 'Active Tests',
-      value: stats.active_test_codes,
+    { 
+      title: 'Active Test Codes', 
+      value: stats.active_test_codes, 
+      icon: PlayCircle, 
       color: '#10b981',
-      icon: PlayCircle,
-      description: 'Currently active',
-      onClick: () => navigate('/admin/testcodes')
+      bgColor: 'bg-green-50',
+      route: '/admin/test-codes'
     },
-    {
-      title: 'Teachers',
-      value: stats.total_teachers,
+    { 
+      title: 'Total Teachers', 
+      value: stats.total_teachers, 
+      icon: GraduationCap, 
+      color: '#8b5cf6',
+      bgColor: 'bg-purple-50',
+      route: '/admin/teachers'
+    },
+    { 
+      title: 'Total Students', 
+      value: stats.total_students, 
+      icon: Users, 
       color: '#f59e0b',
-      icon: Users,
-      description: 'Registered teachers',
-      onClick: () => navigate('/admin/teachers')
+      bgColor: 'bg-amber-50',
+      route: '#'
     },
-    {
-      title: 'Students',
-      value: stats.total_students,
+    { 
+      title: 'Tests Today', 
+      value: stats.tests_today, 
+      icon: Clock, 
       color: '#ef4444',
-      icon: GraduationCap,
-      description: 'Registered students',
-      onClick: () => navigate('/admin/students')
+      bgColor: 'bg-red-50',
+      route: '#'
     },
-    {
-      title: 'Tests Today',
-      value: stats.tests_today,
+    { 
+      title: 'Avg Score', 
+      value: `${stats.average_score}%`, 
+      icon: BarChart3, 
       color: '#06b6d4',
-      icon: Clock,
-      description: 'Tests taken today',
-      onClick: () => navigate('/admin/results')
+      bgColor: 'bg-cyan-50',
+      route: '#'
+    },
+    { 
+      title: 'Total Assignments', 
+      value: stats.total_assignments, 
+      icon: BookOpen, 
+      color: '#84cc16',
+      bgColor: 'bg-lime-50',
+      route: '/admin/teachers'
+    },
+    { 
+      title: 'Completion Rate', 
+      value: `${stats.completion_rate}%`, 
+      icon: Activity, 
+      color: '#ec4899',
+      bgColor: 'bg-pink-50',
+      route: '#'
     }
-  ], [stats, navigate])
+  ]
 
-  // Quick actions
-  const quickActions = useMemo(() => [
-    {
-      title: 'Create Test Code',
-      description: 'Generate new test codes',
-      icon: Plus,
-      onClick: () => navigate('/admin/testcodes'),
-      color: '#3b82f6'
-    },
-    {
-      title: 'Add Teacher',
-      description: 'Register new teacher',
-      icon: UserPlus,
-      onClick: () => navigate('/admin/teachers'),
-      color: '#10b981'
-    },
-    {
-      title: 'Manage Questions',
-      description: 'Add or edit questions',
-      icon: BookOpen,
-      onClick: () => navigate('/admin/questions'),
-      color: '#8b5cf6'
-    },
-    {
-      title: 'View Results',
-      description: 'Check test results',
-      icon: BarChart3,
-      onClick: () => navigate('/admin/results'),
-      color: '#f59e0b'
-    }
-  ], [navigate])
-
-  const formatDate = useCallback((dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    })
-  }, [])
-
-  if (loading && !retrying) {
+  if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh] text-lg text-gray-500">
-        <div className="flex items-center space-x-3">
-          <div className="loading-spinner w-5 h-5"></div>
-          Loading dashboard...
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="loading-spinner w-8 h-8 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
-      {error && <ErrorNotification message={error} onClose={() => setError('')} />}
+    <div className="min-h-screen bg-gray-50">
+      {error && (
+        <ErrorNotification
+          message={error}
+          onClose={() => setError('')}
+          onRetry={handleRetry}
+        />
+      )}
 
       {/* Header */}
-      <div className="mb-6">
+      <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600 mt-1">Welcome back, {user?.full_name || 'Administrator'}</p>
+            <p className="text-gray-600 mt-1">Welcome back, {user?.username}</p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-            <div className="text-sm text-gray-600">
-              <span className="font-medium">Server Time:</span> {liveMetrics.currentTime}
-            </div>
-            <div className="text-sm text-gray-600">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="text-sm text-gray-500">
               <span className="font-medium">API Response:</span> {apiResponseTime}
+            </div>
+            <div className="text-sm text-gray-500">
+              <span className="font-medium">Last Updated:</span> {new Date().toLocaleTimeString()}
             </div>
           </div>
         </div>
       </div>
 
-      {retrying && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-blue-800">
-          <div className="flex items-center gap-3">
-            <div className="loading-spinner w-4 h-4"></div>
-            Retrying connection...
-          </div>
-        </div>
-      )}
-
-      {/* Primary Stats Cards */}
-      <div className="mb-8">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">Core Metrics</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-6">
-          {primaryCards.map((card, index) => {
+      <div className="p-4 sm:p-6 space-y-6">
+        {/* Stats Cards - Improved Desktop Layout */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          {statCards.map((card, index) => {
             const IconComponent = card.icon
             return (
               <div
                 key={index}
-                onClick={card.onClick}
-                className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer"
+                onClick={() => card.route !== '#' && navigate(card.route)}
+                className={`${card.bgColor} rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 ${
+                  card.route !== '#' ? 'cursor-pointer hover:scale-105' : ''
+                }`}
               >
-                <div className="flex items-center gap-3">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ backgroundColor: card.color }}>
-                      <IconComponent size={24} className="text-white" />
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-600 mb-1">{card.title}</p>
+                    <p className="text-2xl lg:text-3xl font-bold" style={{ color: card.color }}>
+                      {card.value}
+                    </p>
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-2xl font-bold text-gray-900">{card.value}</p>
-                    <p className="text-sm text-gray-600 truncate">{card.title}</p>
-                    <p className="text-xs text-gray-500 truncate">{card.description}</p>
+                  <div 
+                    className="p-3 rounded-lg"
+                    style={{ backgroundColor: card.color, opacity: 0.1 }}
+                  >
+                    <IconComponent size={24} style={{ color: card.color }} />
                   </div>
                 </div>
               </div>
             )
           })}
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Test Codes */}
-        <div className="lg:col-span-2 bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Recent Test Codes</h2>
-            <button
-              onClick={() => navigate('/admin/testcodes')}
-              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              View All
-            </button>
+        {/* Quick Actions & Recent Activity - Better Desktop Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Quick Actions */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Plus size={20} />
+                Quick Actions
+              </h2>
+              <div className="space-y-3">
+                <button
+                  onClick={() => navigate('/admin/questions')}
+                  className="w-full flex items-center gap-3 p-3 text-left rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-blue-300 transition-colors"
+                >
+                  <FileText size={20} className="text-blue-600" />
+                  <span className="font-medium text-gray-900">Add Questions</span>
+                </button>
+                <button
+                  onClick={() => navigate('/admin/test-codes')}
+                  className="w-full flex items-center gap-3 p-3 text-left rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-green-300 transition-colors"
+                >
+                  <PlayCircle size={20} className="text-green-600" />
+                  <span className="font-medium text-gray-900">Generate Test Codes</span>
+                </button>
+                <button
+                  onClick={() => navigate('/admin/teachers')}
+                  className="w-full flex items-center gap-3 p-3 text-left rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-purple-300 transition-colors"
+                >
+                  <UserPlus size={20} className="text-purple-600" />
+                  <span className="font-medium text-gray-900">Manage Teachers</span>
+                </button>
+              </div>
+            </div>
           </div>
 
-          {recentActivities.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <FileText size={48} className="text-gray-300 mx-auto mb-4" />
-              <p className="text-base">No test codes created yet</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {recentActivities.slice(0, 5).map((activity) => (
-                <div
-                  key={activity.id}
-                  className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <h4 className="text-base font-semibold text-gray-900">{activity.title}</h4>
-                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                          {activity.code}
-                        </span>
+          {/* Recent Activity */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <Activity size={20} />
+                Recent Test Codes
+              </h2>
+              {recentActivities.length > 0 ? (
+                <div className="space-y-3">
+                  {recentActivities.slice(0, 6).map((activity) => (
+                    <div
+                      key={activity.id}
+                      className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-mono text-sm font-semibold text-blue-600">
+                            {activity.code}
+                          </span>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            activity.is_activated 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {activity.is_activated ? 'Active' : 'Pending'}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600">{activity.subject_name} - {activity.class_level}</p>
+                        <p className="text-xs text-gray-500">Used {activity.usage_count} times</p>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
-                        {activity.subject_name} • {activity.class_level} • Used {activity.usage_count} times
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {formatDate(activity.created_at)}
-                      </p>
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">
+                          {new Date(activity.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex-shrink-0">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          quickToggleActivation(activity.id, activity.is_activated)
-                        }}
-                        className={`px-3 py-1 text-xs font-medium rounded-lg transition-all ${
-                          activity.is_activated 
-                            ? 'bg-green-600 text-white hover:bg-green-700' 
-                            : 'bg-gray-600 text-white hover:bg-gray-700'
-                        }`}
-                      >
-                        {activity.is_activated ? 'Active' : 'Inactive'}
-                      </button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="text-center py-8">
+                  <PlayCircle size={48} className="text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No recent test codes</p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-6">
-          {/* Quick Actions */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5">Quick Actions</h2>
-            <div className="space-y-3">
-              {quickActions.map((action, index) => {
-                const IconComponent = action.icon
-                return (
-                  <button
-                    key={index}
-                    onClick={action.onClick}
-                    className="w-full flex items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-blue-300 transition-all text-left"
-                  >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: action.color }}>
-                      <IconComponent size={18} className="text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-gray-900">{action.title}</h3>
-                      <p className="text-xs text-gray-500">{action.description}</p>
-                    </div>
-                  </button>
-                )
-              })}
+        {/* System Info */}
+        <div className="bg-white rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Shield size={20} />
+            System Information
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">Server Status</p>
+              <p className="text-lg font-semibold text-green-600">Online</p>
             </div>
-          </div>
-
-          {/* System Status */}
-          <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-5">System Status</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Server Time</span>
-                <span className="text-sm font-medium text-gray-900">{liveMetrics.currentTime}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">API Response</span>
-                <span className="text-sm font-medium text-gray-900">{apiResponseTime}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Memory Usage</span>
-                <span className="text-sm font-medium text-gray-900">{liveMetrics.memoryUsage}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">CPU Usage</span>
-                <span className="text-sm font-medium text-gray-900">{liveMetrics.cpuUsage}</span>
-              </div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">API Response</p>
+              <p className="text-lg font-semibold text-blue-600">{apiResponseTime}</p>
+            </div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">Database</p>
+              <p className="text-lg font-semibold text-green-600">Connected</p>
+            </div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg">
+              <p className="text-sm text-gray-600">Last Backup</p>
+              <p className="text-lg font-semibold text-gray-600">Auto</p>
             </div>
           </div>
         </div>
