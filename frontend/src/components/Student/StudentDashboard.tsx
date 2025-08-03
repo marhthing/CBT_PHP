@@ -23,23 +23,23 @@ export default function StudentDashboard() {
         <div className="max-w-md mx-auto space-y-4">
           <button
             onClick={() => navigate('/student/test')}
-            className="w-full flex items-center justify-center gap-4 p-6 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-md"
+            className="w-full flex items-center justify-center gap-4 p-6 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md"
           >
             <BookOpen size={32} />
             <div className="text-left">
               <div className="text-xl font-semibold">Take Test</div>
-              <div className="text-blue-100 text-sm">Enter test code and start exam</div>
+              <div className="text-blue-50 text-sm">Enter test code and start exam</div>
             </div>
           </button>
 
           <button
             onClick={() => navigate('/student/results')}
-            className="w-full flex items-center justify-center gap-4 p-6 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
+            className="w-full flex items-center justify-center gap-4 p-6 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-md"
           >
             <BarChart3 size={32} />
             <div className="text-left">
               <div className="text-xl font-semibold">View Results</div>
-              <div className="text-green-100 text-sm">Check your test performance</div>
+              <div className="text-green-50 text-sm">Check your test performance</div>
             </div>
           </button>
         </div>
