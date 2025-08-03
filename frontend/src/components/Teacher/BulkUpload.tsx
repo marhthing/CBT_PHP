@@ -1,31 +1,61 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import api from '../../lib/api'
+import { api } from '../../lib/api'
 import { Upload, Download, FileText, CheckCircle, AlertCircle, X } from 'lucide-react'
+
+interface TeacherAssignment {
+  id: number
+  subject_id: number
+  subject_name: string
+  subject_code: string
+  class_level: string
+  term_id: number
+  term_name: string
+  session_id: number
+  session_name: string
+  created_at: string
+}
+
+interface LookupData {
+  subjects: Array<{
+    id: number
+    name: string
+    code: string
+  }>
+  terms: Array<{
+    id: number
+    name: string
+  }>
+  sessions: Array<{
+    id: number
+    name: string
+  }>
+}
 
 export default function BulkUpload() {
   const [file, setFile] = useState<File | null>(null)
-  const [subject, setSubject] = useState('')
+  const [subjectId, setSubjectId] = useState('')
   const [classLevel, setClassLevel] = useState('')
-  const [difficulty, setDifficulty] = useState('medium')
+  const [termId, setTermId] = useState('')
+  const [sessionId, setSessionId] = useState('')
   const [uploadResults, setUploadResults] = useState<any>(null)
   const [error, setError] = useState('')
 
   const queryClient = useQueryClient()
 
-  const { data: classes } = useQuery({
+  const { data: assignments } = useQuery({
     queryKey: ['teacher-classes'],
     queryFn: async () => {
       const response = await api.get('/teacher/classes')
-      return response.data.classes
+      return response.data.data.classes as TeacherAssignment[]
     },
   })
 
-  const { data: subjects } = useQuery({
-    queryKey: ['subjects'],
+  const { data: lookupData } = useQuery({
+    queryKey: ['lookup-data'],
     queryFn: async () => {
-      const response = await api.get('/system/lookup?type=subjects')
-      return response.data.data
+      const response = await api.get('/system/lookup')
+      return response.data.data as LookupData
     },
   })
 
@@ -65,7 +95,7 @@ export default function BulkUpload() {
   }
 
   const handleUpload = () => {
-    if (!file || !subject || !classLevel) {
+    if (!file || !subjectId || !classLevel || !termId || !sessionId) {
       setError('Please fill in all required fields and select a file')
       return
     }
@@ -73,10 +103,10 @@ export default function BulkUpload() {
 
     const formData = new FormData()
     formData.append('file', file)
-    formData.append('subject', subject)
+    formData.append('subject_id', subjectId)
     formData.append('class_level', classLevel)
-    formData.append('difficulty', difficulty)
-
+    formData.append('term_id', termId)
+    formData.append('session_id', sessionId)
     uploadMutation.mutate(formData)
   }
 
@@ -97,424 +127,212 @@ export default function BulkUpload() {
     window.URL.revokeObjectURL(url)
   }
 
-  const styles = {
-    container: {
-      maxWidth: '1000px',
-      margin: '0 auto',
-      padding: '0',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    },
-    header: {
-      marginBottom: '2.5rem'
-    },
-    title: {
-      fontSize: '2.25rem',
-      fontWeight: '800',
-      color: '#1e293b',
-      marginBottom: '0.5rem',
-      letterSpacing: '-0.025em'
-    },
-    subtitle: {
-      color: '#64748b',
-      fontSize: '1.125rem',
-      fontWeight: '400'
-    },
-    card: {
-      backgroundColor: 'white',
-      borderRadius: '16px',
-      padding: '2rem',
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      border: '1px solid rgba(226, 232, 240, 0.8)',
-      marginBottom: '2rem'
-    },
-    cardHeader: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.75rem',
-      marginBottom: '1.5rem'
-    },
-    cardTitle: {
-      fontSize: '1.25rem',
-      fontWeight: '600',
-      color: '#1f2937'
-    },
-    description: {
-      color: '#6b7280',
-      fontSize: '0.875rem',
-      lineHeight: '1.6',
-      marginBottom: '1.5rem'
-    },
-    button: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      padding: '0.75rem 1.5rem',
-      border: '1px solid #d1d5db',
-      borderRadius: '8px',
-      fontSize: '0.875rem',
-      fontWeight: '500',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      backgroundColor: 'white',
-      color: '#374151'
-    },
-    primaryButton: {
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '0.5rem',
-      padding: '0.75rem 1.5rem',
-      backgroundColor: '#4f46e5',
-      color: 'white',
-      border: 'none',
-      borderRadius: '8px',
-      fontSize: '0.875rem',
-      fontWeight: '600',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      boxShadow: '0 4px 14px 0 rgba(79, 70, 229, 0.3)'
-    },
-    formGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-      gap: '1rem',
-      marginBottom: '1.5rem'
-    },
-    formGroup: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      gap: '0.5rem'
-    },
-    label: {
-      fontSize: '0.875rem',
-      fontWeight: '500',
-      color: '#374151'
-    },
-    select: {
-      padding: '0.75rem',
-      border: '1px solid #d1d5db',
-      borderRadius: '8px',
-      fontSize: '0.875rem',
-      backgroundColor: 'white',
-      outline: 'none'
-    },
-    fileInput: {
-      display: 'none'
-    },
-    fileUploadArea: {
-      border: '2px dashed #d1d5db',
-      borderRadius: '12px',
-      padding: '2rem',
-      textAlign: 'center' as const,
-      backgroundColor: '#f9fafb',
-      cursor: 'pointer',
-      transition: 'all 0.2s ease',
-      marginBottom: '1rem'
-    },
-    fileUploadContent: {
-      display: 'flex',
-      flexDirection: 'column' as const,
-      alignItems: 'center',
-      gap: '1rem'
-    },
-    fileIcon: {
-      width: '48px',
-      height: '48px',
-      color: '#9ca3af'
-    },
-    fileText: {
-      fontSize: '1rem',
-      fontWeight: '500',
-      color: '#374151'
-    },
-    fileSubtext: {
-      fontSize: '0.875rem',
-      color: '#6b7280'
-    },
-    selectedFile: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '0.75rem',
-      padding: '1rem',
-      backgroundColor: '#eff6ff',
-      border: '1px solid #dbeafe',
-      borderRadius: '8px',
-      marginBottom: '1rem'
-    },
-    alert: {
-      padding: '1rem',
-      borderRadius: '8px',
-      fontSize: '0.875rem',
-      marginBottom: '1rem'
-    },
-    alertSuccess: {
-      backgroundColor: '#f0fdf4',
-      color: '#166534',
-      border: '1px solid #bbf7d0'
-    },
-    alertError: {
-      backgroundColor: '#fef2f2',
-      color: '#dc2626',
-      border: '1px solid #fecaca'
-    },
-    alertInfo: {
-      backgroundColor: '#eff6ff',
-      color: '#1d4ed8',
-      border: '1px solid #dbeafe'
-    },
-    resultsList: {
-      marginTop: '1rem'
-    },
-    resultItem: {
-      padding: '0.75rem',
-      backgroundColor: '#f9fafb',
-      border: '1px solid #f3f4f6',
-      borderRadius: '6px',
-      marginBottom: '0.5rem',
-      fontSize: '0.875rem'
-    },
-    removeButton: {
-      padding: '0.25rem',
-      backgroundColor: 'transparent',
-      color: '#6b7280',
-      border: 'none',
-      borderRadius: '4px',
-      cursor: 'pointer'
-    }
-  }
+  const availableAssignments = assignments?.filter(assignment => 
+    !subjectId || assignment.subject_id === parseInt(subjectId)
+  ) || []
 
   return (
-    <div style={styles.container}>
-      <div style={styles.header}>
-        <h1 style={styles.title}>Bulk Upload Questions</h1>
-        <p style={styles.subtitle}>
-          Upload multiple questions at once using CSV or Excel files
-        </p>
-      </div>
-
-      {/* Template Download */}
-      <div style={styles.card}>
-        <div style={styles.cardHeader}>
-          <Download size={20} style={{ color: '#4f46e5' }} />
-          <h2 style={styles.cardTitle}>Download Template</h2>
-        </div>
-        <p style={styles.description}>
-          Download the CSV template to format your questions correctly before uploading. 
-          The template includes sample questions to guide you.
-        </p>
-        <button 
-          style={styles.button}
-          onClick={downloadTemplate}
-          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
-          onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'white'}
-        >
-          <Download size={16} />
-          Download CSV Template
-        </button>
-      </div>
-
-      {/* Upload Form */}
-      <div style={styles.card}>
-        <div style={styles.cardHeader}>
-          <Upload size={20} style={{ color: '#4f46e5' }} />
-          <h2 style={styles.cardTitle}>Upload Questions</h2>
+    <div className="p-6">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Bulk Upload Questions</h1>
+          <p className="text-gray-600">Upload multiple questions from CSV files</p>
         </div>
 
-        <div style={styles.formGrid}>
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Subject *</label>
-            <select
-              style={styles.select}
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-            >
-              <option value="">Select subject</option>
-              {subjects?.map((subj: any) => (
-                <option key={subj.id} value={subj.id}>{subj.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Class Level *</label>
-            <select
-              style={styles.select}
-              value={classLevel}
-              onChange={(e) => setClassLevel(e.target.value)}
-            >
-              <option value="">Select class level</option>
-              {['JSS1', 'JSS2', 'JSS3', 'SS1', 'SS2', 'SS3'].map(level => (
-                <option key={level} value={level}>{level}</option>
-              ))}
-            </select>
-          </div>
-
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Difficulty</label>
-            <select
-              style={styles.select}
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
-            >
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
-          </div>
-        </div>
-
-        {/* File Upload */}
-        <input
-          type="file"
-          accept=".csv,.xlsx,.xls"
-          onChange={handleFileChange}
-          style={styles.fileInput}
-          id="file-upload"
-        />
-        
-        {!file ? (
-          <label
-            htmlFor="file-upload"
-            style={styles.fileUploadArea}
-            onMouseOver={(e) => {
-              e.currentTarget.style.borderColor = '#4f46e5'
-              e.currentTarget.style.backgroundColor = '#fafbff'
-            }}
-            onMouseOut={(e) => {
-              e.currentTarget.style.borderColor = '#d1d5db'
-              e.currentTarget.style.backgroundColor = '#f9fafb'
-            }}
-          >
-            <div style={styles.fileUploadContent}>
-              <Upload style={styles.fileIcon} />
-              <div>
-                <p style={styles.fileText}>Click to select your file</p>
-                <p style={styles.fileSubtext}>CSV, XLS, or XLSX files supported</p>
-              </div>
+        {/* Template Download Card */}
+        <div className="bg-white rounded-lg border p-6 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Download Template</h2>
+              <p className="text-gray-600">Get the CSV template with proper format</p>
             </div>
-          </label>
-        ) : (
-          <div style={styles.selectedFile}>
-            <FileText size={20} style={{ color: '#4f46e5' }} />
-            <span style={{ flex: 1 }}>{file.name}</span>
             <button
-              style={styles.removeButton}
-              onClick={() => setFile(null)}
+              onClick={downloadTemplate}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
             >
-              <X size={16} />
+              <Download className="w-4 h-4" />
+              Download CSV Template
             </button>
           </div>
-        )}
-
-        <button
-          style={{
-            ...styles.primaryButton,
-            opacity: (!file || !subject || !classLevel || uploadMutation.isPending) ? 0.6 : 1,
-            cursor: (!file || !subject || !classLevel || uploadMutation.isPending) ? 'not-allowed' : 'pointer'
-          }}
-          onClick={handleUpload}
-          disabled={!file || !subject || !classLevel || uploadMutation.isPending}
-          onMouseOver={(e) => {
-            if (!e.currentTarget.disabled) {
-              e.currentTarget.style.backgroundColor = '#4338ca'
-            }
-          }}
-          onMouseOut={(e) => {
-            if (!e.currentTarget.disabled) {
-              e.currentTarget.style.backgroundColor = '#4f46e5'
-            }
-          }}
-        >
-          <Upload size={16} />
-          {uploadMutation.isPending ? 'Uploading...' : 'Upload Questions'}
-        </button>
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <div style={{
-          ...styles.alertError,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          marginBottom: '20px'
-        }}>
-          <AlertCircle size={16} style={{ color: '#ef4444' }} />
-          <strong>Error:</strong> {error}
         </div>
-      )}
 
-      {/* Upload Results */}
-      {uploadResults && (
-        <div style={styles.card}>
-          <div style={styles.cardHeader}>
-            {uploadResults.success ? (
-              <CheckCircle size={20} style={{ color: '#10b981' }} />
-            ) : (
-              <AlertCircle size={20} style={{ color: '#ef4444' }} />
-            )}
-            <h2 style={styles.cardTitle}>Upload Results</h2>
+        {/* Upload Form */}
+        <div className="bg-white rounded-lg border p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Upload Questions</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Subject *
+              </label>
+              <select
+                value={subjectId}
+                onChange={(e) => setSubjectId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select Subject</option>
+                {Array.from(new Set(assignments?.map(a => a.subject_id) || [])).map(sId => {
+                  const subject = lookupData?.subjects.find(s => s.id === sId)
+                  return subject ? (
+                    <option key={subject.id} value={subject.id}>
+                      {subject.name} ({subject.code})
+                    </option>
+                  ) : null
+                })}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Class *
+              </label>
+              <select
+                value={classLevel}
+                onChange={(e) => setClassLevel(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select Class</option>
+                {Array.from(new Set(availableAssignments.map(a => a.class_level))).map(cls => (
+                  <option key={cls} value={cls}>{cls}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Term *
+              </label>
+              <select
+                value={termId}
+                onChange={(e) => setTermId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select Term</option>
+                {Array.from(new Set(availableAssignments.map(a => a.term_id))).map(tId => {
+                  const term = lookupData?.terms.find(t => t.id === tId)
+                  return term ? (
+                    <option key={term.id} value={term.id}>{term.name}</option>
+                  ) : null
+                })}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Session *
+              </label>
+              <select
+                value={sessionId}
+                onChange={(e) => setSessionId(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select Session</option>
+                {Array.from(new Set(availableAssignments.map(a => a.session_id))).map(sId => {
+                  const session = lookupData?.sessions.find(s => s.id === sId)
+                  return session ? (
+                    <option key={session.id} value={session.id}>{session.name}</option>
+                  ) : null
+                })}
+              </select>
+            </div>
           </div>
 
-          {uploadResults.success ? (
-            <div style={styles.alertSuccess}>
-              <strong>Success!</strong> {uploadResults.imported_count} questions imported successfully.
+          {/* File Upload */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Questions File *
+            </label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <input
+                type="file"
+                onChange={handleFileChange}
+                accept=".csv,.xlsx,.xls"
+                className="hidden"
+                id="file-upload"
+              />
+              <label htmlFor="file-upload" className="cursor-pointer">
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="mt-2">
+                  <span className="text-blue-600 hover:text-blue-500">Choose a file</span>
+                  <span className="text-gray-500"> or drag and drop</span>
+                </div>
+                <p className="text-xs text-gray-500">CSV or Excel files only</p>
+              </label>
+              {file && (
+                <div className="mt-2 flex items-center justify-center gap-2">
+                  <FileText className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-gray-900">{file.name}</span>
+                </div>
+              )}
             </div>
-          ) : (
-            <div style={styles.alertError}>
-              <strong>Upload failed:</strong> {uploadResults.message}
+          </div>
+
+          {error && (
+            <div className="mb-4 flex items-center gap-2 text-red-600 bg-red-50 p-3 rounded-lg">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm">{error}</span>
             </div>
           )}
 
-          {uploadResults.errors && uploadResults.errors.length > 0 && (
-            <div>
-              <h4 style={{ color: '#dc2626', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>
-                Errors found:
-              </h4>
-              <div style={styles.resultsList}>
-                {uploadResults.errors.map((error: string, index: number) => (
-                  <div key={index} style={styles.resultItem}>
-                    {error}
-                  </div>
-                ))}
+          <button
+            onClick={handleUpload}
+            disabled={uploadMutation.isPending || !file || !subjectId || !classLevel || !termId || !sessionId}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {uploadMutation.isPending ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Uploading...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4" />
+                Upload Questions
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Upload Results */}
+        {uploadResults && (
+          <div className="mt-6 bg-white rounded-lg border p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Upload Results</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+                <div>
+                  <p className="text-lg font-semibold text-gray-900">{uploadResults.data?.created_count || 0}</p>
+                  <p className="text-sm text-gray-600">Questions Created</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-8 w-8 text-yellow-600" />
+                <div>
+                  <p className="text-lg font-semibold text-gray-900">{uploadResults.data?.skipped_count || 0}</p>
+                  <p className="text-sm text-gray-600">Questions Skipped</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <FileText className="h-8 w-8 text-blue-600" />
+                <div>
+                  <p className="text-lg font-semibold text-gray-900">{uploadResults.data?.total_rows || 0}</p>
+                  <p className="text-sm text-gray-600">Total Rows</p>
+                </div>
               </div>
             </div>
-          )}
 
-          {uploadResults.skipped && uploadResults.skipped.length > 0 && (
-            <div style={{ marginTop: '1rem' }}>
-              <h4 style={{ color: '#f59e0b', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600' }}>
-                Skipped rows:
-              </h4>
-              <div style={styles.resultsList}>
-                {uploadResults.skipped.map((skip: string, index: number) => (
-                  <div key={index} style={styles.resultItem}>
-                    {skip}
-                  </div>
-                ))}
+            {uploadResults.data?.errors && uploadResults.data.errors.length > 0 && (
+              <div className="bg-red-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-red-800 mb-2">Errors:</h4>
+                <ul className="list-disc list-inside space-y-1">
+                  {uploadResults.data.errors.map((error: string, index: number) => (
+                    <li key={index} className="text-sm text-red-700">{error}</li>
+                  ))}
+                </ul>
               </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Instructions */}
-      <div style={styles.card}>
-        <h3 style={{ ...styles.cardTitle, marginBottom: '1rem' }}>File Format Instructions</h3>
-        <div style={{ color: '#6b7280', fontSize: '0.875rem', lineHeight: '1.6' }}>
-          <p><strong>Required columns:</strong></p>
-          <ul style={{ marginLeft: '1.5rem', marginBottom: '1rem' }}>
-            <li>question_text - The main question</li>
-            <li>option_a, option_b, option_c, option_d - Multiple choice options</li>
-            <li>correct_answer - Must be A, B, C, or D</li>
-          </ul>
-          <p><strong>Tips:</strong></p>
-          <ul style={{ marginLeft: '1.5rem' }}>
-            <li>Use the downloaded template as a starting point</li>
-            <li>Ensure all required fields are filled</li>
-            <li>Keep questions clear and concise</li>
-            <li>Double-check your correct answers</li>
-          </ul>
-        </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

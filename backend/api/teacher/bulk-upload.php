@@ -29,23 +29,24 @@ try {
     }
     
     // Get form data
-    $subject = $_POST['subject'] ?? '';
+    $subject_id = $_POST['subject_id'] ?? '';
     $class_level = $_POST['class_level'] ?? '';
-    $difficulty = $_POST['difficulty'] ?? 'medium';
+    $term_id = $_POST['term_id'] ?? '';
+    $session_id = $_POST['session_id'] ?? '';
     
-    if (empty($subject) || empty($class_level)) {
-        Response::validationError('Subject and class level are required');
+    if (empty($subject_id) || empty($class_level) || empty($term_id) || empty($session_id)) {
+        Response::validationError('Subject, class level, term, and session are required');
     }
     
-    // Check if teacher is assigned to this subject/class
+    // Check if teacher is assigned to this subject/class/term/session
     $assignment_stmt = $db->prepare("
         SELECT id FROM teacher_assignments 
-        WHERE teacher_id = ? AND subject = ? AND class_level = ?
+        WHERE teacher_id = ? AND subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
     ");
-    $assignment_stmt->execute([$user['id'], $subject, $class_level]);
+    $assignment_stmt->execute([$user['id'], $subject_id, $class_level, $term_id, $session_id]);
     
     if (!$assignment_stmt->fetch()) {
-        Response::forbidden('You are not assigned to teach this subject/class');
+        Response::forbidden('You are not assigned to teach this subject/class/term/session');
     }
     
     // Handle file upload
@@ -80,9 +81,10 @@ try {
         
         if ($validation_result['valid']) {
             $valid_questions[] = array_merge($validation_result['data'], [
-                'subject' => $subject,
+                'subject_id' => $subject_id,
                 'class_level' => $class_level,
-                'difficulty' => $difficulty,
+                'term_id' => $term_id,
+                'session_id' => $session_id,
                 'teacher_id' => $user['id']
             ]);
         } else {
@@ -102,8 +104,8 @@ try {
         $stmt = $db->prepare("
             INSERT INTO questions (
                 question_text, option_a, option_b, option_c, option_d,
-                correct_answer, subject, class_level, difficulty, teacher_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                correct_answer, subject_id, class_level, term_id, session_id, teacher_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $created_count = 0;
@@ -115,9 +117,10 @@ try {
                 $question['option_c'],
                 $question['option_d'],
                 $question['correct_answer'],
-                $question['subject'],
+                $question['subject_id'],
                 $question['class_level'],
-                $question['difficulty'],
+                $question['term_id'],
+                $question['session_id'],
                 $question['teacher_id']
             ]);
             $created_count++;

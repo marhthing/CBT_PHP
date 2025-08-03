@@ -21,14 +21,21 @@ try {
     $stmt = $db->prepare("
         SELECT 
             ta.id,
-            ta.subject,
+            ta.subject_id,
+            s.name as subject_name,
+            s.code as subject_code,
             ta.class_level,
-            ta.created_at,
-            u.full_name as assigned_by_name
+            ta.term_id,
+            t.name as term_name,
+            ta.session_id,
+            sess.name as session_name,
+            ta.created_at
         FROM teacher_assignments ta
-        LEFT JOIN users u ON ta.assigned_by = u.id
+        LEFT JOIN subjects s ON ta.subject_id = s.id
+        LEFT JOIN terms t ON ta.term_id = t.id
+        LEFT JOIN sessions sess ON ta.session_id = sess.id
         WHERE ta.teacher_id = ?
-        ORDER BY ta.subject, ta.class_level
+        ORDER BY s.name, ta.class_level
     ");
     
     $stmt->execute([$user['id']]);

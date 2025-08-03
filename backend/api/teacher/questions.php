@@ -11,6 +11,17 @@ $user = $auth->requireRole('teacher');
 $database = new Database();
 $db = $database->getConnection();
 
+function validateTeacherAssignment($db, $user_id, $subject_id, $class_level, $term_id, $session_id) {
+    $stmt = $db->prepare("
+        SELECT COUNT(*) as count 
+        FROM teacher_assignments 
+        WHERE teacher_id = ? AND subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
+    ");
+    $stmt->execute([$user_id, $subject_id, $class_level, $term_id, $session_id]);
+    $result = $stmt->fetch();
+    return $result['count'] > 0;
+}
+
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
         handleGet($db, $user);
@@ -108,7 +119,7 @@ function handleGet($db, $user) {
         }
         
         if (isset($_GET['subject']) && !empty($_GET['subject'])) {
-            $where_conditions[] = 'subject = ?';
+            $where_conditions[] = 'subject_id = ?';
             $params[] = $_GET['subject'];
         }
         
@@ -118,11 +129,13 @@ function handleGet($db, $user) {
         }
         
         $sql = "
-            SELECT id, question_text, option_a, option_b, option_c, option_d,
-                   correct_answer, subject, class_level, difficulty, created_at
-            FROM questions 
+            SELECT q.id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d,
+                   q.correct_answer, s.name as subject_name, q.subject_id, q.class_level, 
+                   q.term_id, q.session_id, q.created_at
+            FROM questions q
+            LEFT JOIN subjects s ON q.subject_id = s.id
             WHERE " . implode(' AND ', $where_conditions) . "
-            ORDER BY created_at DESC
+            ORDER BY q.created_at DESC
         ";
         
         $stmt = $db->prepare($sql);
@@ -149,7 +162,7 @@ function handlePost($db, $user) {
         // Validate required fields
         $required_fields = [
             'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
-            'correct_answer', 'subject', 'class_level', 'difficulty'
+            'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
         ];
         Response::validateRequired($input, $required_fields);
         
@@ -158,28 +171,17 @@ function handlePost($db, $user) {
             Response::validationError('Correct answer must be A, B, C, or D');
         }
         
-        // Validate difficulty
-        if (!in_array($input['difficulty'], ['easy', 'medium', 'hard'])) {
-            Response::validationError('Difficulty must be easy, medium, or hard');
-        }
-        
-        // Check if teacher is assigned to this subject/class
-        $assignment_stmt = $db->prepare("
-            SELECT id FROM teacher_assignments 
-            WHERE teacher_id = ? AND subject = ? AND class_level = ?
-        ");
-        $assignment_stmt->execute([$user['id'], $input['subject'], $input['class_level']]);
-        
-        if (!$assignment_stmt->fetch()) {
-            Response::forbidden('You are not assigned to teach this subject/class');
+        // Check if teacher is assigned to this subject/class/term/session
+        if (!validateTeacherAssignment($db, $user['id'], $input['subject_id'], $input['class_level'], $input['term_id'], $input['session_id'])) {
+            Response::forbidden('You are not assigned to teach this subject/class/term/session');
         }
         
         // Insert question
         $stmt = $db->prepare("
             INSERT INTO questions (
                 question_text, option_a, option_b, option_c, option_d,
-                correct_answer, subject, class_level, difficulty, teacher_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                correct_answer, subject_id, class_level, term_id, session_id, teacher_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
@@ -189,9 +191,10 @@ function handlePost($db, $user) {
             $input['option_c'],
             $input['option_d'],
             strtoupper($input['correct_answer']),
-            $input['subject'],
+            $input['subject_id'],
             $input['class_level'],
-            $input['difficulty'],
+            $input['term_id'],
+            $input['session_id'],
             $user['id']
         ]);
         
@@ -232,7 +235,7 @@ function handlePut($db, $user) {
         
         $allowed_fields = [
             'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
-            'correct_answer', 'subject', 'class_level', 'difficulty'
+            'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
         ];
         
         foreach ($allowed_fields as $field) {
@@ -243,12 +246,6 @@ function handlePut($db, $user) {
                     }
                     $update_fields[] = "$field = ?";
                     $params[] = strtoupper($input[$field]);
-                } elseif ($field === 'difficulty') {
-                    if (!in_array($input[$field], ['easy', 'medium', 'hard'])) {
-                        Response::validationError('Difficulty must be easy, medium, or hard');
-                    }
-                    $update_fields[] = "$field = ?";
-                    $params[] = $input[$field];
                 } else {
                     $update_fields[] = "$field = ?";
                     $params[] = $input[$field];
