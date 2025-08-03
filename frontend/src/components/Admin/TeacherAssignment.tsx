@@ -308,98 +308,45 @@ export default function TeacherAssignment() {
       </div>
 
       {/* Controls */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px'
-      }}>
-        <div style={{
-          display: 'flex',
-          gap: '16px'
-        }}>
-          <input
-            type="text"
-            placeholder="Search teachers..."
-            value={teacherFilter}
-            onChange={(e) => setTeacherFilter(e.target.value)}
-            style={{
-              padding: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: '8px',
-              fontSize: '14px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: 'white'
-            }}
-          />
+      <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search teachers..."
+              value={teacherFilter}
+              onChange={(e) => setTeacherFilter(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              <option value="">All Subjects</option>
+              {(lookupData.subjects || []).map(subject => (
+                <option key={subject.id} value={subject.name}>
+                  {subject.name}
+                </option>
+              ))}
+            </select>
 
-          <select
-            value={subjectFilter}
-            onChange={(e) => setSubjectFilter(e.target.value)}
-            style={{
-              padding: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: '8px',
-              fontSize: '14px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: 'white'
-            }}
-          >
-            <option value="">All Subjects</option>
-            {(lookupData.subjects || []).map(subject => (
-              <option key={subject.id} value={subject.name} style={{ color: '#1f2937' }}>
-                {subject.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={classFilter}
-            onChange={(e) => setClassFilter(e.target.value)}
-            style={{
-              padding: '12px',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              borderRadius: '8px',
-              fontSize: '14px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: 'white'
-            }}
-          >
-            <option value="">All Classes</option>
-            {(lookupData.class_levels || []).map(classLevel => (
-              <option key={classLevel.id} value={classLevel.id} style={{ color: '#1f2937' }}>
-                {classLevel.name}
-              </option>
-            ))}
-          </select>
+            <select
+              value={classFilter}
+              onChange={(e) => setClassFilter(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              <option value="">All Classes</option>
+              {(lookupData.class_levels || []).map(classLevel => (
+                <option key={classLevel.id} value={classLevel.id}>
+                  {classLevel.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-
-        <button
-          onClick={() => setShowCreateModal(true)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '12px 20px',
-            background: 'rgba(255, 255, 255, 0.2)',
-            color: 'white',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
-          }}
-        >
-          <Plus size={16} />
-          Create Assignment
-        </button>
       </div>
 
       {/* Assignments List */}
@@ -780,54 +727,25 @@ export default function TeacherAssignment() {
                 </div>
               )}
 
-              <div style={{
-                display: 'flex',
-                gap: '12px',
-                justifyContent: 'flex-end',
-                marginTop: '8px'
-              }}>
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-end mt-6">
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  style={{
-                    padding: '12px 20px',
-                    background: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: 'pointer'
-                  }}
+                  className="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors font-medium"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={createAssignment}
                   disabled={creating}
-                  style={{
-                    padding: '12px 20px',
-                    background: creating ? '#9ca3af' : '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: creating ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
+                  className={`w-full sm:w-auto px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                    creating 
+                      ? 'bg-gray-400 text-white cursor-not-allowed' 
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
                 >
                   {creating ? (
                     <>
-                      <div style={{
-                        width: '16px',
-                        height: '16px',
-                        border: '2px solid #ffffff',
-                        borderTop: '2px solid transparent',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite'
-                      }}></div>
+                      <div className="loading-spinner w-4 h-4"></div>
                       Creating...
                     </>
                   ) : (
@@ -853,8 +771,6 @@ export default function TeacherAssignment() {
         onConfirm={confirmDeleteAssignment}
         title="Delete Assignment"
         message="Are you sure you want to delete this teacher assignment? This action cannot be undone."
-        confirmText="Delete"
-        cancelText="Cancel"
         isDestructive={true}
         loading={deleting}
       />
