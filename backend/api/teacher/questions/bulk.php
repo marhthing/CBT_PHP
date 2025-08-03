@@ -50,15 +50,15 @@ try {
         
         $stmt = $db->prepare("
             INSERT INTO questions (
-                question_text, question_type, difficulty_level, option_a, option_b, option_c, option_d,
+                question_text, question_type, option_a, option_b, option_c, option_d,
                 correct_answer, subject_id, class_level, term_id, session_id, teacher_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         foreach ($input['questions'] as $index => $question) {
             try {
                 // Validate question fields
-                $required_question_fields = ['question_text', 'question_type', 'difficulty_level', 'option_a', 'option_b', 'correct_answer'];
+                $required_question_fields = ['question_text', 'question_type', 'option_a', 'option_b', 'correct_answer'];
                 
                 foreach ($required_question_fields as $field) {
                     if (!isset($question[$field]) || empty(trim($question[$field]))) {
@@ -73,11 +73,7 @@ try {
                     continue;
                 }
                 
-                // Validate difficulty level
-                if (!in_array($question['difficulty_level'], ['Easy', 'Medium', 'Hard'])) {
-                    $errors[] = "Question " . ($index + 1) . ": Invalid difficulty level";
-                    continue;
-                }
+
                 
                 // Validate correct answer
                 if (!in_array(strtoupper($question['correct_answer']), ['A', 'B', 'C', 'D'])) {
@@ -104,7 +100,6 @@ try {
                 $stmt->execute([
                     $question['question_text'],
                     $question['question_type'],
-                    $question['difficulty_level'],
                     $question['option_a'],
                     $question['option_b'],
                     $question['option_c'] ?? '',

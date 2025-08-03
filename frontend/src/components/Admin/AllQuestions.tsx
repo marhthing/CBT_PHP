@@ -7,7 +7,7 @@ interface Question {
   id: number
   question_text: string
   question_type: string
-  difficulty_level: string
+
   subject_name: string
   class_level: string
   created_by_name: string
