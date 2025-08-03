@@ -1,5 +1,5 @@
 -- PostgreSQL Database Schema for CBT Portal
--- Generated: August 3, 2025 at 12:39 PM
+-- Generated: August 3, 2025 at 4:13 PM
 -- Extracted from database: neondb
 -- Structure: All tables
 -- Data: users table only
@@ -24,6 +24,7 @@ SET row_security = off;
 
 ALTER TABLE IF EXISTS ONLY public.test_results DROP CONSTRAINT IF EXISTS test_results_test_code_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.test_results DROP CONSTRAINT IF EXISTS test_results_student_id_fkey;
+ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_used_by_fkey;
 ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_term_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_subject_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.test_codes DROP CONSTRAINT IF EXISTS test_codes_session_id_fkey;
@@ -336,7 +337,11 @@ CREATE TABLE public.test_codes (
     batch_id character varying(255),
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     test_type character varying(20) DEFAULT 'test'::character varying,
-    score_per_question integer DEFAULT 1
+    score_per_question integer DEFAULT 1,
+    is_used boolean DEFAULT false,
+    used_at timestamp without time zone,
+    used_by integer,
+    status character varying(20) DEFAULT 'active'::character varying
 );
 
 
@@ -811,6 +816,14 @@ ALTER TABLE ONLY public.test_codes
 
 
 --
+-- Name: test_codes test_codes_used_by_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.test_codes
+    ADD CONSTRAINT test_codes_used_by_fkey FOREIGN KEY (used_by) REFERENCES public.users(id);
+
+
+--
 -- Name: test_results test_results_student_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -858,9 +871,9 @@ SET row_security = off;
 --
 
 COPY public.users (id, username, email, reg_number, password, role, full_name, is_active, created_at, last_login, current_term, current_session) FROM stdin;
-2       teacher1        teacher1@sfgs.edu.ng    \N      $2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i    teacher John Doe        t       2025-08-03 11:46:51.454306      \N      First   2024/2025
-3       \N      student1@sfgs.edu.ng    2023001 $2y$10$N79EW3YvnfXujdvcy71GuOry7M4AKRDrL3SxYfZxgyDIJqMFHceBS    student Jane Smith      t       2025-08-03 11:46:51.454306      \N      First   2024/2025
-1       admin   admin@sfgs.edu.ng       \N      $2y$10$XO4C03pHWyQ3ZE44D..aTuXReKbIasF9lQE4EyA3nd9Xgg2GbcaJK    admin   System Administrator    t       2025-08-03 11:46:51.454306      2025-08-03 11:48:08.781647      First   2024/2025
+2	teacher1	teacher1@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	teacher	John Doe	t	2025-08-03 11:46:51.454306	2025-08-03 15:27:36.278881	First	2024/2025
+1	admin	admin@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	admin	System Administrator	t	2025-08-03 11:46:51.454306	2025-08-03 16:01:20.533663	First	2024/2025
+3	2023001	student1@sfgs.edu.ng	2023001	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	student	Jane Smith	t	2025-08-03 11:46:51.454306	2025-08-03 16:05:56.424404	First	2024/2025
 \.
 
 
@@ -869,79 +882,6 @@ COPY public.users (id, username, email, reg_number, password, role, full_name, i
 --
 
 SELECT pg_catalog.setval('public.users_id_seq', 3, true);
-
-
---
--- Data for Name: terms; Type: TABLE DATA; Schema: public; Owner: -
---
-
-INSERT INTO public.terms (id, name, display_order, is_active, created_at) VALUES
-(1, 'First Term', 1, true, CURRENT_TIMESTAMP),
-(2, 'Second Term', 2, true, CURRENT_TIMESTAMP),
-(3, 'Third Term', 3, true, CURRENT_TIMESTAMP);
-
---
--- Data for Name: sessions; Type: TABLE DATA; Schema: public; Owner: -
---
-
-INSERT INTO public.sessions (id, name, start_date, end_date, is_current, is_active, created_at) VALUES
-(1, '2023/2024', '2023-09-01', '2024-07-31', false, true, CURRENT_TIMESTAMP),
-(2, '2024/2025', '2024-09-01', '2025-07-31', true, true, CURRENT_TIMESTAMP),
-(3, '2025/2026', '2025-09-01', '2026-07-31', false, true, CURRENT_TIMESTAMP);
-
---
--- Data for Name: subjects; Type: TABLE DATA; Schema: public; Owner: -
---
-
-INSERT INTO public.subjects (id, name, code, description, is_active, created_at) VALUES
-(1, 'Mathematics', 'MATH', 'Mathematics subject covering algebra, geometry, and calculus', true, CURRENT_TIMESTAMP),
-(2, 'English Language', 'ENG', 'English language and literature', true, CURRENT_TIMESTAMP),
-(3, 'Physics', 'PHY', 'Physics - study of matter, energy, and their interactions', true, CURRENT_TIMESTAMP),
-(4, 'Chemistry', 'CHEM', 'Chemistry - study of matter and chemical reactions', true, CURRENT_TIMESTAMP),
-(5, 'Biology', 'BIO', 'Biology - study of living organisms', true, CURRENT_TIMESTAMP),
-(6, 'Geography', 'GEO', 'Geography - study of Earth and its features', true, CURRENT_TIMESTAMP),
-(7, 'History', 'HIST', 'History - study of past events', true, CURRENT_TIMESTAMP),
-(8, 'Economics', 'ECON', 'Economics - study of production, distribution, and consumption of goods', true, CURRENT_TIMESTAMP),
-(9, 'Government', 'GOV', 'Government - study of political systems and governance', true, CURRENT_TIMESTAMP),
-(10, 'Literature', 'LIT', 'Literature - study of written works', true, CURRENT_TIMESTAMP),
-(11, 'Further Mathematics', 'FMATH', 'Advanced mathematics topics', true, CURRENT_TIMESTAMP),
-(12, 'Computer Science', 'CS', 'Computer science and programming', true, CURRENT_TIMESTAMP),
-(13, 'Agricultural Science', 'AGRIC', 'Agricultural science and farming practices', true, CURRENT_TIMESTAMP),
-(14, 'Technical Drawing', 'TD', 'Technical drawing and engineering graphics', true, CURRENT_TIMESTAMP),
-(15, 'French', 'FR', 'French language', true, CURRENT_TIMESTAMP);
-
---
--- Data for Name: teacher_assignments; Type: TABLE DATA; Schema: public; Owner: -
---
-
-INSERT INTO public.teacher_assignments (id, teacher_id, subject_id, class_level, term_id, session_id, created_at) VALUES
-(1, 2, 1, 'SS1', 1, 2, CURRENT_TIMESTAMP),
-(2, 2, 1, 'SS2', 1, 2, CURRENT_TIMESTAMP),
-(3, 2, 3, 'SS1', 1, 2, CURRENT_TIMESTAMP);
-
---
--- Name: terms_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.terms_id_seq', 3, true);
-
---
--- Name: sessions_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.sessions_id_seq', 3, true);
-
---
--- Name: subjects_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.subjects_id_seq', 15, true);
-
---
--- Name: teacher_assignments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
---
-
-SELECT pg_catalog.setval('public.teacher_assignments_id_seq', 3, true);
 
 
 --
