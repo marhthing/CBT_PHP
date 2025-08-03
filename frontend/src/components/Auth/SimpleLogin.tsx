@@ -20,23 +20,23 @@ export default function SimpleLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-6">
-          <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-lg bg-slate-600 mb-4 shadow-sm">
+          <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-lg bg-blue-600 mb-4 shadow-sm">
             <span className="text-white text-sm font-medium tracking-wide">SFCS</span>
           </div>
-          <h1 className="text-2xl font-semibold text-gray-800 mb-2">
+          <h1 className="text-2xl font-semibold text-blue-900 mb-2">
             CBT Portal
           </h1>
-          <p className="text-gray-500 text-sm">
+          <p className="text-blue-700 text-sm">
             Sure Foundation Comprehensive School
           </p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-sky-200 p-6">
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-md text-xs">
               {error}
@@ -45,7 +45,7 @@ export default function SimpleLogin() {
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="identifier" className="block text-xs font-medium text-gray-600 mb-2">
+              <label htmlFor="identifier" className="block text-xs font-medium text-blue-700 mb-2">
                 Username or Registration Number
               </label>
               <input
@@ -53,7 +53,7 @@ export default function SimpleLogin() {
                 name="identifier"
                 type="text"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                className="w-full px-3 py-2 border border-sky-300 rounded-md text-sm placeholder-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-sky-50/50"
                 placeholder="Enter username or registration number"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
@@ -61,7 +61,7 @@ export default function SimpleLogin() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-xs font-medium text-gray-600 mb-2">
+              <label htmlFor="password" className="block text-xs font-medium text-blue-700 mb-2">
                 Password
               </label>
               <input
@@ -69,7 +69,7 @@ export default function SimpleLogin() {
                 name="password"
                 type="password"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-slate-400 focus:border-slate-400 transition-colors"
+                className="w-full px-3 py-2 border border-sky-300 rounded-md text-sm placeholder-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-sky-50/50"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -80,7 +80,7 @@ export default function SimpleLogin() {
               <button
                 type="submit"
                 disabled={loginLoading}
-                className="w-full bg-slate-600 text-white py-2 px-4 rounded-md font-medium text-sm hover:bg-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-medium text-sm hover:bg-blue-700 focus:outline-none focus:ring-1 focus:ring-sky-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loginLoading ? (
                   <div className="flex items-center justify-center">
