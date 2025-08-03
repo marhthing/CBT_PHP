@@ -7,7 +7,6 @@ interface Question {
   id: number
   question_text: string
   question_type: string
-  difficulty_level: string
   subject: string
   class_level: string
   created_at: string
@@ -39,35 +38,19 @@ export default function TeacherDashboard() {
   const fetchTeacherData = async () => {
     try {
       const [questionsResponse] = await Promise.all([
-        api.get('/teacher/questions?limit=10')
+        api.get('/teacher/questions?stats=true')
       ])
       
-      const questions = questionsResponse.data.data || []
-      setRecentQuestions(questions)
-      
-      // Calculate stats from questions
-      const total = questions.length
-      const bySubject: { [key: string]: number } = {}
-      const byClass: { [key: string]: number } = {}
-      
-      questions.forEach((q: Question) => {
-        bySubject[q.subject] = (bySubject[q.subject] || 0) + 1
-        byClass[q.class_level] = (byClass[q.class_level] || 0) + 1
-      })
-      
-      const recentCount = questions.filter((q: Question) => {
-        const questionDate = new Date(q.created_at)
-        const oneWeekAgo = new Date()
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-        return questionDate > oneWeekAgo
-      }).length
-      
+      const statsData = questionsResponse.data.data || {}
       setStats({
-        total_questions: total,
-        questions_by_subject: bySubject,
-        questions_by_class: byClass,
-        recent_uploads: recentCount
+        total_questions: statsData.total_questions || 0,
+        questions_by_subject: {},
+        questions_by_class: {},
+        recent_uploads: statsData.this_week || 0
       })
+      
+      const questions = statsData.recent_questions || []
+      setRecentQuestions(questions)
     } catch (error) {
       console.error('Failed to fetch teacher data:', error)
     } finally {
