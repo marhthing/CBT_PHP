@@ -61,6 +61,8 @@ try {
             }
         }
         
+
+        
         // Validate correct answer
         if (isset($question['correct_answer']) && 
             !in_array(strtoupper($question['correct_answer']), ['A', 'B', 'C', 'D'])) {
@@ -74,9 +76,7 @@ try {
                 'option_b' => trim($question['option_b']),
                 'option_c' => trim($question['option_c']),
                 'option_d' => trim($question['option_d']),
-                'correct_answer' => strtoupper(trim($question['correct_answer'])),
-                'question_type' => 'multiple_choice',
-                'difficulty_level' => $question['difficulty_level'] ?? 'medium'
+                'correct_answer' => strtoupper(trim($question['correct_answer']))
             ];
         } else {
             $errors = array_merge($errors, $question_errors);
@@ -99,9 +99,8 @@ try {
         $stmt = $db->prepare("
             INSERT INTO questions (
                 question_text, option_a, option_b, option_c, option_d,
-                correct_answer, question_type, difficulty_level, 
-                subject_id, class_level, term_id, session_id, created_by
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                correct_answer, subject_id, class_level, term_id, session_id, teacher_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $created_count = 0;
@@ -113,8 +112,6 @@ try {
                 $question['option_c'],
                 $question['option_d'],
                 $question['correct_answer'],
-                $question['question_type'],
-                $question['difficulty_level'],
                 $subject_id,
                 $class_level,
                 $term_id,
