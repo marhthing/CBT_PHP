@@ -171,6 +171,20 @@ export default function AllQuestions() {
     })
   }, [])
 
+  // Memoized filtered questions for performance
+  const filteredQuestions = useMemo(() => {
+    return questions.filter(question => {
+      const matchesSearch = !searchTerm || 
+        question.question_text.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        question.subject_name.toLowerCase().includes(searchTerm.toLowerCase())
+      const matchesSubject = !subjectFilter || question.subject_name === subjectFilter
+      const matchesClass = !classFilter || question.class_level === classFilter
+      const matchesType = !typeFilter || question.question_type === typeFilter
+      
+      return matchesSearch && matchesSubject && matchesClass && matchesType
+    })
+  }, [questions, searchTerm, subjectFilter, classFilter, typeFilter])
+
   const handleSelectAll = useCallback((checked: boolean) => {
     if (checked) {
       setSelectedQuestions(new Set(filteredQuestions.map(q => q.id)))
@@ -469,20 +483,6 @@ export default function AllQuestions() {
       setCreatingQuestions(false)
     }
   }, [manualQuestions, createFilters, fetchQuestions, fetchQuestionStats])
-
-  // Memoized filtered questions for performance
-  const filteredQuestions = useMemo(() => {
-    return questions.filter(question => {
-      const matchesSearch = !searchTerm || 
-        question.question_text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        question.subject_name.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesSubject = !subjectFilter || question.subject_name === subjectFilter
-      const matchesClass = !classFilter || question.class_level === classFilter
-      const matchesType = !typeFilter || question.question_type === typeFilter
-      
-      return matchesSearch && matchesSubject && matchesClass && matchesType
-    })
-  }, [questions, searchTerm, subjectFilter, classFilter, typeFilter])
 
   // Memoized stats cards
   const statsCards = useMemo(() => [
