@@ -1157,7 +1157,12 @@ export default function AllQuestions() {
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
+        onClose={() => {
+          if (!deleting) {
+            setShowDeleteModal(false)
+            setQuestionToDelete(null)
+          }
+        }}
         onConfirm={confirmDeleteQuestion}
         isLoading={deleting}
         title="Delete Question"
