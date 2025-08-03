@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
-import { Search, BookOpen, Edit, Trash2, BarChart3, FileText, Users, GraduationCap, X, Save, Upload, Download } from 'lucide-react'
+import { Search, BookOpen, Edit, Trash2, BarChart3, FileText, Users, GraduationCap, X, Save, Upload, Download, Plus } from 'lucide-react'
 
 interface Question {
   id: number
@@ -55,6 +55,25 @@ export default function AllQuestions() {
   const [subjectFilter, setSubjectFilter] = useState('')
   const [classFilter, setClassFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
+
+  // Manual question creation state
+  const [showManualCreate, setShowManualCreate] = useState(false)
+  const [manualQuestions, setManualQuestions] = useState<Array<{
+    question_text: string
+    option_a: string
+    option_b: string
+    option_c: string
+    option_d: string
+    correct_answer: string
+  }>>([])
+  const [createFilters, setCreateFilters] = useState({
+    subject_id: '',
+    class_level: '',
+    term_id: '',
+    session_id: ''
+  })
+  const [showQuestionForm, setShowQuestionForm] = useState(false)
+  const [creatingQuestions, setCreatingQuestions] = useState(false)
 
   // Memoized fetch functions for performance
   const fetchQuestions = useCallback(async () => {
@@ -207,20 +226,134 @@ export default function AllQuestions() {
   }, [])
 
   const downloadTemplate = useCallback(() => {
-    const csvContent = [
+    // Create subject reference table
+    const subjectReference = [
+      '# Subject ID Reference Table',
+      '# Copy the ID number for the subject you want to use in your questions',
+      '# ID | Subject Name | Code',
+      '# 1  | Mathematics | MATH',
+      '# 2  | English Language | ENG', 
+      '# 3  | Physics | PHY',
+      '# 4  | Chemistry | CHE',
+      '# 5  | Biology | BIO',
+      '# 6  | Geography | GEO',
+      '# 7  | History | HIS',
+      '# 8  | Economics | ECO',
+      '# 9  | Accounting | ACC',
+      '# 10 | Computer Science | CS',
+      '# 11 | Agricultural Science | AGR',
+      '# 12 | Civic Education | CIV',
+      '# 13 | French | FRE',
+      '# 14 | Literature | LIT',
+      '# 15 | Government | GOV',
+      '#',
+      '# Example: For Mathematics questions, use subject_id = 1',
+      '# Example: For English questions, use subject_id = 2',
+      '',
       'question_text,subject_id,class_level,option_a,option_b,option_c,option_d,correct_answer',
       '"What is the capital of Nigeria?",1,"JSS1","Lagos","Abuja","Kano","Port Harcourt","B"',
-      '"Which of the following is a prime number?",2,"JSS2","4","6","7","8","C"'
+      '"Which of the following is a prime number?",1,"JSS2","4","6","7","8","C"'
     ].join('\n')
     
-    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const blob = new Blob([subjectReference], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'questions_template.csv'
+    a.download = 'questions_template_with_subject_reference.csv'
     a.click()
     window.URL.revokeObjectURL(url)
   }, [])
+
+  // Manual question creation functions
+  const handleCreateFiltersSubmit = useCallback(() => {
+    if (!createFilters.subject_id || !createFilters.class_level || !createFilters.term_id || !createFilters.session_id) {
+      setError('Please fill in all filter fields before proceeding')
+      return
+    }
+    setError('')
+    setShowQuestionForm(true)
+    // Initialize with one empty question
+    if (manualQuestions.length === 0) {
+      setManualQuestions([{
+        question_text: '',
+        option_a: '',
+        option_b: '',
+        option_c: '',
+        option_d: '',
+        correct_answer: 'A'
+      }])
+    }
+  }, [createFilters, manualQuestions.length])
+
+  const addAnotherQuestion = useCallback(() => {
+    setManualQuestions(prev => [...prev, {
+      question_text: '',
+      option_a: '',
+      option_b: '',
+      option_c: '',
+      option_d: '',
+      correct_answer: 'A'
+    }])
+  }, [])
+
+  const updateManualQuestion = useCallback((index: number, field: string, value: string) => {
+    setManualQuestions(prev => prev.map((q, i) => 
+      i === index ? { ...q, [field]: value } : q
+    ))
+  }, [])
+
+  const removeManualQuestion = useCallback((index: number) => {
+    setManualQuestions(prev => prev.filter((_, i) => i !== index))
+  }, [])
+
+  const submitManualQuestions = useCallback(async () => {
+    if (manualQuestions.length === 0) {
+      setError('Please add at least one question')
+      return
+    }
+
+    // Validate all questions
+    for (let i = 0; i < manualQuestions.length; i++) {
+      const q = manualQuestions[i]
+      if (!q.question_text || !q.option_a || !q.option_b || !q.option_c || !q.option_d) {
+        setError(`Question ${i + 1} is incomplete. Please fill all fields.`)
+        return
+      }
+    }
+
+    setCreatingQuestions(true)
+    setError('')
+    
+    try {
+      const questionsToSubmit = manualQuestions.map(q => ({
+        ...q,
+        subject_id: parseInt(createFilters.subject_id),
+        class_level: createFilters.class_level,
+        term_id: parseInt(createFilters.term_id),
+        session_id: parseInt(createFilters.session_id)
+      }))
+
+      const response = await api.post('/teacher/questions/bulk', {
+        questions: questionsToSubmit
+      })
+
+      if (response.data.success) {
+        await fetchQuestions()
+        await fetchQuestionStats()
+        setShowManualCreate(false)
+        setShowQuestionForm(false)
+        setManualQuestions([])
+        setCreateFilters({ subject_id: '', class_level: '', term_id: '', session_id: '' })
+        setSuccessMessage(`Successfully created ${questionsToSubmit.length} questions!`)
+        setTimeout(() => setSuccessMessage(''), 3000)
+      }
+    } catch (error: any) {
+      console.error('Failed to create questions:', error)
+      setError('Failed to create questions: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setCreatingQuestions(false)
+    }
+  }, [manualQuestions, createFilters, fetchQuestions, fetchQuestionStats])
 
   // Memoized filtered questions for performance
   const filteredQuestions = useMemo(() => {
@@ -333,26 +466,48 @@ export default function AllQuestions() {
             Manage all questions in the system
           </p>
         </div>
-        <button
-          onClick={() => setShowBulkUpload(true)}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '12px 20px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease'
-          }}
-        >
-          <Upload size={16} />
-          Bulk Upload Questions
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={() => setShowManualCreate(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: '#10b981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 20px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Plus size={16} />
+            Manual Create
+          </button>
+          <button
+            onClick={() => setShowBulkUpload(true)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: '#3b82f6',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 20px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Upload size={16} />
+            Bulk Upload Questions
+          </button>
+        </div>
       </div>
 
       {/* Error/Success Messages */}
@@ -1220,6 +1375,482 @@ export default function AllQuestions() {
                     </>
                   )}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Question Creation Modal */}
+      {showManualCreate && !showQuestionForm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '500px',
+            width: '100%'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px'
+            }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                color: '#1f2937',
+                margin: 0
+              }}>
+                Set Question Filters
+              </h3>
+              <button
+                onClick={() => setShowManualCreate(false)}
+                style={{
+                  padding: '8px',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  borderRadius: '4px',
+                  color: '#6b7280'
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Subject *
+                </label>
+                <select
+                  value={createFilters.subject_id}
+                  onChange={(e) => setCreateFilters(prev => ({ ...prev, subject_id: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}
+                >
+                  <option value="">Select Subject</option>
+                  {lookupData.subjects?.map(subject => (
+                    <option key={subject.id} value={subject.id}>{subject.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Class Level *
+                </label>
+                <select
+                  value={createFilters.class_level}
+                  onChange={(e) => setCreateFilters(prev => ({ ...prev, class_level: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}
+                >
+                  <option value="">Select Class</option>
+                  <option value="JSS1">JSS1</option>
+                  <option value="JSS2">JSS2</option>
+                  <option value="JSS3">JSS3</option>
+                  <option value="SS1">SS1</option>
+                  <option value="SS2">SS2</option>
+                  <option value="SS3">SS3</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Term *
+                </label>
+                <select
+                  value={createFilters.term_id}
+                  onChange={(e) => setCreateFilters(prev => ({ ...prev, term_id: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}
+                >
+                  <option value="">Select Term</option>
+                  {lookupData.terms?.map(term => (
+                    <option key={term.id} value={term.id}>{term.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  color: '#374151',
+                  marginBottom: '4px'
+                }}>
+                  Session *
+                </label>
+                <select
+                  value={createFilters.session_id}
+                  onChange={(e) => setCreateFilters(prev => ({ ...prev, session_id: e.target.value }))}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '14px'
+                  }}
+                >
+                  <option value="">Select Session</option>
+                  {lookupData.sessions?.map(session => (
+                    <option key={session.id} value={session.id}>{session.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'flex-end',
+                marginTop: '20px'
+              }}>
+                <button
+                  onClick={() => setShowManualCreate(false)}
+                  style={{
+                    padding: '12px 20px',
+                    background: '#f3f4f6',
+                    color: '#374151',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateFiltersSubmit}
+                  style={{
+                    padding: '12px 20px',
+                    background: '#10b981',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Continue to Create Questions
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Question Form Modal */}
+      {showManualCreate && showQuestionForm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '800px',
+            width: '100%',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px'
+            }}>
+              <h3 style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                color: '#1f2937',
+                margin: 0
+              }}>
+                Create Questions ({manualQuestions.length} question{manualQuestions.length !== 1 ? 's' : ''})
+              </h3>
+              <button
+                onClick={() => {
+                  setShowManualCreate(false)
+                  setShowQuestionForm(false)
+                  setManualQuestions([])
+                }}
+                style={{
+                  padding: '8px',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  borderRadius: '4px',
+                  color: '#6b7280'
+                }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '20px', padding: '12px', background: '#f9fafb', borderRadius: '8px' }}>
+              <strong>Filters:</strong> {lookupData.subjects?.find(s => s.id === parseInt(createFilters.subject_id))?.name} | {createFilters.class_level} | {lookupData.terms?.find(t => t.id === parseInt(createFilters.term_id))?.name} | {lookupData.sessions?.find(s => s.id === parseInt(createFilters.session_id))?.name}
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              {manualQuestions.map((question, index) => (
+                <div key={index} style={{
+                  border: '1px solid #e5e7eb',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  background: '#fafafa'
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '12px'
+                  }}>
+                    <h4 style={{ margin: 0, color: '#374151' }}>Question {index + 1}</h4>
+                    {manualQuestions.length > 1 && (
+                      <button
+                        onClick={() => removeManualQuestion(index)}
+                        style={{
+                          padding: '4px',
+                          background: '#fee2e2',
+                          color: '#dc2626',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: '4px'
+                      }}>
+                        Question Text *
+                      </label>
+                      <textarea
+                        value={question.question_text}
+                        onChange={(e) => updateManualQuestion(index, 'question_text', e.target.value)}
+                        rows={3}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          fontSize: '14px'
+                        }}
+                        placeholder="Enter the question..."
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      {['A', 'B', 'C', 'D'].map(option => (
+                        <div key={option}>
+                          <label style={{
+                            display: 'block',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            color: '#374151',
+                            marginBottom: '4px'
+                          }}>
+                            Option {option} *
+                          </label>
+                          <input
+                            type="text"
+                            value={question[`option_${option.toLowerCase()}` as keyof typeof question]}
+                            onChange={(e) => updateManualQuestion(index, `option_${option.toLowerCase()}`, e.target.value)}
+                            style={{
+                              width: '100%',
+                              padding: '8px',
+                              border: '1px solid #d1d5db',
+                              borderRadius: '6px',
+                              fontSize: '14px'
+                            }}
+                            placeholder={`Option ${option}`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '14px',
+                        fontWeight: '500',
+                        color: '#374151',
+                        marginBottom: '4px'
+                      }}>
+                        Correct Answer *
+                      </label>
+                      <select
+                        value={question.correct_answer}
+                        onChange={(e) => updateManualQuestion(index, 'correct_answer', e.target.value)}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          border: '1px solid #d1d5db',
+                          borderRadius: '6px',
+                          fontSize: '14px'
+                        }}
+                      >
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div style={{
+                display: 'flex',
+                gap: '12px',
+                justifyContent: 'space-between',
+                marginTop: '20px'
+              }}>
+                <button
+                  onClick={addAnotherQuestion}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '12px 20px',
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Plus size={16} />
+                  Add Another Question
+                </button>
+
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button
+                    onClick={() => {
+                      setShowQuestionForm(false)
+                      setManualQuestions([])
+                    }}
+                    style={{
+                      padding: '12px 20px',
+                      background: '#f3f4f6',
+                      color: '#374151',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={submitManualQuestions}
+                    disabled={creatingQuestions || manualQuestions.length === 0}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '12px 20px',
+                      background: creatingQuestions ? '#9ca3af' : '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      cursor: creatingQuestions ? 'not-allowed' : 'pointer'
+                    }}
+                  >
+                    {creatingQuestions ? (
+                      <>
+                        <div style={{
+                          width: '16px',
+                          height: '16px',
+                          border: '2px solid white',
+                          borderTop: '2px solid transparent',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite'
+                        }}></div>
+                        Creating Questions...
+                      </>
+                    ) : (
+                      <>
+                        <Save size={16} />
+                        Upload Questions ({manualQuestions.length})
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

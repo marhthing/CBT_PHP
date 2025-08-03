@@ -6,10 +6,11 @@ This project is a Computer-Based Testing (CBT) Portal designed for secondary sch
 Successfully migrated from Replit Agent to standard Replit environment with PostgreSQL database integration. Database schema deployed with proper password hashing and all authentication verified working.
 
 ### Latest Updates (August 3, 2025)
-✓ **Question Filtering Fixed**: Test code creation now properly validates questions scoped to specific term, session, and subject
-✓ **Password Security Enhanced**: All user passwords re-hashed with proper PHP password_hash() for maximum security  
-✓ **Database Integrity**: PostgreSQL database fully configured with sample data and proper indexing
-✓ **API Endpoints Updated**: Teacher questions endpoint enhanced with count_only parameter and proper filtering
+✓ **Migration Completed**: Successfully migrated from Replit Agent to standard Replit environment
+✓ **Database Setup**: PostgreSQL database created with complete schema and secure password hashing
+✓ **Enhanced CSV Template**: Bulk upload template now includes subject ID reference table for easy identification
+✓ **Manual Question Creation**: Added comprehensive manual form with filter setup and bulk creation capabilities
+✓ **Question Bank Features**: Both CSV upload and manual creation now fully functional with proper validation
 
 ### Final Migration Verification (August 2, 2025)
 ✓ PostgreSQL database created and fully configured with Neon
