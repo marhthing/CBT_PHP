@@ -25,6 +25,20 @@ interface TestResult {
   submitted_at: string
 }
 
+interface Test {
+  id: number
+  code: string
+  title: string
+  subject: string
+  class_level: string
+  duration_minutes: number
+  question_count: number
+  is_activated: boolean
+  expires_at: string
+  created_at: string
+  already_participated: boolean
+}
+
 export default function StudentDashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -104,7 +118,7 @@ export default function StudentDashboard() {
         }}>
           Quick Actions
         </h2>
-        
+
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
@@ -131,7 +145,7 @@ export default function StudentDashboard() {
             <span style={{ fontSize: '20px' }}>📝</span>
             Take Test
           </button>
-          
+
           <button
             onClick={() => navigate('/student/results')}
             style={{
@@ -173,7 +187,7 @@ export default function StudentDashboard() {
           }}>
             Available Tests
           </h2>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {availableTests.map((test) => (
               <div
@@ -209,7 +223,7 @@ export default function StudentDashboard() {
                     {test.is_activated ? 'ACTIVE' : 'INACTIVE'}
                   </span>
                 </div>
-                
+
                 <div style={{
                   fontSize: '12px',
                   color: '#64748b',
@@ -217,7 +231,7 @@ export default function StudentDashboard() {
                 }}>
                   {test.subject} • {test.class_level} • {test.duration_minutes} min • {test.question_count} questions
                 </div>
-                
+
                 <button
                   onClick={() => navigate(`/student/test?code=${test.code}`)}
                   disabled={!test.is_activated}
@@ -276,7 +290,7 @@ export default function StudentDashboard() {
               View All
             </button>
           </div>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {recentResults.map((result) => (
               <div
@@ -307,7 +321,7 @@ export default function StudentDashboard() {
                     {result.subject} • {new Date(result.submitted_at).toLocaleDateString()}
                   </div>
                 </div>
-                
+
                 <div style={{
                   background: result.percentage >= 50 ? '#dcfce7' : '#fef2f2',
                   color: result.percentage >= 50 ? '#166534' : '#dc2626',
