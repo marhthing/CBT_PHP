@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../lib/api'
+import { useNavigate } from 'react-router-dom'
 import { 
   Trophy, 
   TrendingUp, 
   Award, 
   BookOpen,
   Filter,
-  RefreshCw
+  RefreshCw,
+  FileText,
+  Clock
 } from 'lucide-react'
 
 interface TestResult {
@@ -27,6 +30,18 @@ interface TestResult {
   }
 }
 
+interface TestCode {
+  id: number
+  code: string
+  title: string
+  subject: string
+  class_level: string
+  duration_minutes: number
+  question_count: number
+  is_active: boolean
+  is_activated: boolean
+}
+
 interface FilterOptions {
   subject: string
   term: string
@@ -34,8 +49,10 @@ interface FilterOptions {
 }
 
 export default function TestResults() {
+  const navigate = useNavigate()
   const [results, setResults] = useState<TestResult[]>([])
   const [filteredResults, setFilteredResults] = useState<TestResult[]>([])
+  const [availableTests, setAvailableTests] = useState<TestCode[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState<FilterOptions>({
     subject: '',
@@ -55,8 +72,12 @@ export default function TestResults() {
 
   const fetchResults = async () => {
     try {
-      const response = await api.get('/student/results')
-      setResults(response.data.data?.results || [])
+      const [resultsResponse, testsResponse] = await Promise.all([
+        api.get('/student/results'),
+        api.get('/student/available-tests')
+      ])
+      setResults(resultsResponse.data.data?.results || [])
+      setAvailableTests(testsResponse.data.data || [])
     } catch (error) {
       // Failed to fetch results
     } finally {
@@ -184,6 +205,75 @@ export default function TestResults() {
             )
           })}
         </div>
+
+        {/* Quick Actions & Available Tests */}
+        {availableTests.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Quick Action */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <BookOpen size={20} />
+                  Quick Action
+                </h2>
+                <button
+                  onClick={() => navigate('/student/test')}
+                  className="w-full flex items-center gap-3 p-3 text-left rounded-lg border border-gray-200 hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                >
+                  <FileText size={20} className="text-blue-600" />
+                  <span className="font-medium text-gray-900">Take New Test</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Available Tests */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Clock size={20} />
+                  Available Tests
+                </h2>
+                <div className="space-y-3">
+                  {availableTests.slice(0, 3).map((test) => (
+                    <div
+                      key={test.id}
+                      className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-sm font-semibold text-gray-900">
+                            {test.title}
+                          </span>
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${
+                            test.is_activated 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {test.is_activated ? 'ACTIVE' : 'INACTIVE'}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500 mb-2">
+                          {test.subject} • {test.class_level} • {test.duration_minutes} min • {test.question_count} questions
+                        </div>
+                        <button
+                          onClick={() => navigate(`/student/test?code=${test.code}`)}
+                          disabled={!test.is_activated}
+                          className={`px-3 py-1.5 rounded text-xs font-medium ${
+                            test.is_activated 
+                              ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                              : 'bg-gray-400 text-white cursor-not-allowed'
+                          }`}
+                        >
+                          Use Code: {test.code}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filters */}
         <div className="bg-white rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200">
