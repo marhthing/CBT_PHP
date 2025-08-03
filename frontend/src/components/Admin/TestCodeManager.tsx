@@ -364,96 +364,32 @@ export default function TestCodeManager() {
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '400px',
-        flexDirection: 'column',
-        gap: '16px'
-      }}>
-        <div style={{
-          width: '32px',
-          height: '32px',
-          border: '2px solid #e5e7eb',
-          borderTop: '2px solid #3b82f6',
-          borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
-        }}></div>
-        Loading test codes...
+      <div className="flex justify-center items-center min-h-[60vh] text-lg text-gray-500">
+        <div className="flex items-center space-x-3">
+          <div className="loading-spinner w-8 h-8"></div>
+          Loading test codes...
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ 
-      padding: '24px',
-      background: '#ffffff',
-      minHeight: '100vh'
-    }}>
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
-
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: '32px'
-      }}>
-        <div>
-          <h2 style={{
-            fontSize: '32px',
-            fontWeight: 'bold',
-            color: '#1f2937',
-            margin: 0,
-            marginBottom: '8px'
-          }}>
-            Test Code Batch Management
-          </h2>
-          <p style={{
-            fontSize: '16px',
-            color: '#6b7280',
-            margin: 0
-          }}>
-            All test codes are organized in batches for better management
-          </p>
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Test Code Batch Management</h2>
+            <p className="text-gray-600 mt-1">All test codes are organized in batches for better management</p>
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          >
+            <Plus size={16} />
+            Create Test Code Batch
+          </button>
         </div>
-        <button
-          onClick={(e) => {
-            e.preventDefault()
-            setShowCreateModal(true)
-          }}
-          style={{
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '12px 20px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            transition: 'all 0.2s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = '#2563eb'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = '#3b82f6'
-          }}
-        >
-          <Plus size={16} />
-          Create Test Code Batch
-        </button>
       </div>
 
       {/* Filters */}
