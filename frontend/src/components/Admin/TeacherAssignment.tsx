@@ -70,8 +70,11 @@ export default function TeacherAssignment() {
   // Memoized fetch functions to prevent unnecessary re-renders
   const fetchAssignments = useCallback(async () => {
     try {
+      console.log('Fetching assignments...')
       const response = await api.get('/admin/assignments')
+      console.log('Assignments response:', response.data)
       const assignmentsData = response.data.data || response.data || []
+      console.log('Setting assignments:', assignmentsData)
       setAssignments(Array.isArray(assignmentsData) ? assignmentsData : [])
     } catch (error) {
       console.error('Failed to fetch assignments:', error)
@@ -119,12 +122,17 @@ export default function TeacherAssignment() {
     setError('')
     try {
       const response = await api.post('/admin/assignments', createForm)
+      console.log('Assignment creation response:', response.data)
+      
       if (response.data.success) {
         await fetchAssignments()
         setShowCreateModal(false)
         setCreateForm({ teacher_id: '', subject_id: '', class_level: '', term_id: '', session_id: '' })
         setSuccessMessage('Assignment created successfully')
         setTimeout(() => setSuccessMessage(''), 3000)
+      } else {
+        // Handle case where response is received but success is false
+        setError(response.data.message || 'Failed to create assignment')
       }
     } catch (error: any) {
       console.error('Failed to create assignment:', error)
