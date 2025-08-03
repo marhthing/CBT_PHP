@@ -5,11 +5,10 @@ const API_URL = '/api'
 
 export const api = axios.create({
   baseURL: API_URL,
-  timeout: 45000, // Increase timeout to 45 seconds
+  timeout: 60000, // 60 seconds timeout for slow backend
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // Increased to 30 seconds
 })
 
 // Request interceptor to add auth token

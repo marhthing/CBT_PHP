@@ -80,14 +80,21 @@ export default function AdminDashboard() {
   }, [])
 
   // Standalone fetch functions for each component
-  const fetchStats = useCallback(async () => {
+  const fetchStats = useCallback(async (signal?: AbortSignal) => {
     try {
       setLoadingStats(true)
       console.log('Fetching dashboard stats...')
-      const response = await api.get('/admin/dashboard-stats')
+      const response = await api.get('/admin/dashboard-stats', { 
+        signal,
+        timeout: 45000 // 45 second timeout for this request
+      })
       console.log('Dashboard stats response:', response.data)
       setStats(response.data.data || response.data || {})
     } catch (error: any) {
+      if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+        console.log('Stats request was cancelled')
+        return
+      }
       console.error('Failed to fetch stats:', error)
       console.error('Stats error details:', error.response?.data)
       // Don't show error for stats, just use default values
@@ -112,11 +119,14 @@ export default function AdminDashboard() {
     }
   }, [])
 
-  const fetchActivities = useCallback(async () => {
+  const fetchActivities = useCallback(async (signal?: AbortSignal) => {
     try {
       setLoadingActivities(true)
       const startTime = performance.now()
-      const response = await api.get('/admin/test-codes?limit=8')
+      const response = await api.get('/admin/test-codes?limit=8', { 
+        signal,
+        timeout: 45000 // 45 second timeout for this request
+      })
       const endTime = performance.now()
       const responseTime = Math.round(endTime - startTime)
       
@@ -126,10 +136,17 @@ export default function AdminDashboard() {
       setRecentActivities(response.data.data || response.data || [])
       setApiResponseTime(`${responseTime}ms`)
     } catch (error: any) {
+      if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+        console.log('Activities request was cancelled')
+        return
+      }
       console.error('Failed to fetch activities:', error)
       console.error('Error details:', error.response?.data)
       setApiResponseTime('Error')
-      setError(error.response?.data?.message || error.message || 'Failed to load recent activities')
+      // Only show error if it's not a timeout - timeout is expected with slow backend
+      if (!error.message?.includes('timeout')) {
+        setError(error.response?.data?.message || error.message || 'Failed to load recent activities')
+      }
     } finally {
       setLoadingActivities(false)
     }
@@ -137,15 +154,20 @@ export default function AdminDashboard() {
 
   // Load components independently on mount with staggered timing
   useEffect(() => {
+    const controller = new AbortController()
+    
     // Load stats first
-    fetchStats()
+    fetchStats(controller.signal)
     
     // Load activities after a short delay to avoid overwhelming the backend
     const activitiesTimeout = setTimeout(() => {
-      fetchActivities()
-    }, 1000)
+      fetchActivities(controller.signal)
+    }, 2000) // Increased delay to 2 seconds
 
-    return () => clearTimeout(activitiesTimeout)
+    return () => {
+      controller.abort()
+      clearTimeout(activitiesTimeout)
+    }
   }, [])
 
   // Live server time updates every second
@@ -197,9 +219,10 @@ export default function AdminDashboard() {
     return `${hours}h ${minutes}m`
   }, [])
 
-  // API Response Time monitoring every 30 seconds (increased from 10 seconds)
+  // API Response Time monitoring every 60 seconds (increased from 30 seconds)
   useEffect(() => {
     let isMounting = true
+    const controller = new AbortController()
 
     const measureApiResponseTime = async () => {
       // Skip if component is unmounting
@@ -208,7 +231,10 @@ export default function AdminDashboard() {
       try {
         const startTime = performance.now()
         // Use a lightweight endpoint for ping with shorter timeout
-        const response = await api.get('/health', { timeout: 10000 })
+        const response = await api.get('/health', { 
+          timeout: 15000, // 15 second timeout for health check
+          signal: controller.signal 
+        })
         const endTime = performance.now()
         const responseTime = Math.round(endTime - startTime)
 
@@ -218,10 +244,13 @@ export default function AdminDashboard() {
         if (response && response.status === 200 && isMounting) {
           setApiResponseTime(`${responseTime}ms`)
         }
-      } catch (error) {
+      } catch (error: any) {
+        if (error.name === 'AbortError' || error.code === 'ERR_CANCELED') {
+          return
+        }
         console.log('API health check failed:', error)
         if (isMounting) {
-          setApiResponseTime('Error')
+          setApiResponseTime('Slow')
         }
       }
     }
@@ -231,17 +260,18 @@ export default function AdminDashboard() {
       if (isMounting) {
         measureApiResponseTime()
       }
-    }, 5000)
+    }, 10000) // Wait 10 seconds before first health check
 
-    // Then measure every 30 seconds
+    // Then measure every 60 seconds
     const apiInterval = setInterval(() => {
       if (isMounting) {
         measureApiResponseTime()
       }
-    }, 30000)
+    }, 60000)
 
     return () => {
       isMounting = false
+      controller.abort()
       clearTimeout(initialTimeout)
       clearInterval(apiInterval)
     }
