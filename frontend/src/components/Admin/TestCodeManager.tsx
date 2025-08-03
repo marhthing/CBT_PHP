@@ -1165,25 +1165,36 @@ export default function TestCodeManager() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000
+          zIndex: 1000,
+          padding: '16px'
         }}>
           <div style={{
             background: 'white',
             borderRadius: '12px',
-            padding: '24px',
+            padding: '16px',
+            width: '100%',
             maxWidth: '500px',
-            width: '90%',
-            maxHeight: '80vh',
-            overflow: 'auto'
+            maxHeight: 'calc(100vh - 32px)',
+            overflow: 'auto',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
           }}>
-            <h3 style={{
-              fontSize: '20px',
-              fontWeight: 'bold',
-              marginBottom: '16px',
-              color: '#1f2937'
+            <div style={{
+              position: 'sticky',
+              top: 0,
+              backgroundColor: 'white',
+              paddingBottom: '16px',
+              borderBottom: '1px solid #e5e7eb',
+              marginBottom: '16px'
             }}>
-              Create Test Code Batch
-            </h3>
+              <h3 style={{
+                fontSize: '18px',
+                fontWeight: 'bold',
+                margin: 0,
+                color: '#1f2937'
+              }}>
+                Create Test Code Batch
+              </h3>
+            </div>
 
             <div style={{ marginBottom: '16px' }}>
               <label style={{
@@ -1200,10 +1211,18 @@ export default function TestCodeManager() {
                 onChange={(e) => setCreateForm(prev => ({ ...prev, subject_id: e.target.value }))}
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '12px',
                   border: '1px solid #d1d5db',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '16px',
+                  backgroundColor: 'white',
+                  outline: 'none',
+                  appearance: 'none',
+                  backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  backgroundSize: '16px',
+                  paddingRight: '40px'
                 }}
                 required
               >
@@ -1229,10 +1248,18 @@ export default function TestCodeManager() {
                 onChange={(e) => setCreateForm(prev => ({ ...prev, class_level: e.target.value }))}
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '12px',
                   border: '1px solid #d1d5db',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '16px',
+                  backgroundColor: 'white',
+                  outline: 'none',
+                  appearance: 'none',
+                  backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  backgroundSize: '16px',
+                  paddingRight: '40px'
                 }}
                 required
               >
@@ -1258,10 +1285,18 @@ export default function TestCodeManager() {
                 onChange={(e) => setCreateForm(prev => ({ ...prev, term_id: e.target.value }))}
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '12px',
                   border: '1px solid #d1d5db',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '16px',
+                  backgroundColor: 'white',
+                  outline: 'none',
+                  appearance: 'none',
+                  backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  backgroundSize: '16px',
+                  paddingRight: '40px'
                 }}
                 required
               >
@@ -1287,10 +1322,18 @@ export default function TestCodeManager() {
                 onChange={(e) => setCreateForm(prev => ({ ...prev, session_id: e.target.value }))}
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '12px',
                   border: '1px solid #d1d5db',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '16px',
+                  backgroundColor: 'white',
+                  outline: 'none',
+                  appearance: 'none',
+                  backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  backgroundSize: '16px',
+                  paddingRight: '40px'
                 }}
                 required
               >
@@ -1316,10 +1359,18 @@ export default function TestCodeManager() {
                 onChange={(e) => setCreateForm(prev => ({ ...prev, test_type: e.target.value }))}
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '12px',
                   border: '1px solid #d1d5db',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '16px',
+                  backgroundColor: 'white',
+                  outline: 'none',
+                  appearance: 'none',
+                  backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  backgroundSize: '16px',
+                  paddingRight: '40px'
                 }}
                 required
               >
@@ -1353,10 +1404,11 @@ export default function TestCodeManager() {
                 placeholder="Enter test duration in minutes"
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '12px',
                   border: '1px solid #d1d5db',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '16px',
+                  outline: 'none'
                 }}
                 required
               />
@@ -1394,10 +1446,11 @@ export default function TestCodeManager() {
                 placeholder="Enter number of questions"
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '12px',
                   border: '1px solid #d1d5db',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '16px',
+                  outline: 'none'
                 }}
                 required
               />
@@ -1437,10 +1490,11 @@ export default function TestCodeManager() {
                 placeholder="Enter score per question"
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '12px',
                   border: '1px solid #d1d5db',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '16px',
+                  outline: 'none'
                 }}
                 required
               />
@@ -1453,7 +1507,7 @@ export default function TestCodeManager() {
               </p>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '24px' }}>
               <label style={{
                 display: 'block',
                 fontSize: '14px',
@@ -1478,57 +1532,81 @@ export default function TestCodeManager() {
                 placeholder="Enter number of codes"
                 style={{
                   width: '100%',
-                  padding: '10px 12px',
+                  padding: '12px',
                   border: '1px solid #d1d5db',
                   borderRadius: '8px',
-                  fontSize: '14px'
+                  fontSize: '16px',
+                  outline: 'none'
                 }}
                 required
               />
             </div>
 
             <div style={{
-              display: 'flex',
-              gap: '12px',
-              justifyContent: 'flex-end'
+              position: 'sticky',
+              bottom: 0,
+              backgroundColor: 'white',
+              paddingTop: '16px',
+              borderTop: '1px solid #e5e7eb',
+              marginTop: '16px'
             }}>
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  setShowCreateModal(false)
-                }}
-                style={{
-                  padding: '10px 16px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  backgroundColor: 'white',
-                  color: '#374151',
-                  fontSize: '14px',
-                  cursor: 'pointer'
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={(e) => {
-                  e.preventDefault()
-                  handleCreateCodes()
-                }}
-                disabled={creating || !createForm.subject_id || !createForm.class_level || 
-                  !createForm.term_id || !createForm.session_id ||
-                  (createForm.total_questions > availableQuestions && availableQuestions > 0)}
-                style={{
-                  padding: '10px 16px',
-                  backgroundColor: creating ? '#9ca3af' : '#3b82f6',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  cursor: creating ? 'not-allowed' : 'pointer'
-                }}
-              >
-                {creating ? 'Creating...' : `Create ${createForm.count} Code${createForm.count > 1 ? 's' : ''}`}
-              </button>
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handleCreateCodes()
+                  }}
+                  disabled={creating || !createForm.subject_id || !createForm.class_level || 
+                    !createForm.term_id || !createForm.session_id ||
+                    (createForm.total_questions > availableQuestions && availableQuestions > 0)}
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    backgroundColor: creating ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    cursor: creating ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {creating ? 'Creating...' : `Create ${createForm.count} Code${createForm.count > 1 ? 's' : ''}`}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault()
+                    setShowCreateModal(false)
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    border: '2px solid #d1d5db',
+                    borderRadius: '8px',
+                    backgroundColor: 'white',
+                    color: '#374151',
+                    fontSize: '16px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f9fafb'
+                    e.currentTarget.style.borderColor = '#9ca3af'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = 'white'
+                    e.currentTarget.style.borderColor = '#d1d5db'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
