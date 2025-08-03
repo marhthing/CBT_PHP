@@ -194,14 +194,13 @@ export default function TestCodeManager() {
     return groupedBatches.filter(batch => {
       const firstCode = batch.codes[0]
       const matchesSubject = !subjectFilter || firstCode.subject_name.toLowerCase().includes(subjectFilter.toLowerCase())
-      const matchesClass = !classFilter || firstCode.class_level.toLowerCase().includes(classFilter.toLowerCase()) 
+      const matchesClass = !classFilter || firstCode.class_level === classFilter
       const matchesTerm = !termFilter || firstCode.term_name?.toLowerCase().includes(termFilter.toLowerCase())
       const matchesSession = !sessionFilter || firstCode.session_name?.toLowerCase().includes(sessionFilter.toLowerCase())
       
       let matchesStatus = true
       if (statusFilter === 'active') matchesStatus = batch.isActivated
-      else if (statusFilter === 'used') matchesStatus = batch.hasUsedCodes
-      else if (statusFilter === 'unused') matchesStatus = !batch.hasUsedCodes
+      else if (statusFilter === 'deactivated') matchesStatus = !batch.isActivated
       
       return matchesSubject && matchesClass && matchesTerm && matchesSession && matchesStatus
     })
@@ -554,8 +553,7 @@ export default function TestCodeManager() {
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
-              <option value="used">Used</option>
-              <option value="unused">Unused</option>
+              <option value="deactivated">Deactivated</option>
             </select>
           </div>
           <div style={{
