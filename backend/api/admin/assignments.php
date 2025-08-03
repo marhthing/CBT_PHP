@@ -52,25 +52,24 @@ function handleGet($db, $user) {
         $stmt->execute();
         $assignments = $stmt->fetchAll();
         
-        // Group assignments by teacher for easier frontend handling
-        $grouped_assignments = [];
+        // Format assignments for frontend
+        $formatted_assignments = [];
         foreach ($assignments as $assignment) {
-            $assignment['teacher'] = [
-                'id' => $assignment['teacher_id'],
-                'username' => $assignment['username'],
-                'email' => $assignment['email'],
-                'full_name' => $assignment['full_name']
+            $formatted_assignments[] = [
+                'id' => $assignment['id'],
+                'teacher_id' => $assignment['teacher_id'],
+                'teacher_name' => $assignment['full_name'],
+                'teacher_email' => $assignment['email'],
+                'subject_id' => $assignment['subject_id'],
+                'subject_name' => $assignment['subject_name'],
+                'class_level' => $assignment['class_level'],
+                'created_at' => $assignment['created_at'],
+                'assigned_by_name' => 'Administrator' // Default since we don't have this field
             ];
-            
-            // Remove redundant fields
-            unset($assignment['teacher_id'], $assignment['username'], 
-                  $assignment['email'], $assignment['full_name']);
-            
-            $grouped_assignments[] = $assignment;
         }
         
         Response::logRequest('admin/assignments', 'GET', $user['id']);
-        Response::success('Teacher assignments retrieved', ['assignments' => $grouped_assignments]);
+        Response::success('Teacher assignments retrieved', $formatted_assignments);
         
     } catch (Exception $e) {
         error_log("Error getting teacher assignments: " . $e->getMessage());

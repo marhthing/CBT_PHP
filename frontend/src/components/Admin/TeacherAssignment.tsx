@@ -70,11 +70,10 @@ export default function TeacherAssignment() {
   // Memoized fetch functions to prevent unnecessary re-renders
   const fetchAssignments = useCallback(async () => {
     try {
-      console.log('Fetching assignments...')
       const response = await api.get('/admin/assignments')
-      console.log('Assignments response:', response.data)
-      const assignmentsData = response.data.data || response.data || []
-      console.log('Setting assignments:', assignmentsData)
+      
+      // The API returns data in response.data.data structure  
+      const assignmentsData = response.data.data || []
       setAssignments(Array.isArray(assignmentsData) ? assignmentsData : [])
     } catch (error) {
       console.error('Failed to fetch assignments:', error)
@@ -122,8 +121,6 @@ export default function TeacherAssignment() {
     setError('')
     try {
       const response = await api.post('/admin/assignments', createForm)
-      console.log('Assignment creation response:', response.data)
-      
       if (response.data.success) {
         await fetchAssignments()
         setShowCreateModal(false)
