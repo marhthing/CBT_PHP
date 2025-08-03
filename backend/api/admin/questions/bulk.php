@@ -1,0 +1,145 @@
+<?php
+
+require_once __DIR__ . '/../../../config/cors.php';
+require_once __DIR__ . '/../../../config/database.php';
+require_once __DIR__ . '/../../../includes/auth.php';
+require_once __DIR__ . '/../../../includes/response.php';
+
+// Only allow POST requests
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    Response::methodNotAllowed();
+}
+
+try {
+    $auth = new Auth();
+    $user = $auth->requireRole('admin');
+    
+    $database = new Database();
+    $db = $database->getConnection();
+    
+    // Get JSON input
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    if (!$input) {
+        Response::validationError('Invalid JSON data');
+    }
+    
+    // Validate required fields
+    $required_fields = ['questions', 'subject_id', 'class_level', 'term_id', 'session_id'];
+    foreach ($required_fields as $field) {
+        if (!isset($input[$field]) || empty($input[$field])) {
+            Response::validationError("Missing required field: $field");
+        }
+    }
+    
+    $questions = $input['questions'];
+    $subject_id = $input['subject_id'];
+    $class_level = $input['class_level'];
+    $term_id = $input['term_id'];
+    $session_id = $input['session_id'];
+    
+    if (!is_array($questions) || empty($questions)) {
+        Response::validationError('Questions must be a non-empty array');
+    }
+    
+    // Validate questions
+    $valid_questions = [];
+    $errors = [];
+    
+    foreach ($questions as $index => $question) {
+        $question_errors = [];
+        
+        // Required fields for each question
+        $required_question_fields = [
+            'question_text', 'option_a', 'option_b', 'option_c', 
+            'option_d', 'correct_answer'
+        ];
+        
+        foreach ($required_question_fields as $field) {
+            if (!isset($question[$field]) || trim($question[$field]) === '') {
+                $question_errors[] = "Question " . ($index + 1) . ": Missing $field";
+            }
+        }
+        
+        // Validate correct answer
+        if (isset($question['correct_answer']) && 
+            !in_array(strtoupper($question['correct_answer']), ['A', 'B', 'C', 'D'])) {
+            $question_errors[] = "Question " . ($index + 1) . ": Correct answer must be A, B, C, or D";
+        }
+        
+        if (empty($question_errors)) {
+            $valid_questions[] = [
+                'question_text' => trim($question['question_text']),
+                'option_a' => trim($question['option_a']),
+                'option_b' => trim($question['option_b']),
+                'option_c' => trim($question['option_c']),
+                'option_d' => trim($question['option_d']),
+                'correct_answer' => strtoupper(trim($question['correct_answer'])),
+                'question_type' => 'multiple_choice',
+                'difficulty_level' => $question['difficulty_level'] ?? 'medium'
+            ];
+        } else {
+            $errors = array_merge($errors, $question_errors);
+        }
+    }
+    
+    if (!empty($errors)) {
+        Response::validationError('Validation errors found', ['errors' => $errors]);
+    }
+    
+    if (empty($valid_questions)) {
+        Response::validationError('No valid questions to create');
+    }
+    
+    // Begin transaction
+    $db->beginTransaction();
+    
+    try {
+        // Insert valid questions
+        $stmt = $db->prepare("
+            INSERT INTO questions (
+                question_text, option_a, option_b, option_c, option_d,
+                correct_answer, question_type, difficulty_level, 
+                subject_id, class_level, term_id, session_id, created_by
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+        
+        $created_count = 0;
+        foreach ($valid_questions as $question) {
+            $stmt->execute([
+                $question['question_text'],
+                $question['option_a'],
+                $question['option_b'],
+                $question['option_c'],
+                $question['option_d'],
+                $question['correct_answer'],
+                $question['question_type'],
+                $question['difficulty_level'],
+                $subject_id,
+                $class_level,
+                $term_id,
+                $session_id,
+                $user['id']
+            ]);
+            $created_count++;
+        }
+        
+        $db->commit();
+        
+        Response::logRequest('admin/questions/bulk', 'POST', $user['id']);
+        
+        Response::success('Questions created successfully', [
+            'created_count' => $created_count,
+            'total_questions' => count($questions)
+        ]);
+        
+    } catch (Exception $e) {
+        $db->rollback();
+        throw $e;
+    }
+    
+} catch (Exception $e) {
+    Response::error('Failed to create questions: ' . $e->getMessage());
+}
+
+?>

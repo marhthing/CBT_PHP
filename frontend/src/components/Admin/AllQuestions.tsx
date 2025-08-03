@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
-import { Search, BookOpen, Edit, Trash2, BarChart3, FileText, Users, GraduationCap, X, Save, Upload, Download, Plus } from 'lucide-react'
+import { Search, BookOpen, Edit, Trash2, BarChart3, FileText, GraduationCap, X, Save, Upload, Download, Plus } from 'lucide-react'
 
 interface Question {
   id: number
@@ -306,6 +306,8 @@ export default function AllQuestions() {
     setManualQuestions(prev => prev.filter((_, i) => i !== index))
   }, [])
 
+
+
   const submitManualQuestions = useCallback(async () => {
     if (manualQuestions.length === 0) {
       setError('Please add at least one question')
@@ -325,16 +327,12 @@ export default function AllQuestions() {
     setError('')
     
     try {
-      const questionsToSubmit = manualQuestions.map(q => ({
-        ...q,
+      const response = await api.post('/admin/questions/bulk', {
+        questions: manualQuestions,
         subject_id: parseInt(createFilters.subject_id),
         class_level: createFilters.class_level,
         term_id: parseInt(createFilters.term_id),
         session_id: parseInt(createFilters.session_id)
-      }))
-
-      const response = await api.post('/teacher/questions/bulk', {
-        questions: questionsToSubmit
       })
 
       if (response.data.success) {
@@ -344,7 +342,7 @@ export default function AllQuestions() {
         setShowQuestionForm(false)
         setManualQuestions([])
         setCreateFilters({ subject_id: '', class_level: '', term_id: '', session_id: '' })
-        setSuccessMessage(`Successfully created ${questionsToSubmit.length} questions!`)
+        setSuccessMessage(`Successfully created ${response.data.data.created_count} questions!`)
         setTimeout(() => setSuccessMessage(''), 3000)
       }
     } catch (error: any) {
