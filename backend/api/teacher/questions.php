@@ -85,12 +85,20 @@ function handleGet($db, $user) {
             $stats_stmt = $db->prepare("
                 SELECT 
                     COUNT(*) as total_questions,
-                    COUNT(DISTINCT subject_id) as subjects_count,
-                    COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as this_week
-                FROM questions 
-                WHERE teacher_id = ?
+                    COUNT(DISTINCT q.subject_id) as subjects_count,
+                    COUNT(CASE WHEN q.created_at >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as this_week
+                FROM questions q
+                WHERE q.teacher_id = ?
+                AND EXISTS (
+                    SELECT 1 FROM teacher_assignments ta 
+                    WHERE ta.teacher_id = ? 
+                    AND ta.subject_id = q.subject_id 
+                    AND ta.class_level = q.class_level 
+                    AND ta.term_id = q.term_id 
+                    AND ta.session_id = q.session_id
+                )
             ");
-            $stats_stmt->execute([$user['id']]);
+            $stats_stmt->execute([$user['id'], $user['id']]);
             $stats = $stats_stmt->fetch();
             
             // Get breakdown by subject
@@ -99,9 +107,17 @@ function handleGet($db, $user) {
                 FROM questions q
                 LEFT JOIN subjects s ON q.subject_id = s.id
                 WHERE q.teacher_id = ?
+                AND EXISTS (
+                    SELECT 1 FROM teacher_assignments ta 
+                    WHERE ta.teacher_id = ? 
+                    AND ta.subject_id = q.subject_id 
+                    AND ta.class_level = q.class_level 
+                    AND ta.term_id = q.term_id 
+                    AND ta.session_id = q.session_id
+                )
                 GROUP BY s.name
             ");
-            $subject_stmt->execute([$user['id']]);
+            $subject_stmt->execute([$user['id'], $user['id']]);
             $by_subject = [];
             while ($row = $subject_stmt->fetch()) {
                 $by_subject[$row['name']] = (int)$row['count'];
@@ -109,12 +125,20 @@ function handleGet($db, $user) {
             
             // Get breakdown by class
             $class_stmt = $db->prepare("
-                SELECT class_level, COUNT(*) as count
-                FROM questions
-                WHERE teacher_id = ?
-                GROUP BY class_level
+                SELECT q.class_level, COUNT(*) as count
+                FROM questions q
+                WHERE q.teacher_id = ?
+                AND EXISTS (
+                    SELECT 1 FROM teacher_assignments ta 
+                    WHERE ta.teacher_id = ? 
+                    AND ta.subject_id = q.subject_id 
+                    AND ta.class_level = q.class_level 
+                    AND ta.term_id = q.term_id 
+                    AND ta.session_id = q.session_id
+                )
+                GROUP BY q.class_level
             ");
-            $class_stmt->execute([$user['id']]);
+            $class_stmt->execute([$user['id'], $user['id']]);
             $by_class = [];
             while ($row = $class_stmt->fetch()) {
                 $by_class[$row['class_level']] = (int)$row['count'];
@@ -122,12 +146,20 @@ function handleGet($db, $user) {
             
             // Get breakdown by type
             $type_stmt = $db->prepare("
-                SELECT question_type, COUNT(*) as count
-                FROM questions
-                WHERE teacher_id = ?
-                GROUP BY question_type
+                SELECT q.question_type, COUNT(*) as count
+                FROM questions q
+                WHERE q.teacher_id = ?
+                AND EXISTS (
+                    SELECT 1 FROM teacher_assignments ta 
+                    WHERE ta.teacher_id = ? 
+                    AND ta.subject_id = q.subject_id 
+                    AND ta.class_level = q.class_level 
+                    AND ta.term_id = q.term_id 
+                    AND ta.session_id = q.session_id
+                )
+                GROUP BY q.question_type
             ");
-            $type_stmt->execute([$user['id']]);
+            $type_stmt->execute([$user['id'], $user['id']]);
             $by_type = [];
             while ($row = $type_stmt->fetch()) {
                 $by_type[$row['question_type']] = (int)$row['count'];
@@ -135,13 +167,21 @@ function handleGet($db, $user) {
             
             // Get recent questions
             $recent_stmt = $db->prepare("
-                SELECT id, question_text, subject_id, class_level, created_at
-                FROM questions 
-                WHERE teacher_id = ?
-                ORDER BY created_at DESC
+                SELECT q.id, q.question_text, q.subject_id, q.class_level, q.created_at
+                FROM questions q
+                WHERE q.teacher_id = ?
+                AND EXISTS (
+                    SELECT 1 FROM teacher_assignments ta 
+                    WHERE ta.teacher_id = ? 
+                    AND ta.subject_id = q.subject_id 
+                    AND ta.class_level = q.class_level 
+                    AND ta.term_id = q.term_id 
+                    AND ta.session_id = q.session_id
+                )
+                ORDER BY q.created_at DESC
                 LIMIT 5
             ");
-            $recent_stmt->execute([$user['id']]);
+            $recent_stmt->execute([$user['id'], $user['id']]);
             $recent_questions = $recent_stmt->fetchAll();
             
             $response_data = [
@@ -157,41 +197,49 @@ function handleGet($db, $user) {
             Response::success('Stats retrieved', $response_data);
         }
         
-        // Build query with filters
-        $where_conditions = ['teacher_id = ?'];
-        $params = [$user['id']];
+        // Build query with filters - only show questions for subjects/classes teacher is assigned to
+        $where_conditions = [
+            'q.teacher_id = ?',
+            'EXISTS (
+                SELECT 1 FROM teacher_assignments ta 
+                WHERE ta.teacher_id = ? 
+                AND ta.subject_id = q.subject_id 
+                AND ta.class_level = q.class_level 
+                AND ta.term_id = q.term_id 
+                AND ta.session_id = q.session_id
+            )'
+        ];
+        $params = [$user['id'], $user['id']];
         
         if (isset($_GET['search']) && !empty($_GET['search'])) {
-            $where_conditions[] = 'question_text ILIKE ?';
+            $where_conditions[] = 'q.question_text ILIKE ?';
             $params[] = '%' . $_GET['search'] . '%';
         }
         
         if (isset($_GET['subject']) && !empty($_GET['subject'])) {
-            $where_conditions[] = 'subject_id = ?';
+            $where_conditions[] = 'q.subject_id = ?';
             $params[] = $_GET['subject'];
         }
         
         if (isset($_GET['class']) && !empty($_GET['class'])) {
-            $where_conditions[] = 'class_level = ?';
+            $where_conditions[] = 'q.class_level = ?';
             $params[] = $_GET['class'];
         }
         
         if (isset($_GET['term']) && !empty($_GET['term'])) {
-            $where_conditions[] = 'term_id = ?';
+            $where_conditions[] = 'q.term_id = ?';
             $params[] = $_GET['term'];
         }
         
         if (isset($_GET['session']) && !empty($_GET['session'])) {
-            $where_conditions[] = 'session_id = ?';
+            $where_conditions[] = 'q.session_id = ?';
             $params[] = $_GET['session'];
         }
         
         if (isset($_GET['type']) && !empty($_GET['type'])) {
-            $where_conditions[] = 'question_type = ?';
+            $where_conditions[] = 'q.question_type = ?';
             $params[] = $_GET['type'];
         }
-        
-
         
         $sql = "
             SELECT q.id, q.question_text, q.question_type, q.option_a, q.option_b, q.option_c, q.option_d,

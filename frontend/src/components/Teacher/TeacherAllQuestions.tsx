@@ -84,12 +84,9 @@ export default function TeacherAllQuestions() {
   const fetchQuestions = useCallback(async () => {
     try {
       setError('')
-      console.log('Fetching questions...')
       const response = await api.get('/teacher/questions?limit=100')
-      console.log('Questions response:', response.data)
       if (response.data.success) {
         const questions = response.data.data?.questions || []
-        console.log('Setting questions:', questions)
         setQuestions(questions)
       } else {
         setError('Failed to load questions: ' + (response.data.message || 'Unknown error'))
@@ -102,9 +99,7 @@ export default function TeacherAllQuestions() {
 
   const fetchStats = useCallback(async () => {
     try {
-      console.log('Fetching stats...')
       const response = await api.get('/teacher/questions?stats=true')
-      console.log('Stats response:', response.data)
       if (response.data.success) {
         const statsData = response.data.data || {}
         const stats = {
@@ -113,7 +108,6 @@ export default function TeacherAllQuestions() {
           by_class: statsData.by_class || {},
           by_type: statsData.by_type || {}
         }
-        console.log('Setting stats:', stats)
         setStats(stats)
       }
     } catch (error: any) {
