@@ -46,7 +46,15 @@ export interface TestResult {
   total_questions: number
   time_taken: number
   submitted_at: string
-  test_code: TestCode
+  percentage: number
+  grade: string
+  test_code: {
+    code: string
+    title: string
+    subject: string
+    class_level: string
+    duration_minutes: number
+  }
 }
 
 export interface TestQuestion {

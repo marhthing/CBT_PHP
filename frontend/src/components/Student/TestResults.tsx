@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../../contexts/AuthContext'
 import { api } from '../../lib/api'
 
 interface TestResult {
@@ -7,12 +6,16 @@ interface TestResult {
   score: number
   total_questions: number
   percentage: number
-  test_title: string
-  subject: string
-  class_level: string
+  grade: string
+  time_taken: number
   submitted_at: string
-  duration_taken: number
-  test_code: string
+  test_code: {
+    code: string
+    title: string
+    subject: string
+    class_level: string
+    duration_minutes: number
+  }
 }
 
 interface FilterOptions {
@@ -22,7 +25,6 @@ interface FilterOptions {
 }
 
 export default function TestResults() {
-  const { user } = useAuth()
   const [results, setResults] = useState<TestResult[]>([])
   const [filteredResults, setFilteredResults] = useState<TestResult[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,7 +47,8 @@ export default function TestResults() {
   const fetchResults = async () => {
     try {
       const response = await api.get('/student/results')
-      setResults(response.data.data || [])
+      console.log('API Response:', response.data) // Debug log
+      setResults(response.data.data?.results || [])
     } catch (error) {
       console.error('Failed to fetch results:', error)
     } finally {
@@ -66,7 +69,7 @@ export default function TestResults() {
     let filtered = [...results]
 
     if (filters.subject) {
-      filtered = filtered.filter(result => result.subject === filters.subject)
+      filtered = filtered.filter(result => result.test_code?.subject === filters.subject)
     }
 
     setFilteredResults(filtered)
@@ -376,20 +379,20 @@ export default function TestResults() {
                         color: '#1e293b',
                         margin: '0 0 4px 0'
                       }}>
-                        {result.test_title}
+                        {result.test_code?.title}
                       </h3>
                       <div style={{
                         fontSize: '12px',
                         color: '#64748b',
                         marginBottom: '4px'
                       }}>
-                        {result.subject} • {result.class_level}
+                        {result.test_code?.subject} • {result.test_code?.class_level}
                       </div>
                       <div style={{
                         fontSize: '11px',
                         color: '#94a3b8'
                       }}>
-                        Code: {result.test_code} • {new Date(result.submitted_at).toLocaleDateString()}
+                        Code: {result.test_code?.code} • {new Date(result.submitted_at).toLocaleDateString()}
                       </div>
                     </div>
 
@@ -418,7 +421,7 @@ export default function TestResults() {
                       <span style={{ fontWeight: '500' }}>Score:</span> {result.score}/{result.total_questions}
                     </div>
                     <div>
-                      <span style={{ fontWeight: '500' }}>Duration:</span> {Math.round(result.duration_taken / 60)} min
+                      <span style={{ fontWeight: '500' }}>Duration:</span> {Math.round(result.time_taken / 60)} min
                     </div>
                     <div>
                       <span style={{ fontWeight: '500' }}>Grade:</span> {
