@@ -1338,6 +1338,47 @@ export default function TestCodeManager() {
                 marginBottom: '6px',
                 color: '#374151'
               }}>
+                Duration (Minutes) *
+              </label>
+              <input
+                type="text"
+                value={createForm.duration_minutes}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '')
+                  if (value === '') {
+                    setCreateForm(prev => ({ ...prev, duration_minutes: '' as any }))
+                  } else {
+                    const num = parseInt(value)
+                    setCreateForm(prev => ({ ...prev, duration_minutes: num }))
+                  }
+                }}
+                placeholder="Enter test duration in minutes"
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+                required
+              />
+              <p style={{
+                fontSize: '12px',
+                color: '#6b7280',
+                marginTop: '4px'
+              }}>
+                How long students have to complete the test
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: '#374151'
+              }}>
                 Number of Questions *
               </label>
               <input
