@@ -72,179 +72,80 @@ export default function StudentDashboard() {
 
 
   return (
-    <div style={{
-      maxWidth: '100%',
-      margin: '0 auto',
-      padding: '0',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    }}>
+    <div className="max-w-full mx-auto space-y-6">
       {/* Welcome Section */}
-      <div style={{
-        background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
-        color: 'white',
-        padding: '20px 16px',
-        borderRadius: '12px',
-        marginBottom: '20px'
-      }}>
-        <h1 style={{ 
-          fontSize: '20px', 
-          fontWeight: 'bold',
-          margin: '0 0 4px 0'
-        }}>
+      <div className="bg-gradient-to-br from-primary-600 to-primary-700 text-white p-4 sm:p-6 rounded-xl shadow-moderate">
+        <h1 className="text-xl sm:text-2xl font-bold mb-1">
           Welcome, {user?.full_name}
         </h1>
-        <p style={{ 
-          fontSize: '14px', 
-          opacity: 0.9,
-          margin: '0'
-        }}>
+        <p className="text-sm opacity-90">
           View your dashboard and take tests when ready
         </p>
       </div>
 
       {/* Quick Actions */}
-      <div style={{
-        background: 'white',
-        padding: '20px 16px',
-        borderRadius: '12px',
-        marginBottom: '20px',
-        border: '1px solid #e2e8f0'
-      }}>
-        <h2 style={{
-          fontSize: '16px',
-          fontWeight: '600',
-          color: '#1e293b',
-          margin: '0 0 12px 0'
-        }}>
+      <div className="card">
+        <h2 className="card-title">
           Quick Actions
         </h2>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-          gap: '12px'
-        }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <button
             onClick={() => navigate('/student/test')}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '8px',
-              background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
-              color: 'white',
-              border: 'none',
-              padding: '16px 12px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              textAlign: 'center'
-            }}
+            className="btn-primary btn-lg flex flex-col items-center space-y-2 h-auto py-4"
           >
-            <span style={{ fontSize: '20px' }}>📝</span>
-            Take Test
+            <span className="text-2xl">📝</span>
+            <span>Take Test</span>
           </button>
 
           <button
             onClick={() => navigate('/student/results')}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '8px',
-              background: 'linear-gradient(135deg, #059669, #10b981)',
-              color: 'white',
-              border: 'none',
-              padding: '16px 12px',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: '600',
-              cursor: 'pointer',
-              textAlign: 'center'
-            }}
+            className="btn-success btn-lg flex flex-col items-center space-y-2 h-auto py-4"
           >
-            <span style={{ fontSize: '20px' }}>📊</span>
-            View Results
+            <span className="text-2xl">📊</span>
+            <span>View Results</span>
           </button>
         </div>
       </div>
 
       {/* Available Tests */}
       {availableTests.length > 0 && (
-        <div style={{
-          background: 'white',
-          padding: '20px 16px',
-          borderRadius: '12px',
-          marginBottom: '20px',
-          border: '1px solid #e2e8f0'
-        }}>
-          <h2 style={{
-            fontSize: '16px',
-            fontWeight: '600',
-            color: '#1e293b',
-            margin: '0 0 12px 0'
-          }}>
+        <div className="card">
+          <h2 className="card-title">
             Available Tests
           </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="space-y-2">
             {availableTests.map((test) => (
               <div
                 key={test.id}
-                style={{
-                  padding: '12px',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  background: '#f8fafc'
-                }}
+                className="p-3 border border-gray-200 rounded-lg bg-gray-50"
               >
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '6px'
-                }}>
-                  <span style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: '#1e293b'
-                  }}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-semibold text-gray-900">
                     {test.title}
                   </span>
-                  <span style={{
-                    background: test.is_activated ? '#dcfce7' : '#fef3c7',
-                    color: test.is_activated ? '#166534' : '#92400e',
-                    padding: '2px 6px',
-                    borderRadius: '4px',
-                    fontSize: '10px',
-                    fontWeight: '500'
-                  }}>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    test.is_activated 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
                     {test.is_activated ? 'ACTIVE' : 'INACTIVE'}
                   </span>
                 </div>
 
-                <div style={{
-                  fontSize: '12px',
-                  color: '#64748b',
-                  marginBottom: '8px'
-                }}>
+                <div className="text-xs text-gray-500 mb-2">
                   {test.subject} • {test.class_level} • {test.duration_minutes} min • {test.question_count} questions
                 </div>
 
                 <button
                   onClick={() => navigate(`/student/test?code=${test.code}`)}
                   disabled={!test.is_activated}
-                  style={{
-                    background: test.is_activated ? '#1e40af' : '#94a3b8',
-                    color: 'white',
-                    border: 'none',
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    cursor: test.is_activated ? 'pointer' : 'not-allowed'
-                  }}
+                  className={`px-3 py-1.5 rounded text-xs font-medium ${
+                    test.is_activated 
+                      ? 'bg-primary-600 text-white hover:bg-primary-700' 
+                      : 'bg-gray-400 text-white cursor-not-allowed'
+                  }`}
                 >
                   Use Code: {test.code}
                 </button>
@@ -256,80 +157,39 @@ export default function StudentDashboard() {
 
       {/* Recent Results */}
       {recentResults.length > 0 && (
-        <div style={{
-          background: 'white',
-          padding: '20px 16px',
-          borderRadius: '12px',
-          border: '1px solid #e2e8f0'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '12px'
-          }}>
-            <h2 style={{
-              fontSize: '16px',
-              fontWeight: '600',
-              color: '#1e293b',
-              margin: '0'
-            }}>
+        <div className="card">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="card-title">
               Recent Results
             </h2>
             <button
               onClick={() => navigate('/student/results')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#3b82f6',
-                fontSize: '12px',
-                fontWeight: '500',
-                cursor: 'pointer'
-              }}
+              className="btn-link text-xs"
             >
               View All
             </button>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div className="space-y-2">
             {recentResults.map((result) => (
               <div
                 key={result.id}
-                style={{
-                  padding: '10px',
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '6px',
-                  background: '#f8fafc',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
+                className="p-3 border border-gray-200 rounded-lg bg-gray-50 flex justify-between items-center"
               >
                 <div>
-                  <div style={{
-                    fontSize: '13px',
-                    fontWeight: '500',
-                    color: '#1e293b',
-                    marginBottom: '2px'
-                  }}>
+                  <div className="text-sm font-medium text-gray-900 mb-1">
                     {result.test_title}
                   </div>
-                  <div style={{
-                    fontSize: '11px',
-                    color: '#64748b'
-                  }}>
+                  <div className="text-xs text-gray-500">
                     {result.subject} • {new Date(result.submitted_at).toLocaleDateString()}
                   </div>
                 </div>
 
-                <div style={{
-                  background: result.percentage >= 50 ? '#dcfce7' : '#fef2f2',
-                  color: result.percentage >= 50 ? '#166534' : '#dc2626',
-                  padding: '4px 8px',
-                  borderRadius: '4px',
-                  fontSize: '12px',
-                  fontWeight: '600'
-                }}>
+                <div className={`px-2 py-1 rounded text-xs font-semibold ${
+                  result.percentage >= 50 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
                   {result.percentage}%
                 </div>
               </div>

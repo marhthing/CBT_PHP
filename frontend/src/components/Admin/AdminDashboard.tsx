@@ -393,27 +393,9 @@ export default function AdminDashboard() {
 
   if (loading && !retrying) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '60vh',
-        fontSize: '18px',
-        color: '#6b7280'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          <div style={{
-            width: '20px',
-            height: '20px',
-            border: '2px solid #e5e7eb',
-            borderTop: '2px solid #3b82f6',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
+      <div className="flex justify-center items-center min-h-[60vh] text-lg text-gray-500">
+        <div className="flex items-center space-x-3">
+          <div className="loading-spinner w-5 h-5"></div>
           Loading dashboard...
         </div>
       </div>
@@ -421,40 +403,15 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div style={{ 
-      padding: '24px',
-      background: '#ffffff',
-      minHeight: '100vh'
-    }}>
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
-
+    <div className="p-4 sm:p-6 lg:p-8 bg-white min-h-screen">
       {error && <ErrorNotification message={error} onClose={() => setError('')} />}
 
       {/* Header */}
-      <div style={{
-        marginBottom: '32px'
-      }}>
-        <h1 style={{
-          fontSize: '32px',
-          fontWeight: 'bold',
-          color: '#1f2937',
-          margin: 0,
-          marginBottom: '8px'
-        }}>
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
           Admin Dashboard
         </h1>
-        <p style={{
-          fontSize: '16px',
-          color: '#6b7280',
-          margin: 0
-        }}>
+        <p className="text-sm sm:text-base text-gray-600">
           Welcome back, {user?.full_name || 'Administrator'}
         </p>
       </div>

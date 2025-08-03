@@ -65,118 +65,55 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
   const navigationItems = getNavigationItems()
 
   const SidebarContent = () => (
-    <div style={{
-      height: '100%',
-      background: 'linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%)',
-      color: 'white',
-      display: 'flex',
-      flexDirection: 'column'
-    }}>
+    <div className="h-full bg-gradient-to-b from-secondary-800 to-secondary-900 text-white flex flex-col">
       {/* Sidebar Header */}
-      <div style={{
-        padding: '24px 20px',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-      }}>
-        <div style={{
-          width: '60px',
-          height: '60px',
-          background: 'rgba(255, 255, 255, 0.15)',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '18px',
-          fontWeight: 'bold',
-          margin: '0 auto 12px'
-        }}>
+      <div className="p-6 border-b border-white/10">
+        <div className="w-16 h-16 bg-white/15 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
           SFCS
         </div>
-        <div style={{
-          textAlign: 'center',
-          fontSize: '14px',
-          fontWeight: '600'
-        }}>
-          {user?.full_name}
-        </div>
-        <div style={{
-          textAlign: 'center',
-          fontSize: '12px',
-          opacity: 0.8,
-          textTransform: 'capitalize'
-        }}>
-          {user?.role}
+        <div className="text-center">
+          <div className="font-semibold text-sm truncate">
+            {user?.full_name}
+          </div>
+          <div className="text-xs opacity-80 capitalize mt-1">
+            {user?.role}
+          </div>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav style={{ flex: 1, padding: '20px 0' }}>
-        {navigationItems.map((item) => (
-          <button
-            key={item.path}
-            onClick={() => {
-              navigate(item.path)
-              if (isMobile) setIsSidebarOpen(false)
-            }}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              padding: '12px 20px',
-              border: 'none',
-              background: location.pathname === item.path ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
-              color: 'white',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              textAlign: 'left',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => {
-              if (location.pathname !== item.path) {
-                const target = e.target as HTMLButtonElement
-                target.style.background = 'rgba(255, 255, 255, 0.1)'
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (location.pathname !== item.path) {
-                const target = e.target as HTMLButtonElement
-                target.style.background = 'transparent'
-              }
-            }}
-          >
-            <span style={{ fontSize: '16px' }}>{item.icon}</span>
-            {item.name}
-          </button>
-        ))}
+      <nav className="flex-1 py-6 px-2">
+        <div className="sidebar-nav">
+          {navigationItems.map((item) => (
+            <button
+              key={item.path}
+              onClick={() => {
+                navigate(item.path)
+                if (isMobile) setIsSidebarOpen(false)
+              }}
+              className={`nav-item w-full ${
+                location.pathname === item.path 
+                  ? 'bg-white/15 text-white' 
+                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <span className="text-lg">{item.icon}</span>
+              <span className="truncate">{item.name}</span>
+            </button>
+          ))}
+        </div>
       </nav>
 
       {/* Logout Button */}
-      <div style={{ padding: '20px' }}>
+      <div className="p-4">
         <button
           onClick={handleLogout}
-          style={{
-            width: '100%',
-            background: 'rgba(220, 38, 38, 0.2)',
-            border: '1px solid rgba(220, 38, 38, 0.3)',
-            color: 'white',
-            padding: '12px',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '14px',
-            fontWeight: '500',
-            transition: 'all 0.2s'
-          }}
-          onMouseEnter={(e) => {
-            const target = e.target as HTMLButtonElement
-            target.style.background = 'rgba(220, 38, 38, 0.3)'
-          }}
-          onMouseLeave={(e) => {
-            const target = e.target as HTMLButtonElement
-            target.style.background = 'rgba(220, 38, 38, 0.2)'
-          }}
+          className="w-full bg-danger-500/20 border border-danger-500/30 text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 hover:bg-danger-500/30 hover:border-danger-500/40"
         >
-          Logout
+          <span className="flex items-center justify-center space-x-2">
+            <span>🚪</span>
+            <span>Logout</span>
+          </span>
         </button>
       </div>
     </div>
@@ -184,42 +121,21 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
 
   if (isMobile) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        background: '#f8fafc',
-        fontFamily: 'system-ui, -apple-system, sans-serif'
-      }}>
+      <div className="min-h-screen bg-gray-50">
         {/* Mobile Header */}
-        <header style={{
-          background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
-          color: 'white',
-          padding: '12px 16px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-          position: 'sticky',
-          top: 0,
-          zIndex: 50
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <header className="bg-gradient-to-r from-primary-600 to-primary-700 text-white p-4 flex items-center justify-between shadow-lg sticky top-0 z-50">
+          <div className="flex items-center space-x-3">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              style={{
-                background: 'rgba(255, 255, 255, 0.2)',
-                border: 'none',
-                color: 'white',
-                padding: '8px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '16px'
-              }}
+              className="bg-white/20 p-2 rounded-lg hover:bg-white/30 transition-colors"
             >
-              ☰
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
             </button>
             <div>
-              <div style={{ fontSize: '16px', fontWeight: 'bold' }}>SFCS CBT</div>
-              <div style={{ fontSize: '11px', opacity: 0.9 }}>
+              <div className="font-bold text-lg">SFCS CBT</div>
+              <div className="text-xs opacity-90 truncate max-w-48">
                 {user?.full_name}
               </div>
             </div>
@@ -227,16 +143,7 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
 
           <button
             onClick={handleLogout}
-            style={{
-              background: 'rgba(255, 255, 255, 0.2)',
-              border: 'none',
-              color: 'white',
-              padding: '6px 12px',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: '500'
-            }}
+            className="bg-white/20 px-3 py-2 rounded-lg text-xs font-medium hover:bg-white/30 transition-colors"
           >
             Logout
           </button>
@@ -245,23 +152,11 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
         {/* Mobile Sidebar Overlay */}
         {isSidebarOpen && (
           <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0, 0, 0, 0.5)',
-              zIndex: 100
-            }}
+            className="fixed inset-0 bg-black/50 z-50"
             onClick={() => setIsSidebarOpen(false)}
           >
             <div
-              style={{
-                width: '280px',
-                height: '100%',
-                background: 'white'
-              }}
+              className="w-80 h-full bg-white transform transition-transform duration-300 ease-in-out"
               onClick={(e) => e.stopPropagation()}
             >
               <SidebarContent />
@@ -270,48 +165,25 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
         )}
 
         {/* Main Content */}
-        <main style={{
-          padding: '16px',
-          paddingBottom: '80px'
-        }}>
+        <main className="p-4 pb-20 min-h-screen">
           {children}
         </main>
 
-        {/* Bottom Navigation for Mobile - Only show for students */}
+        {/* Bottom Navigation for Mobile */}
         {user?.role === 'student' && (
-          <nav style={{
-            position: 'fixed',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            background: 'white',
-            borderTop: '1px solid #e2e8f0',
-            padding: '8px 0',
-            display: 'flex',
-            justifyContent: 'space-around',
-            boxShadow: '0 -2px 10px rgba(0, 0, 0, 0.1)',
-            zIndex: 40
-          }}>
+          <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 flex justify-around shadow-moderate z-40">
             {navigationItems.slice(0, 3).map((item) => (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '4px',
-                  background: 'none',
-                  border: 'none',
-                  padding: '8px 12px',
-                  cursor: 'pointer',
-                  color: location.pathname === item.path ? '#1e40af' : '#64748b',
-                  fontSize: '10px',
-                  fontWeight: '500'
-                }}
+                className={`flex flex-col items-center space-y-1 py-2 px-3 rounded-lg transition-colors ${
+                  location.pathname === item.path 
+                    ? 'text-primary-600 bg-primary-50' 
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
               >
-                <span style={{ fontSize: '18px' }}>{item.icon}</span>
-                <span>{item.name.split(' ')[0]}</span>
+                <span className="text-lg">{item.icon}</span>
+                <span className="text-xs font-medium">{item.name.split(' ')[0]}</span>
               </button>
             ))}
           </nav>
@@ -322,31 +194,14 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
 
   // Desktop Layout
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: '#f8fafc', 
-      display: 'flex',
-      fontFamily: 'system-ui, -apple-system, sans-serif'
-    }}>
+    <div className="min-h-screen bg-gray-50 flex">
       {/* Desktop Sidebar */}
-      <aside style={{
-        width: '280px',
-        height: '100vh',
-        position: 'fixed',
-        left: 0,
-        top: 0,
-        zIndex: 30
-      }}>
+      <aside className="w-80 h-screen fixed left-0 top-0 z-30">
         <SidebarContent />
       </aside>
 
       {/* Desktop Main Content */}
-      <main style={{
-        flex: '1',
-        marginLeft: '280px',
-        padding: '32px',
-        minHeight: '100vh'
-      }}>
+      <main className="flex-1 ml-80 p-6 lg:p-8 min-h-screen">
         {children}
       </main>
     </div>
