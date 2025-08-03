@@ -62,38 +62,90 @@ export default function MobileBottomBar({ children }: MobileBottomBarProps) {
   const navigationItems = getNavigationItems()
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Top Header - Mobile First */}
-      <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-3 sm:px-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white text-xs font-semibold">SFCS</span>
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900 sm:text-xl">CBT Portal</h1>
-              <p className="text-xs text-gray-500 sm:text-sm">Sure Foundation Comprehensive School</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Mobile Layout */}
+      <div className="sm:hidden">
+        {/* Mobile Header */}
+        <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white text-xs font-semibold">SFCS</span>
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">CBT Portal</h1>
+                <p className="text-xs text-gray-500">Sure Foundation Comprehensive School</p>
+              </div>
             </div>
           </div>
-          
+        </header>
+
+        {/* Mobile Main Content */}
+        <main className="pb-16 px-4 py-6">
+          {children}
+        </main>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden sm:flex">
+        {/* Desktop Sidebar */}
+        <aside className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-10">
+          {/* Desktop Header in Sidebar */}
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center space-x-3">
+              <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white text-sm font-semibold">SFCS</span>
+              </div>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">CBT Portal</h1>
+                <p className="text-sm text-gray-500">Sure Foundation Comprehensive School</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Navigation */}
+          <div className="flex-1 px-4 py-6 space-y-2">
+            {navigationItems.map((item) => {
+              const Icon = item.icon
+              const isActive = location.pathname === item.path
+              
+              return (
+                <button
+                  key={item.path}
+                  onClick={() => navigate(item.path)}
+                  className={`w-full flex items-center space-x-3 px-3 py-2 text-sm rounded-lg transition-colors ${
+                    isActive 
+                      ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
+                  <span>{item.name}</span>
+                </button>
+              )
+            })}
+          </div>
+
           {/* Desktop Logout Button */}
-          <button
-            onClick={handleLogout}
-            className="hidden sm:flex items-center space-x-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Logout</span>
-          </button>
-        </div>
-      </header>
+          <div className="p-4 border-t border-gray-200">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Logout</span>
+            </button>
+          </div>
+        </aside>
 
-      {/* Main Content Area */}
-      <main className="flex-1 pb-16 sm:pb-4 sm:ml-64 px-4 py-6 sm:px-6 sm:py-8">
-        {children}
-      </main>
+        {/* Desktop Main Content */}
+        <main className="ml-64 flex-1 px-6 py-8">
+          {children}
+        </main>
+      </div>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-1 sm:hidden">
+      {/* Mobile Bottom Navigation - Only visible on mobile */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-1">
         <div className="flex items-center justify-around">
           {navigationItems.slice(0, 4).map((item) => {
             const Icon = item.icon
@@ -125,31 +177,6 @@ export default function MobileBottomBar({ children }: MobileBottomBarProps) {
           </button>
         </div>
       </nav>
-
-      {/* Desktop Sidebar Navigation - Hidden on Mobile */}
-      <aside className="hidden sm:fixed sm:left-0 sm:top-0 sm:h-full sm:w-64 sm:bg-white sm:border-r sm:border-gray-200 sm:flex sm:flex-col sm:pt-20 sm:z-10">
-        <div className="flex-1 px-4 py-6 space-y-2">
-          {navigationItems.map((item) => {
-            const Icon = item.icon
-            const isActive = location.pathname === item.path
-            
-            return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`w-full flex items-center space-x-3 px-3 py-2 text-sm rounded-lg transition-colors ${
-                  isActive 
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : 'text-gray-500'}`} />
-                <span>{item.name}</span>
-              </button>
-            )
-          })}
-        </div>
-      </aside>
     </div>
   )
 }
