@@ -57,6 +57,9 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [retrying, setRetrying] = useState(false)
+  const [showHealthModal, setShowHealthModal] = useState(false)
+  const [healthData, setHealthData] = useState<any>(null)
+  const [loadingHealth, setLoadingHealth] = useState(false)
 
   // Memoized fetch function with retry logic
   const fetchDashboardData = useCallback(async (retryCount = 0) => {
@@ -269,10 +272,24 @@ export default function AdminDashboard() {
       title: 'System Health',
       description: 'Monitor system status',
       icon: Activity,
-      onClick: () => window.open('/api/health', '_blank'),
+      onClick: () => fetchHealthData(),
       color: '#f59e0b'
     }
   ], [navigate])
+
+  const fetchHealthData = useCallback(async () => {
+    setLoadingHealth(true)
+    try {
+      const response = await api.get('/health')
+      setHealthData(response.data)
+      setShowHealthModal(true)
+    } catch (error) {
+      console.error('Failed to fetch health data:', error)
+      setError('Failed to fetch system health data')
+    } finally {
+      setLoadingHealth(false)
+    }
+  }, [])
 
   const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
@@ -869,7 +886,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* System Metrics Footer */}
+      {/* Recent Activity Feed */}
       <div style={{
         marginTop: '48px',
         background: '#ffffff',
@@ -890,137 +907,446 @@ export default function AdminDashboard() {
             color: '#1f2937',
             margin: 0
           }}>
-            System Metrics
+            System Overview
           </h2>
-          <button
-            onClick={() => window.open('/api/health', '_blank')}
-            style={{
-              background: '#6b7280',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              fontSize: '12px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#4b5563'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#6b7280'
-            }}
-          >
-            Detailed Health
-          </button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button
+              onClick={() => fetchHealthData()}
+              disabled={loadingHealth}
+              style={{
+                background: loadingHealth ? '#9ca3af' : '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '8px 12px',
+                fontSize: '12px',
+                fontWeight: '500',
+                cursor: loadingHealth ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+              onMouseEnter={(e) => {
+                if (!loadingHealth) e.currentTarget.style.backgroundColor = '#2563eb'
+              }}
+              onMouseLeave={(e) => {
+                if (!loadingHealth) e.currentTarget.style.backgroundColor = '#3b82f6'
+              }}
+            >
+              {loadingHealth ? (
+                <>
+                  <div style={{
+                    width: '12px',
+                    height: '12px',
+                    border: '2px solid #ffffff40',
+                    borderTop: '2px solid #ffffff',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  Checking...
+                </>
+              ) : (
+                <>🔍 System Health</>
+              )}
+            </button>
+            <button
+              onClick={() => fetchDashboardData()}
+              style={{
+                background: '#10b981',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '8px 12px',
+                fontSize: '12px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#059669'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#10b981'
+              }}
+            >
+              🔄 Refresh Data
+            </button>
+          </div>
         </div>
+        
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
           gap: '16px'
         }}>
           <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '12px 16px',
-            background: '#f9fafb',
+            padding: '16px',
+            background: '#f8fafc',
             borderRadius: '8px',
-            border: '1px solid #e5e7eb'
+            border: '1px solid #e2e8f0'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Database size={18} style={{ color: '#059669' }} />
-              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>Database Entities</span>
-            </div>
-            <span style={{
-              fontSize: '12px',
+            <h3 style={{
+              fontSize: '14px',
               fontWeight: '600',
-              color: '#059669',
-              background: '#d1fae5',
-              padding: '4px 8px',
-              borderRadius: '6px'
+              color: '#374151',
+              margin: '0 0 8px 0'
             }}>
-              {stats.total_questions + stats.total_test_codes + stats.total_teachers + stats.total_students} Records
-            </span>
+              🎯 System Status
+            </h3>
+            <p style={{
+              fontSize: '12px',
+              color: '#6b7280',
+              margin: 0,
+              lineHeight: '1.4'
+            }}>
+              All core systems operational. Database connected with {stats.total_questions + stats.total_test_codes + stats.total_teachers + stats.total_students} total records.
+            </p>
           </div>
           
           <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '12px 16px',
-            background: '#f9fafb',
+            padding: '16px',
+            background: stats.active_test_codes > 0 ? '#f0fdf4' : '#fefce8',
             borderRadius: '8px',
-            border: '1px solid #e5e7eb'
+            border: stats.active_test_codes > 0 ? '1px solid #bbf7d0' : '1px solid #fde047'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Activity size={18} style={{ color: stats.active_test_codes > 0 ? '#059669' : '#f59e0b' }} />
-              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>Active Tests</span>
-            </div>
-            <span style={{
-              fontSize: '12px',
+            <h3 style={{
+              fontSize: '14px',
               fontWeight: '600',
-              color: stats.active_test_codes > 0 ? '#059669' : '#f59e0b',
-              background: stats.active_test_codes > 0 ? '#d1fae5' : '#fef3c7',
-              padding: '4px 8px',
-              borderRadius: '6px'
+              color: '#374151',
+              margin: '0 0 8px 0'
             }}>
-              {stats.active_test_codes} Live
-            </span>
+              📊 Test Activity
+            </h3>
+            <p style={{
+              fontSize: '12px',
+              color: '#6b7280',
+              margin: 0,
+              lineHeight: '1.4'
+            }}>
+              {stats.active_test_codes} active tests available. {stats.tests_today} tests completed today with {stats.average_score}% average score.
+            </p>
           </div>
           
           <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '12px 16px',
-            background: '#f9fafb',
+            padding: '16px',
+            background: '#f0f9ff',
             borderRadius: '8px',
-            border: '1px solid #e5e7eb'
+            border: '1px solid #bae6fd'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Users size={18} style={{ color: '#0891b2' }} />
-              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>User Activity</span>
-            </div>
-            <span style={{
-              fontSize: '12px',
+            <h3 style={{
+              fontSize: '14px',
               fontWeight: '600',
-              color: '#0891b2',
-              background: '#cffafe',
-              padding: '4px 8px',
-              borderRadius: '6px'
+              color: '#374151',
+              margin: '0 0 8px 0'
             }}>
-              {stats.tests_today} Tests Today
-            </span>
+              👥 User Management
+            </h3>
+            <p style={{
+              fontSize: '12px',
+              color: '#6b7280',
+              margin: 0,
+              lineHeight: '1.4'
+            }}>
+              {stats.total_teachers} teachers managing {stats.total_assignments} assignments across {stats.total_students} students.
+            </p>
           </div>
           
           <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '12px 16px',
-            background: '#f9fafb',
+            padding: '16px',
+            background: '#fef7ff',
             borderRadius: '8px',
-            border: '1px solid #e5e7eb'
+            border: '1px solid #f3e8ff'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BarChart3 size={18} style={{ color: '#7c3aed' }} />
-              <span style={{ fontSize: '14px', color: '#374151', fontWeight: '500' }}>Performance</span>
-            </div>
-            <span style={{
-              fontSize: '12px',
+            <h3 style={{
+              fontSize: '14px',
               fontWeight: '600',
-              color: '#7c3aed',
-              background: '#ede9fe',
-              padding: '4px 8px',
-              borderRadius: '6px'
+              color: '#374151',
+              margin: '0 0 8px 0'
             }}>
-              {stats.average_score}% Avg Score
-            </span>
+              📚 Content Library
+            </h3>
+            <p style={{
+              fontSize: '12px',
+              color: '#6b7280',
+              margin: 0,
+              lineHeight: '1.4'
+            }}>
+              {stats.total_questions} questions available. Top subject: {stats.most_active_subject || 'None'} ({stats.most_active_subject_count} questions).
+            </p>
           </div>
         </div>
       </div>
+      {/* Health Check Modal */}
+      {showHealthModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            maxWidth: '500px',
+            width: '90%',
+            maxHeight: '80vh',
+            overflowY: 'auto',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '20px'
+            }}>
+              <h2 style={{
+                fontSize: '20px',
+                fontWeight: 'bold',
+                color: '#1f2937',
+                margin: 0
+              }}>
+                🏥 System Health Check
+              </h2>
+              <button
+                onClick={() => setShowHealthModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  cursor: 'pointer',
+                  color: '#6b7280',
+                  padding: '4px'
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            {healthData && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: '12px 16px',
+                  background: healthData.status === 'ok' ? '#f0fdf4' : '#fef2f2',
+                  borderRadius: '8px',
+                  border: healthData.status === 'ok' ? '1px solid #bbf7d0' : '1px solid #fecaca'
+                }}>
+                  <span style={{
+                    fontSize: '20px',
+                    marginRight: '12px'
+                  }}>
+                    {healthData.status === 'ok' ? '✅' : '❌'}
+                  </span>
+                  <div>
+                    <h3 style={{
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      color: healthData.status === 'ok' ? '#065f46' : '#991b1b',
+                      margin: '0 0 4px 0'
+                    }}>
+                      System Status: {healthData.status.toUpperCase()}
+                    </h3>
+                    <p style={{
+                      fontSize: '12px',
+                      color: '#6b7280',
+                      margin: 0
+                    }}>
+                      Last checked: {new Date(healthData.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '12px'
+                }}>
+                  <div style={{
+                    padding: '12px',
+                    background: '#f8fafc',
+                    borderRadius: '6px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <h4 style={{
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: '#374151',
+                      margin: '0 0 4px 0'
+                    }}>
+                      🗄️ Database
+                    </h4>
+                    <p style={{
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: healthData.database === 'connected' ? '#059669' : '#dc2626',
+                      margin: 0
+                    }}>
+                      {healthData.database}
+                    </p>
+                  </div>
+                  
+                  <div style={{
+                    padding: '12px',
+                    background: '#f8fafc',
+                    borderRadius: '6px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <h4 style={{
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: '#374151',
+                      margin: '0 0 4px 0'
+                    }}>
+                      🐘 PHP Version
+                    </h4>
+                    <p style={{
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      margin: 0
+                    }}>
+                      {healthData.php_version}
+                    </p>
+                  </div>
+                  
+                  <div style={{
+                    padding: '12px',
+                    background: '#f8fafc',
+                    borderRadius: '6px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <h4 style={{
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: '#374151',
+                      margin: '0 0 4px 0'
+                    }}>
+                      💾 Memory Usage
+                    </h4>
+                    <p style={{
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      margin: 0
+                    }}>
+                      {(healthData.memory_usage / 1024 / 1024).toFixed(1)} MB
+                    </p>
+                  </div>
+                  
+                  <div style={{
+                    padding: '12px',
+                    background: '#f8fafc',
+                    borderRadius: '6px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <h4 style={{
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: '#374151',
+                      margin: '0 0 4px 0'
+                    }}>
+                      🕐 Uptime
+                    </h4>
+                    <p style={{
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      margin: 0
+                    }}>
+                      {healthData.uptime} seconds
+                    </p>
+                  </div>
+                  
+                  <div style={{
+                    padding: '12px',
+                    background: '#f8fafc',
+                    borderRadius: '6px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <h4 style={{
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: '#374151',
+                      margin: '0 0 4px 0'
+                    }}>
+                      🌍 Environment
+                    </h4>
+                    <p style={{
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      margin: 0
+                    }}>
+                      {healthData.environment}
+                    </p>
+                  </div>
+                  
+                  <div style={{
+                    padding: '12px',
+                    background: '#f8fafc',
+                    borderRadius: '6px',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <h4 style={{
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      color: '#374151',
+                      margin: '0 0 4px 0'
+                    }}>
+                      📋 Version
+                    </h4>
+                    <p style={{
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      color: '#374151',
+                      margin: 0
+                    }}>
+                      {healthData.version}
+                    </p>
+                  </div>
+                </div>
+                
+                {healthData.issues && healthData.issues.length > 0 && (
+                  <div style={{
+                    padding: '12px 16px',
+                    background: '#fef2f2',
+                    borderRadius: '8px',
+                    border: '1px solid #fecaca'
+                  }}>
+                    <h4 style={{
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: '#991b1b',
+                      margin: '0 0 8px 0'
+                    }}>
+                      ⚠️ Issues Detected
+                    </h4>
+                    <ul style={{
+                      fontSize: '12px',
+                      color: '#7f1d1d',
+                      margin: 0,
+                      paddingLeft: '16px'
+                    }}>
+                      {healthData.issues.map((issue: string, index: number) => (
+                        <li key={index}>{issue}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
