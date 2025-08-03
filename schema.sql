@@ -1,6 +1,8 @@
 -- PostgreSQL Database Schema for CBT Portal
--- Generated: August 3, 2025 at 11:20 AM
+-- Generated: August 3, 2025 at 12:39 PM
 -- Extracted from database: neondb
+-- Structure: All tables
+-- Data: users table only
 
 --
 -- PostgreSQL database dump
@@ -333,7 +335,8 @@ CREATE TABLE public.test_codes (
     activated_at timestamp without time zone,
     batch_id character varying(255),
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    test_type character varying(20) DEFAULT 'test'::character varying
+    test_type character varying(20) DEFAULT 'test'::character varying,
+    score_per_question integer DEFAULT 1
 );
 
 
@@ -821,6 +824,51 @@ ALTER TABLE ONLY public.test_results
 
 ALTER TABLE ONLY public.test_results
     ADD CONSTRAINT test_results_test_code_id_fkey FOREIGN KEY (test_code_id) REFERENCES public.test_codes(id) ON DELETE CASCADE;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.9
+-- Dumped by pg_dump version 16.9
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.users (id, username, email, reg_number, password, role, full_name, is_active, created_at, last_login, current_term, current_session) FROM stdin;
+2	teacher1	teacher1@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	teacher	John Doe	t	2025-08-03 11:46:51.454306	\N	First	2024/2025
+3	\N	student1@sfgs.edu.ng	2023001	$2y$10$N79EW3YvnfXujdvcy71GuOry7M4AKRDrL3SxYfZxgyDIJqMFHceBS	student	Jane Smith	t	2025-08-03 11:46:51.454306	\N	First	2024/2025
+1	admin	admin@sfgs.edu.ng	\N	$2y$10$XO4C03pHWyQ3ZE44D..aTuXReKbIasF9lQE4EyA3nd9Xgg2GbcaJK	admin	System Administrator	t	2025-08-03 11:46:51.454306	2025-08-03 11:48:08.781647	First	2024/2025
+\.
+
+
+--
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 3, true);
 
 
 --
