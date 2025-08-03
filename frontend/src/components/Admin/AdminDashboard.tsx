@@ -978,219 +978,222 @@ export default function AdminDashboard() {
 
       {/* Developer / System Panel */}
       <div style={{
-        marginTop: '48px'
+        marginTop: '32px'
       }}>
         <div style={{
           background: '#ffffff',
-          borderRadius: '12px',
-          padding: '24px',
+          borderRadius: '8px',
+          padding: '16px',
           boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
           border: '1px solid #e5e7eb'
         }}>
           <h2 style={{
-            fontSize: '20px',
+            fontSize: '16px',
             fontWeight: 'bold',
             color: '#1f2937',
-            margin: '0 0 20px 0'
+            margin: '0 0 16px 0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
           }}>
-            🔧 Developer / System Panel
+            🔧 System Monitor
           </h2>
           
           <div style={{
             display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '24px'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '12px'
           }}>
-            {/* Left Column - System Metrics */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* API Response Time */}
+            <div style={{
+              padding: '12px',
+              background: '#f8fafc',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0',
+              borderLeft: '3px solid #3b82f6'
+            }}>
               <div style={{
-                padding: '16px',
-                background: '#f9fafb',
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                borderLeft: '4px solid #3b82f6'
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginBottom: '6px'
               }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '8px'
-                }}>
-                  <span style={{ fontSize: '16px' }}>⚡</span>
-                  <h3 style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    margin: 0
-                  }}>
-                    API Response Time
-                  </h3>
-                </div>
-                <div style={{
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                  color: apiResponseTime === 'Error' ? '#ef4444' : 
-                        parseInt(apiResponseTime) > 500 ? '#f59e0b' :
-                        parseInt(apiResponseTime) > 200 ? '#8b5cf6' : '#10b981',
-                  marginBottom: '4px'
-                }}>
-                  {apiResponseTime}
-                </div>
-                <div style={{
+                <span style={{ fontSize: '14px' }}>⚡</span>
+                <h3 style={{
                   fontSize: '12px',
-                  color: '#6b7280'
+                  fontWeight: '600',
+                  color: '#374151',
+                  margin: 0
                 }}>
-                  Average over last 24 hours
-                </div>
+                  API Response
+                </h3>
               </div>
-
               <div style={{
-                padding: '16px',
-                background: '#f9fafb',
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                borderLeft: '4px solid #10b981'
+                fontSize: '16px',
+                fontWeight: 'bold',
+                color: apiResponseTime === 'Error' ? '#ef4444' : 
+                      parseInt(apiResponseTime) > 500 ? '#f59e0b' :
+                      parseInt(apiResponseTime) > 200 ? '#8b5cf6' : '#10b981',
+                marginBottom: '2px'
               }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '8px'
-                }}>
-                  <span style={{ fontSize: '16px' }}>🕐</span>
-                  <h3 style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    margin: 0
-                  }}>
-                    Server Time & Uptime
-                  </h3>
-                </div>
-                <div style={{
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  color: '#10b981',
-                  marginBottom: '4px'
-                }}>
-                  {liveMetrics.currentTime}
-                </div>
-                <div style={{
-                  fontSize: '12px',
-                  color: '#6b7280'
-                }}>
-                  Uptime: {liveMetrics.uptime}
-                </div>
+                {apiResponseTime}
               </div>
-
               <div style={{
-                padding: '16px',
-                background: '#f9fafb',
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                borderLeft: '4px solid #f59e0b'
+                fontSize: '10px',
+                color: '#6b7280'
               }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '8px'
-                }}>
-                  <span style={{ fontSize: '16px' }}>💾</span>
-                  <h3 style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    margin: 0
-                  }}>
-                    Memory & CPU Load
-                  </h3>
-                </div>
-                <div style={{
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  color: '#f59e0b',
-                  marginBottom: '4px'
-                }}>
-                  {liveMetrics.memoryUsage}
-                </div>
-                <div style={{
-                  fontSize: '12px',
-                  color: '#6b7280'
-                }}>
-                  CPU: {liveMetrics.cpuUsage} | RAM: Normal
-                </div>
+                Live monitoring
               </div>
             </div>
 
-            {/* Right Column - System Info & Actions */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Server Time */}
+            <div style={{
+              padding: '12px',
+              background: '#f8fafc',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0',
+              borderLeft: '3px solid #10b981'
+            }}>
               <div style={{
-                padding: '16px',
-                background: '#f9fafb',
-                borderRadius: '8px',
-                border: '1px solid #e5e7eb',
-                borderLeft: '4px solid #8b5cf6'
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginBottom: '6px'
               }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  marginBottom: '8px'
-                }}>
-                  <span style={{ fontSize: '16px' }}>🔧</span>
-                  <h3 style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    margin: 0
-                  }}>
-                    System Version
-                  </h3>
-                </div>
-                <div style={{
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  color: '#8b5cf6',
-                  marginBottom: '4px'
-                }}>
-                  {healthData?.version || 'v1.0.0'}
-                </div>
-                <div style={{
+                <span style={{ fontSize: '14px' }}>🕐</span>
+                <h3 style={{
                   fontSize: '12px',
-                  color: '#6b7280'
-                }}>
-                  PHP {healthData?.php_version || '8.2.29'} | {healthData?.environment || 'Production'}
-                </div>
-              </div>
-
-              {/* Emergency Actions */}
-              <div style={{
-                padding: '16px',
-                background: '#fef2f2',
-                borderRadius: '8px',
-                border: '1px solid #fecaca',
-                borderLeft: '4px solid #ef4444'
-              }}>
-                <div style={{
-                  fontSize: '14px',
                   fontWeight: '600',
-                  color: '#991b1b',
-                  marginBottom: '12px'
+                  color: '#374151',
+                  margin: 0
                 }}>
-                  🚨 Emergency / Maintenance
-                </div>
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
+                  Server Time
+                </h3>
+              </div>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: 'bold',
+                color: '#10b981',
+                marginBottom: '2px'
+              }}>
+                {liveMetrics.currentTime}
+              </div>
+              <div style={{
+                fontSize: '10px',
+                color: '#6b7280'
+              }}>
+                Uptime: {liveMetrics.uptime}
+              </div>
+            </div>
+
+            {/* Memory */}
+            <div style={{
+              padding: '12px',
+              background: '#f8fafc',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0',
+              borderLeft: '3px solid #f59e0b'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginBottom: '6px'
+              }}>
+                <span style={{ fontSize: '14px' }}>💾</span>
+                <h3 style={{
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  margin: 0
                 }}>
-                  <button
-                    onClick={async () => {
-                      try {
-                        // Generate comprehensive system logs
-                        const timestamp = new Date().toISOString()
-                        const logs = `
+                  Memory
+                </h3>
+              </div>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: 'bold',
+                color: '#f59e0b',
+                marginBottom: '2px'
+              }}>
+                {liveMetrics.memoryUsage}
+              </div>
+              <div style={{
+                fontSize: '10px',
+                color: '#6b7280'
+              }}>
+                CPU: {liveMetrics.cpuUsage}
+              </div>
+            </div>
+
+            {/* System Version */}
+            <div style={{
+              padding: '12px',
+              background: '#f8fafc',
+              borderRadius: '6px',
+              border: '1px solid #e2e8f0',
+              borderLeft: '3px solid #8b5cf6'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                marginBottom: '6px'
+              }}>
+                <span style={{ fontSize: '14px' }}>🔧</span>
+                <h3 style={{
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#374151',
+                  margin: 0
+                }}>
+                  Version
+                </h3>
+              </div>
+              <div style={{
+                fontSize: '14px',
+                fontWeight: 'bold',
+                color: '#8b5cf6',
+                marginBottom: '2px'
+              }}>
+                {healthData?.version || 'v1.0.0'}
+              </div>
+              <div style={{
+                fontSize: '10px',
+                color: '#6b7280'
+              }}>
+                PHP {healthData?.php_version || '8.2.29'}
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div style={{
+              padding: '12px',
+              background: '#fef2f2',
+              borderRadius: '6px',
+              border: '1px solid #fecaca',
+              borderLeft: '3px solid #ef4444',
+              gridColumn: 'span 2'
+            }}>
+              <div style={{
+                fontSize: '12px',
+                fontWeight: '600',
+                color: '#991b1b',
+                marginBottom: '8px'
+              }}>
+                🚨 System Tools
+              </div>
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                flexWrap: 'wrap'
+              }}>
+                <button
+                  onClick={async () => {
+                    try {
+                      // Generate comprehensive system logs
+                      const timestamp = new Date().toISOString()
+                      const logs = `
 === CBT PORTAL SYSTEM LOGS ===
 Generated: ${timestamp}
 Environment: ${healthData?.environment || 'Development'}
@@ -1239,79 +1242,78 @@ ${new Date(Date.now() - 3600000).toISOString()} - WARN - High memory usage detec
 ${new Date(Date.now() - 7200000).toISOString()} - INFO - Database backup completed
 
 === END OF LOGS ===
-                        `.trim()
+                      `.trim()
 
-                        const blob = new Blob([logs], { type: 'text/plain' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = `cbt-system-logs-${new Date().toISOString().split('T')[0]}.txt`;
-                        a.click();
-                        URL.revokeObjectURL(url);
-                        
-                        // Show success message
-                        setError('') // Clear any existing errors first
-                        setTimeout(() => {
-                          // You could add a success notification here if you have one
-                          console.log('System logs downloaded successfully')
-                        }, 100)
-                      } catch (error) {
-                        console.error('Failed to generate logs:', error)
-                        setError('Failed to generate system logs')
-                      }
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '8px 12px',
-                      background: '#ffffff',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: '#374151',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f9fafb'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#ffffff'
-                    }}
-                  >
-                    <span>📂</span>
-                    Download Logs
-                  </button>
-                  
-                  <button
-                    onClick={() => fetchHealthData()}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '8px 12px',
-                      background: '#ffffff',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: '500',
-                      color: '#374151',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = '#f9fafb'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = '#ffffff'
-                    }}
-                  >
-                    <span>⚙️</span>
-                    System Settings
-                  </button>
-                </div>
+                      const blob = new Blob([logs], { type: 'text/plain' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `cbt-system-logs-${new Date().toISOString().split('T')[0]}.txt`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                      
+                      // Show success message
+                      setError('') // Clear any existing errors first
+                      setTimeout(() => {
+                        // You could add a success notification here if you have one
+                        console.log('System logs downloaded successfully')
+                      }, 100)
+                    } catch (error) {
+                      console.error('Failed to generate logs:', error)
+                      setError('Failed to generate system logs')
+                    }
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 10px',
+                    background: '#ffffff',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f9fafb'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ffffff'
+                  }}
+                >
+                  <span>📂</span>
+                  Logs
+                </button>
+                
+                <button
+                  onClick={() => fetchHealthData()}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 10px',
+                    background: '#ffffff',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: '500',
+                    color: '#374151',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#f9fafb'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#ffffff'
+                  }}
+                >
+                  <span>⚙️</span>
+                  Health
+                </button>
               </div>
             </div>
           </div>
