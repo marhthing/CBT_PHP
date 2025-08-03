@@ -75,10 +75,7 @@ export default function AdminDashboard() {
       setRecentActivities(activitiesResponse.data.data || activitiesResponse.data || [])
       setError('')
     } catch (error: any) {
-      console.error('Dashboard fetch error:', error)
-      
       if (retryCount < maxRetries) {
-        console.log(`Retrying... (${retryCount + 1}/${maxRetries})`)
         await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)))
         return fetchDashboardData(retryCount + 1)
       }

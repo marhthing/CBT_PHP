@@ -59,20 +59,20 @@ export default function TestCodeManager() {
   const [successMessage, setSuccessMessage] = useState('')
   const [lookupData, setLookupData] = useState<LookupData>({})
   const [availableQuestions, setAvailableQuestions] = useState(0)
-  
+
   // Filters
   const [subjectFilter, setSubjectFilter] = useState('')
   const [classFilter, setClassFilter] = useState('')
   const [termFilter, setTermFilter] = useState('')
   const [sessionFilter, setSessionFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
-  
+
   // Form states
   const [creating, setCreating] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showViewModal, setShowViewModal] = useState(false)
   const [selectedBatch, setSelectedBatch] = useState<any>(null)
-  
+
   // Confirmation modal states
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [batchToDelete, setBatchToDelete] = useState<string | null>(null)
@@ -112,7 +112,7 @@ export default function TestCodeManager() {
       const response = await api.get('/system/lookup')
       setLookupData(response.data.data)
     } catch (error: any) {
-      // Error handled silently
+      setError('Failed to load lookup data')
     }
   }, [])
 
@@ -146,7 +146,7 @@ export default function TestCodeManager() {
       const subject = lookupData.subjects?.find(s => s.id === parseInt(createForm.subject_id))
       const term = lookupData.terms?.find(t => t.id === parseInt(createForm.term_id))
       const session = lookupData.sessions?.find(s => s.id === parseInt(createForm.session_id))
-      
+
       if (subject && term && session) {
         const title = `${subject.name} - ${createForm.class_level} (${term.name} ${session.name})`
         setCreateForm(prev => prev.title !== title ? { ...prev, title } : prev)
@@ -170,7 +170,7 @@ export default function TestCodeManager() {
   // Group codes by batch for management
   const groupedBatches = useMemo(() => {
     const batches = new Map<string, TestCode[]>()
-    
+
     testCodes.forEach(code => {
       const batchKey = code.batch_id || `single_${code.id}`
       if (!batches.has(batchKey)) {
@@ -178,7 +178,7 @@ export default function TestCodeManager() {
       }
       batches.get(batchKey)!.push(code)
     })
-    
+
     return Array.from(batches.entries()).map(([batchId, codes]) => ({
       batchId,
       codes,
@@ -196,11 +196,11 @@ export default function TestCodeManager() {
       const matchesClass = !classFilter || firstCode.class_level === classFilter
       const matchesTerm = !termFilter || firstCode.term_name?.toLowerCase().includes(termFilter.toLowerCase())
       const matchesSession = !sessionFilter || firstCode.session_name?.toLowerCase().includes(sessionFilter.toLowerCase())
-      
+
       let matchesStatus = true
       if (statusFilter === 'active') matchesStatus = batch.isActivated
       else if (statusFilter === 'deactivated') matchesStatus = !batch.isActivated
-      
+
       return matchesSubject && matchesClass && matchesTerm && matchesSession && matchesStatus
     })
   }, [groupedBatches, subjectFilter, classFilter, termFilter, sessionFilter, statusFilter])
@@ -230,7 +230,7 @@ export default function TestCodeManager() {
       }
 
       const response = await api.post('/admin/test-codes/bulk', payload)
-      
+
       // Add new codes to state locally instead of full refresh
       if (response.data.data?.codes) {
         const newCodes = response.data.data.codes.map((codeData: any) => ({
@@ -256,14 +256,14 @@ export default function TestCodeManager() {
           batch_id: response.data.data.batch_id,
           test_type: createForm.test_type
         }))
-        
+
         setTestCodes(prevCodes => [...prevCodes, ...newCodes])
       }
-      
+
       const message = createForm.count === 1 
         ? 'Test code batch created successfully (1 code)'
         : `Successfully created batch of ${createForm.count} test codes`
-      
+
       setSuccessMessage(message)
       setShowCreateModal(false)
       setCreateForm({
@@ -280,7 +280,7 @@ export default function TestCodeManager() {
         test_type: 'test'
       })
       setAvailableQuestions(0)
-      
+
       // Auto-clear success message
       setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
@@ -297,7 +297,7 @@ export default function TestCodeManager() {
       await api.patch(`/admin/test-codes/batch/${batchId}/toggle-activation`, {
         is_activated: newStatus
       })
-      
+
       // Update state locally instead of full refresh
       setTestCodes(prevCodes => 
         prevCodes.map(code => 
@@ -306,9 +306,9 @@ export default function TestCodeManager() {
             : code
         )
       )
-      
+
       setSuccessMessage(`Test code batch ${newStatus ? 'activated' : 'deactivated'} successfully`)
-      
+
       // Auto-clear success message
       setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
@@ -331,20 +331,20 @@ export default function TestCodeManager() {
 
   const confirmDeleteBatch = async () => {
     if (!batchToDelete) return
-    
+
     setDeleting(true)
     try {
       await api.delete(`/admin/test-codes/batch/${batchToDelete}`)
-      
+
       // Remove all codes from this batch locally
       setTestCodes(prevCodes => prevCodes.filter(code => code.batch_id !== batchToDelete))
-      
+
       // Close modal if currently viewing this batch
       if (selectedBatch && selectedBatch.batchId === batchToDelete) {
         setShowViewModal(false)
         setSelectedBatch(null)
       }
-      
+
       setSuccessMessage('Test code batch deleted successfully')
       setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
@@ -867,7 +867,7 @@ export default function TestCodeManager() {
                   // Determine status color based on code state
                   let statusColor = '#10b981' // Green - not used
                   let statusText = 'Available'
-                  
+
                   if (code.status === 'using') {
                     statusColor = '#f59e0b' // Yellow - currently in use
                     statusText = 'In Use'
@@ -875,7 +875,7 @@ export default function TestCodeManager() {
                     statusColor = '#ef4444' // Red - used/completed
                     statusText = 'Used'
                   }
-                  
+
                   return (
                     <div
                       key={code.id}

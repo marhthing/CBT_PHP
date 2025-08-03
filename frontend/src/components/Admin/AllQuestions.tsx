@@ -100,8 +100,7 @@ export default function AllQuestions() {
       const response = await api.get(`/admin/questions?${params.toString()}`)
       setQuestions(response.data.data?.questions || [])
     } catch (error: any) {
-      console.error('Failed to fetch questions:', error)
-      setError('Failed to load questions. Please try again.')
+      setError(error.response?.data?.message || 'Failed to load questions')
     } finally {
       setLoading(false)
     }
@@ -120,8 +119,8 @@ export default function AllQuestions() {
     try {
       const response = await api.get('/system/lookup')
       setLookupData(response.data.data || {})
-    } catch (error) {
-      console.error('Failed to fetch lookup data:', error)
+    } catch (error: any) {
+      setError('Failed to load lookup data')
     }
   }, [])
 
@@ -163,7 +162,6 @@ export default function AllQuestions() {
         setTimeout(() => setSuccessMessage(''), 3000)
       }
     } catch (error: any) {
-      console.error('Failed to delete question:', error)
       setError('Failed to delete question: ' + (error.response?.data?.message || error.message))
     } finally {
       setDeleting(false)
@@ -870,7 +868,7 @@ export default function AllQuestions() {
                   </p>
                 )}
               </div>
-              
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">

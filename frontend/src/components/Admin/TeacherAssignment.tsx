@@ -48,7 +48,7 @@ export default function TeacherAssignment() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
-  
+
   // Filters
   const [teacherFilter, setTeacherFilter] = useState('')
   const [subjectFilter, setSubjectFilter] = useState('')
@@ -72,12 +72,11 @@ export default function TeacherAssignment() {
   const fetchAssignments = useCallback(async () => {
     try {
       const response = await api.get('/admin/assignments')
-      
+
       // The API returns data in response.data.data structure  
       const assignmentsData = response.data.data || []
       setAssignments(Array.isArray(assignmentsData) ? assignmentsData : [])
     } catch (error) {
-      console.error('Failed to fetch assignments:', error)
       setAssignments([]) // Set empty array on error
     } finally {
       setLoading(false)
@@ -88,8 +87,8 @@ export default function TeacherAssignment() {
     try {
       const response = await api.get('/admin/teachers')
       setTeachers(response.data.data?.teachers || [])
-    } catch (error) {
-      console.error('Failed to fetch teachers:', error)
+    } catch (error: any) {
+      setError('Failed to load teachers data')
     }
   }, [])
 
@@ -97,8 +96,8 @@ export default function TeacherAssignment() {
     try {
       const response = await api.get('/system/lookup')
       setLookupData(response.data.data || {})
-    } catch (error) {
-      console.error('Failed to fetch lookup data:', error)
+    } catch (error: any) {
+      setError('Failed to load lookup data')
     }
   }, [])
 
@@ -132,7 +131,6 @@ export default function TeacherAssignment() {
         setError(response.data.message || 'Failed to create assignment')
       }
     } catch (error: any) {
-      console.error('Failed to create assignment:', error)
       setError('Failed to create assignment: ' + (error.response?.data?.message || error.message))
     } finally {
       setCreating(false)
@@ -146,7 +144,7 @@ export default function TeacherAssignment() {
 
   const confirmDeleteAssignment = useCallback(async () => {
     if (!assignmentToDelete) return
-    
+
     setDeleting(true)
     try {
       const response = await api.delete(`/admin/assignments?id=${assignmentToDelete}`)
@@ -156,7 +154,6 @@ export default function TeacherAssignment() {
         setTimeout(() => setSuccessMessage(''), 3000)
       }
     } catch (error: any) {
-      console.error('Failed to delete assignment:', error)
       setError('Failed to delete assignment: ' + (error.response?.data?.message || error.message))
     } finally {
       setDeleting(false)
@@ -172,7 +169,7 @@ export default function TeacherAssignment() {
       const matchesTeacher = !teacherFilter || assignment.teacher_name.toLowerCase().includes(teacherFilter.toLowerCase())
       const matchesSubject = !subjectFilter || assignment.subject_name === subjectFilter
       const matchesClass = !classFilter || assignment.class_level === classFilter
-      
+
       return matchesTeacher && matchesSubject && matchesClass
     })
   }, [assignments, teacherFilter, subjectFilter, classFilter])
@@ -187,11 +184,11 @@ export default function TeacherAssignment() {
         assignedClasses: 0
       }
     }
-    
+
     const uniqueTeachers = new Set(assignments.map(a => a.teacher_id)).size
     const uniqueSubjects = new Set(assignments.map(a => a.subject_id)).size
     const uniqueClasses = new Set(assignments.map(a => a.class_level)).size
-    
+
     return {
       totalAssignments: assignments.length,
       assignedTeachers: uniqueTeachers,
