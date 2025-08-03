@@ -998,57 +998,88 @@ export default function TestCodeManager() {
                 overflow: 'auto',
                 padding: '8px'
               }}>
-                {selectedBatch.codes.map((code: any) => (
-                  <div
-                    key={code.id}
-                    style={{
-                      background: '#ffffff',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      padding: '12px',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    <div style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      marginBottom: '8px'
-                    }}>
-                      <span style={{
-                        fontFamily: 'monospace',
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        color: '#1f2937'
+                {selectedBatch.codes.map((code: any) => {
+                  // Determine status color based on code state
+                  let statusColor = '#10b981' // Green - not used
+                  let statusText = 'Available'
+                  
+                  if (code.status === 'using') {
+                    statusColor = '#f59e0b' // Yellow - currently in use
+                    statusText = 'In Use'
+                  } else if (code.status === 'used') {
+                    statusColor = '#ef4444' // Red - used/completed
+                    statusText = 'Used'
+                  }
+                  
+                  return (
+                    <div
+                      key={code.id}
+                      style={{
+                        background: '#ffffff',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        padding: '12px',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '8px'
                       }}>
-                        {code.code}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault()
-                          copyToClipboard(code.code)
-                        }}
-                        style={{
-                          background: '#3b82f6',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          padding: '4px 8px',
-                          fontSize: '11px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        Copy
-                      </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            backgroundColor: statusColor
+                          }}></div>
+                          <span style={{
+                            fontFamily: 'monospace',
+                            fontSize: '14px',
+                            fontWeight: 'bold',
+                            color: '#1f2937'
+                          }}>
+                            {code.code}
+                          </span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault()
+                            copyToClipboard(code.code)
+                          }}
+                          style={{
+                            background: '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '4px 8px',
+                            fontSize: '11px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Copy
+                        </button>
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '11px',
+                        color: '#6b7280'
+                      }}>
+                        <span>Created: {new Date(code.created_at).toLocaleDateString()}</span>
+                        <span style={{
+                          color: statusColor,
+                          fontWeight: '500'
+                        }}>
+                          {statusText}
+                        </span>
+                      </div>
                     </div>
-                    <div style={{
-                      fontSize: '11px',
-                      color: '#6b7280'
-                    }}>
-                      Created: {new Date(code.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
 
