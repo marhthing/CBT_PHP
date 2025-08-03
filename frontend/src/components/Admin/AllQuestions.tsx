@@ -46,6 +46,10 @@ export default function AllQuestions() {
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   
+  // Bulk delete state
+  const [selectedQuestions, setSelectedQuestions] = useState<Set<number>>(new Set())
+  const [bulkDeleting, setBulkDeleting] = useState(false)
+  
   // Bulk upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState<string[]>([])
@@ -153,6 +157,58 @@ export default function AllQuestions() {
       setError('Failed to delete question: ' + (error.response?.data?.message || error.message))
     }
   }, [fetchQuestions, fetchQuestionStats])
+
+  // Bulk delete functions
+  const handleSelectQuestion = useCallback((questionId: number, checked: boolean) => {
+    setSelectedQuestions(prev => {
+      const newSet = new Set(prev)
+      if (checked) {
+        newSet.add(questionId)
+      } else {
+        newSet.delete(questionId)
+      }
+      return newSet
+    })
+  }, [])
+
+  const handleSelectAll = useCallback((checked: boolean) => {
+    if (checked) {
+      setSelectedQuestions(new Set(filteredQuestions.map(q => q.id)))
+    } else {
+      setSelectedQuestions(new Set())
+    }
+  }, [filteredQuestions])
+
+  const bulkDeleteQuestions = useCallback(async () => {
+    if (selectedQuestions.size === 0) {
+      setError('Please select questions to delete')
+      return
+    }
+
+    if (!confirm(`Are you sure you want to delete ${selectedQuestions.size} question${selectedQuestions.size !== 1 ? 's' : ''}?`)) return
+
+    setBulkDeleting(true)
+    setError('')
+
+    try {
+      const response = await api.delete('/admin/questions/bulk', {
+        data: { question_ids: Array.from(selectedQuestions) }
+      })
+
+      if (response.data.success) {
+        await fetchQuestions()
+        await fetchQuestionStats()
+        setSelectedQuestions(new Set())
+        setSuccessMessage(`Successfully deleted ${response.data.data?.deleted_count || selectedQuestions.size} questions!`)
+        setTimeout(() => setSuccessMessage(''), 3000)
+      }
+    } catch (error: any) {
+      console.error('Failed to bulk delete questions:', error)
+      setError('Failed to delete questions: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setBulkDeleting(false)
+    }
+  }, [selectedQuestions, fetchQuestions, fetchQuestionStats])
 
   const updateQuestion = useCallback(async (updatedQuestion: Question) => {
     if (!originalQuestion) return
@@ -526,6 +582,45 @@ export default function AllQuestions() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
+          {selectedQuestions.size > 0 && (
+            <button
+              onClick={bulkDeleteQuestions}
+              disabled={bulkDeleting}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: bulkDeleting ? '#9ca3af' : '#ef4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '12px 20px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: bulkDeleting ? 'not-allowed' : 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              {bulkDeleting ? (
+                <>
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    border: '2px solid white',
+                    borderTop: '2px solid transparent',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 size={16} />
+                  Delete Selected ({selectedQuestions.size})
+                </>
+              )}
+            </button>
+          )}
           <button
             onClick={() => setShowManualCreate(true)}
             style={{
@@ -756,14 +851,46 @@ export default function AllQuestions() {
         padding: '24px',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
       }}>
-        <h2 style={{
-          fontSize: '20px',
-          fontWeight: 'bold',
-          color: '#1f2937',
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           marginBottom: '20px'
         }}>
-          Questions ({filteredQuestions.length})
-        </h2>
+          <h2 style={{
+            fontSize: '20px',
+            fontWeight: 'bold',
+            color: '#1f2937',
+            margin: 0
+          }}>
+            Questions ({filteredQuestions.length})
+          </h2>
+          {filteredQuestions.length > 0 && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <input
+                type="checkbox"
+                checked={selectedQuestions.size === filteredQuestions.length && filteredQuestions.length > 0}
+                onChange={(e) => handleSelectAll(e.target.checked)}
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  cursor: 'pointer'
+                }}
+              />
+              <label style={{
+                fontSize: '14px',
+                color: '#6b7280',
+                cursor: 'pointer'
+              }}>
+                Select All
+              </label>
+            </div>
+          )}
+        </div>
 
         {filteredQuestions.length === 0 ? (
           <div style={{
@@ -815,6 +942,16 @@ export default function AllQuestions() {
                       gap: '8px',
                       marginBottom: '8px'
                     }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedQuestions.has(question.id)}
+                        onChange={(e) => handleSelectQuestion(question.id, e.target.checked)}
+                        style={{
+                          width: '16px',
+                          height: '16px',
+                          cursor: 'pointer'
+                        }}
+                      />
                       <span style={{
                         fontSize: '14px',
                         fontWeight: '500',
