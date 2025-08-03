@@ -21,8 +21,8 @@ function extractDatabaseSchema() {
         // Set PGPASSWORD environment variable for pg_dump
         putenv("PGPASSWORD=$password");
         
-        // Build pg_dump command for schema only
-        $command = sprintf(
+        // First, extract schema only for all tables
+        $schema_command = sprintf(
             'pg_dump --host=%s --port=%s --username=%s --dbname=%s --schema-only --no-owner --no-privileges --clean --if-exists',
             escapeshellarg($host),
             escapeshellarg($port),
@@ -30,28 +30,62 @@ function extractDatabaseSchema() {
             escapeshellarg($db_name)
         );
         
-        echo "Running: $command\n\n";
+        echo "Extracting database schema...\n";
+        echo "Running: $schema_command\n\n";
         
-        // Execute pg_dump and capture output
-        $output = [];
+        // Execute schema dump
+        $schema_output = [];
         $return_code = 0;
-        exec($command . ' 2>&1', $output, $return_code);
+        exec($schema_command . ' 2>&1', $schema_output, $return_code);
         
         if ($return_code !== 0) {
-            echo "Error running pg_dump (return code: $return_code):\n";
-            echo implode("\n", $output) . "\n";
+            echo "Error running schema dump (return code: $return_code):\n";
+            echo implode("\n", $schema_output) . "\n";
             return false;
         }
         
-        // Join output and add header
-        $schema_content = implode("\n", $output);
+        // Now extract data for users table only
+        $data_command = sprintf(
+            'pg_dump --host=%s --port=%s --username=%s --dbname=%s --data-only --no-owner --no-privileges --table=users',
+            escapeshellarg($host),
+            escapeshellarg($port),
+            escapeshellarg($username),
+            escapeshellarg($db_name)
+        );
+        
+        echo "Extracting users table data...\n";
+        echo "Running: $data_command\n\n";
+        
+        // Execute data dump for users table
+        $data_output = [];
+        $return_code = 0;
+        exec($data_command . ' 2>&1', $data_output, $return_code);
+        
+        if ($return_code !== 0) {
+            echo "Error running data dump (return code: $return_code):\n";
+            echo implode("\n", $data_output) . "\n";
+            return false;
+        }
+        
+        // Combine schema and data
+        $schema_content = implode("\n", $schema_output);
+        $data_content = implode("\n", $data_output);
         
         // Add header comment
         $header = "-- PostgreSQL Database Schema for CBT Portal\n";
         $header .= "-- Generated: " . date('F j, Y \a\t g:i A') . "\n";
-        $header .= "-- Extracted from database: $db_name\n\n";
+        $header .= "-- Extracted from database: $db_name\n";
+        $header .= "-- Structure: All tables\n";
+        $header .= "-- Data: users table only\n\n";
         
+        // Combine everything
         $full_schema = $header . $schema_content;
+        
+        // Add users data if we have any
+        if (!empty($data_content) && trim($data_content) !== '') {
+            $full_schema .= "\n\n--\n-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -\n--\n\n";
+            $full_schema .= $data_content;
+        }
         
         // Write to schema.sql file
         $bytes_written = file_put_contents('schema.sql', $full_schema);
@@ -65,12 +99,14 @@ function extractDatabaseSchema() {
         echo "File size: " . number_format($bytes_written) . " bytes\n";
         
         // Show summary of extracted objects
-        $lines = explode("\n", $schema_content);
+        $schema_lines = explode("\n", $schema_content);
+        $data_lines = explode("\n", $data_content);
         $tables = 0;
         $indexes = 0;
         $constraints = 0;
+        $data_rows = 0;
         
-        foreach ($lines as $line) {
+        foreach ($schema_lines as $line) {
             if (preg_match('/^CREATE TABLE/', $line)) {
                 $tables++;
             } elseif (preg_match('/^CREATE.*INDEX/', $line)) {
@@ -80,10 +116,18 @@ function extractDatabaseSchema() {
             }
         }
         
+        // Count INSERT statements for users data
+        foreach ($data_lines as $line) {
+            if (preg_match('/^INSERT INTO/', $line)) {
+                $data_rows++;
+            }
+        }
+        
         echo "\nSummary:\n";
-        echo "- Tables: $tables\n";
+        echo "- Tables (structure): $tables\n";
         echo "- Indexes: $indexes\n";
         echo "- Constraints: $constraints\n";
+        echo "- Users data rows: $data_rows\n";
         
         return true;
         
