@@ -16,6 +16,7 @@ interface TestCode {
   session_name: string
   duration_minutes: number
   total_questions: number
+  score_per_question: number
   usage_count: number
   is_active: boolean
   is_activated: boolean
@@ -42,6 +43,7 @@ interface CreateForm {
   class_level: string
   duration_minutes: number
   total_questions: number
+  score_per_question: number
   term_id: string
   session_id: string
   expires_at: string
@@ -75,6 +77,7 @@ export default function TestCodeManager() {
     class_level: '',
     duration_minutes: 60,
     total_questions: 10,
+    score_per_question: 1,
     term_id: '',
     session_id: '',
     expires_at: '',
@@ -236,6 +239,7 @@ export default function TestCodeManager() {
           session_name: lookupData.sessions?.find(s => s.id === parseInt(createForm.session_id))?.name || '',
           duration_minutes: createForm.duration_minutes,
           total_questions: createForm.total_questions,
+          score_per_question: createForm.score_per_question,
           usage_count: 0,
           is_active: true,
           is_activated: false,
@@ -264,6 +268,7 @@ export default function TestCodeManager() {
         class_level: '',
         duration_minutes: 60,
         total_questions: 10,
+        score_per_question: 1,
         term_id: '',
         session_id: '',
         expires_at: '',
@@ -940,6 +945,8 @@ export default function TestCodeManager() {
                 <div><strong>Type:</strong> {selectedBatch.codes[0].test_type === 'examination' ? 'Examination' : 'Test'}</div>
                 <div><strong>Duration:</strong> {selectedBatch.codes[0].duration_minutes} minutes</div>
                 <div><strong>Questions:</strong> {selectedBatch.codes[0].total_questions}</div>
+                <div><strong>Score per Question:</strong> {selectedBatch.codes[0].score_per_question} points</div>
+                <div><strong>Questions:</strong> {selectedBatch.codes[0].total_questions}</div>
                 <div><strong>Status:</strong> 
                   <span style={{
                     marginLeft: '8px',
@@ -1310,6 +1317,40 @@ export default function TestCodeManager() {
                   {availableQuestions} questions available for this combination
                 </p>
               )}
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: '#374151'
+              }}>
+                Score per Question *
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="10"
+                value={createForm.score_per_question}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, score_per_question: parseInt(e.target.value) || 1 }))}
+                style={{
+                  width: '100%',
+                  padding: '10px 12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+                required
+              />
+              <p style={{
+                fontSize: '12px',
+                color: '#6b7280',
+                marginTop: '4px'
+              }}>
+                Points awarded for each correct answer
+              </p>
             </div>
 
             <div style={{ marginBottom: '16px' }}>

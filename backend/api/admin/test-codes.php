@@ -135,7 +135,7 @@ try {
                     LEFT JOIN test_results tr ON tc.id = tr.test_code_id
                     $where_clause
                     GROUP BY tc.id, tc.code, tc.title, tc.subject_id, tc.class_level, 
-                             tc.duration_minutes, tc.total_questions, tc.term_id, 
+                             tc.duration_minutes, tc.total_questions, tc.score_per_question, tc.term_id, 
                              tc.session_id, tc.is_active, tc.is_activated, tc.expires_at,
                              tc.created_by, tc.created_at, tc.description,
                              tc.pass_score, tc.activated_at, tc.batch_id, tc.test_type,
@@ -164,7 +164,7 @@ try {
                 
                 Response::validateRequired($input, [
                     'title', 'subject_id', 'class_level', 'duration_minutes', 
-                    'total_questions', 'term_id', 'session_id', 'count'
+                    'total_questions', 'score_per_question', 'term_id', 'session_id', 'count'
                 ]);
                 
                 $count = (int)($input['count'] ?? 1);
@@ -205,9 +205,9 @@ try {
                         $stmt = $db->prepare("
                             INSERT INTO test_codes (
                                 code, title, subject_id, class_level, duration_minutes,
-                                total_questions, term_id, session_id, expires_at, created_by,
+                                total_questions, score_per_question, term_id, session_id, expires_at, created_by,
                                 is_active, is_activated, batch_id, test_type
-                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, false, ?, ?)
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, true, false, ?, ?)
                         ");
                         
                         $stmt->execute([
@@ -217,6 +217,7 @@ try {
                             $input['class_level'],
                             $input['duration_minutes'],
                             $input['total_questions'],
+                            $input['score_per_question'],
                             $input['term_id'],
                             $input['session_id'],
                             $input['expires_at'] ?: null,
