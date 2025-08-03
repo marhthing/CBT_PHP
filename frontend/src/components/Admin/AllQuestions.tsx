@@ -7,7 +7,6 @@ interface Question {
   id: number
   question_text: string
   question_type: string
-
   subject_name: string
   class_level: string
   created_by_name: string
@@ -49,13 +48,13 @@ export default function AllQuestions() {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
-  
+
   // Bulk upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState<string[]>([])
   const [defaultTermId, setDefaultTermId] = useState('')
   const [defaultSessionId, setDefaultSessionId] = useState('')
-  
+
   // Filters
   const [searchTerm, setSearchTerm] = useState('')
   const [subjectFilter, setSubjectFilter] = useState('')
@@ -81,7 +80,7 @@ export default function AllQuestions() {
   })
   const [showQuestionForm, setShowQuestionForm] = useState(false)
   const [creatingQuestions, setCreatingQuestions] = useState(false)
-  
+
   // Delete confirmation modal states
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [questionToDelete, setQuestionToDelete] = useState<number | null>(null)
@@ -142,7 +141,7 @@ export default function AllQuestions() {
         fetchQuestions()
       }
     }, 300)
-    
+
     return () => clearTimeout(timeoutId)
   }, [searchTerm, subjectFilter, classFilter, typeFilter, fetchQuestions])
 
@@ -153,7 +152,7 @@ export default function AllQuestions() {
 
   const confirmDeleteQuestion = useCallback(async () => {
     if (!questionToDelete) return
-    
+
     setDeleting(true)
     try {
       const response = await api.delete(`/admin/questions/${questionToDelete}`)
@@ -175,7 +174,7 @@ export default function AllQuestions() {
 
   const updateQuestion = useCallback(async (updatedQuestion: Question) => {
     if (!originalQuestion) return
-    
+
     setSavingEdit(true)
     try {
       const response = await api.put(`/admin/questions/${originalQuestion.id}`, {
@@ -187,7 +186,7 @@ export default function AllQuestions() {
         option_d: updatedQuestion.option_d,
         correct_answer: updatedQuestion.correct_answer
       })
-      
+
       if (response.data.success) {
         await fetchQuestions()
         setEditingQuestion(null)
@@ -212,7 +211,7 @@ export default function AllQuestions() {
     setUploading(true)
     setError('')
     setUploadProgress(['Starting upload...'])
-    
+
     try {
       const formData = new FormData()
       formData.append('file', selectedFile)
@@ -224,7 +223,7 @@ export default function AllQuestions() {
           'Content-Type': 'multipart/form-data'
         }
       })
-      
+
       if (response.data.success) {
         await fetchQuestions()
         await fetchQuestionStats()
@@ -284,7 +283,7 @@ export default function AllQuestions() {
       '"Which of the following is a prime number?",1,"JSS2","4","6","7","8","C"',
       '# Note: Use actual class level values from your system (JSS1, JSS2, JSS3, SS1, SS2, SS3, etc.)'
     ].join('\n')
-    
+
     const blob = new Blob([subjectReference], { type: 'text/csv' })
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -332,7 +331,7 @@ export default function AllQuestions() {
     setManualQuestions(prev => prev.map((q, i) => {
       if (i === index) {
         const updatedQuestion = { ...q, [field]: value }
-        
+
         // Auto-set True/False options when question type changes to true_false
         if (field === 'question_type' && value === 'true_false') {
           updatedQuestion.option_a = 'True'
@@ -344,7 +343,7 @@ export default function AllQuestions() {
             updatedQuestion.correct_answer = 'A'
           }
         }
-        
+
         return updatedQuestion
       }
       return q
@@ -358,7 +357,7 @@ export default function AllQuestions() {
   // Check if any changes were made to the editing question
   const hasUnsavedChanges = useCallback(() => {
     if (!editingQuestion || !originalQuestion) return false
-    
+
     return (
       editingQuestion.question_text !== originalQuestion.question_text ||
       editingQuestion.question_type !== originalQuestion.question_type ||
@@ -369,8 +368,6 @@ export default function AllQuestions() {
       editingQuestion.correct_answer !== originalQuestion.correct_answer
     )
   }, [editingQuestion, originalQuestion])
-
-
 
   const submitManualQuestions = useCallback(async () => {
     if (manualQuestions.length === 0) {
@@ -385,19 +382,19 @@ export default function AllQuestions() {
         setError(`Question ${i + 1} is incomplete. Please fill required fields.`)
         return
       }
-      
+
       // For multiple choice, also validate options C and D
       if (q.question_type === 'multiple_choice' && (!q.option_c || !q.option_d)) {
         setError(`Question ${i + 1} is Multiple Choice but missing options C or D.`)
         return
       }
-      
+
       // Validate correct answer based on question type
       if (q.question_type === 'true_false' && !['A', 'B'].includes(q.correct_answer)) {
         setError(`Question ${i + 1} is True/False but correct answer is not A or B.`)
         return
       }
-      
+
       if (q.question_type === 'multiple_choice' && !['A', 'B', 'C', 'D'].includes(q.correct_answer)) {
         setError(`Question ${i + 1} is Multiple Choice but correct answer is not A, B, C, or D.`)
         return
@@ -406,7 +403,7 @@ export default function AllQuestions() {
 
     setCreatingQuestions(true)
     setError('')
-    
+
     try {
       const response = await api.post('/admin/questions/bulk', {
         questions: manualQuestions,
@@ -443,7 +440,7 @@ export default function AllQuestions() {
       const matchesSubject = !subjectFilter || question.subject_name === subjectFilter
       const matchesClass = !classFilter || question.class_level === classFilter
       const matchesType = !typeFilter || question.question_type === typeFilter
-      
+
       return matchesSearch && matchesSubject && matchesClass && matchesType
     })
   }, [questions, searchTerm, subjectFilter, classFilter, typeFilter])
@@ -453,217 +450,94 @@ export default function AllQuestions() {
     {
       title: 'Total Questions',
       value: stats?.total_questions || 0,
-      icon: BookOpen,
-      color: '#6366f1'
+      icon: BookOpen
     },
     {
       title: 'Subjects',
       value: stats?.subjects_count || 0,
-      icon: BarChart3,
-      color: '#8b5cf6'
+      icon: BarChart3
     },
     {
       title: 'Class Levels',
       value: stats?.class_levels_count || 0,
-      icon: GraduationCap,
-      color: '#10b981'
+      icon: GraduationCap
     },
     {
       title: 'Question Types',
       value: stats?.question_types_count || 0,
-      icon: FileText,
-      color: '#f59e0b'
+      icon: FileText
     }
   ], [stats])
 
   if (loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '60vh',
-        fontSize: '18px',
-        color: '#6b7280'
-      }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          <div style={{
-            width: '20px',
-            height: '20px',
-            border: '2px solid #e5e7eb',
-            borderTop: '2px solid #6366f1',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite'
-          }}></div>
-          Loading questions...
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+          <span className="text-gray-600">Loading questions...</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div style={{ 
-      padding: '24px',
-      background: '#ffffff',
-      minHeight: '100vh'
-    }}>
-      <style>
-        {`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}
-      </style>
-
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '32px'
-      }}>
-        <div>
-          <h1 style={{
-            fontSize: '32px',
-            fontWeight: 'bold',
-            color: '#1f2937',
-            margin: 0,
-            marginBottom: '8px'
-          }}>
-            Question Bank
-          </h1>
-          <p style={{
-            fontSize: '16px',
-            color: '#6b7280',
-            margin: 0
-          }}>
-            Manage all questions in the system
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onClick={() => setShowManualCreate(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: '#10b981',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '12px 20px',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Plus size={16} />
-            Manual Create
-          </button>
-          <button
-            onClick={() => setShowBulkUpload(true)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: '#3b82f6',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              padding: '12px 20px',
-              fontSize: '14px',
-              fontWeight: '500',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <Upload size={16} />
-            Bulk Upload Questions
-          </button>
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Question Bank</h1>
+            <p className="text-gray-600 mt-1">Manage all questions in the system</p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <button
+              onClick={() => setShowManualCreate(true)}
+              className="flex items-center justify-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+            >
+              <Plus size={16} />
+              <span className="hidden sm:inline">Manual Create</span>
+              <span className="sm:hidden">Create</span>
+            </button>
+            <button
+              onClick={() => setShowBulkUpload(true)}
+              className="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              <Upload size={16} />
+              <span className="hidden sm:inline">Bulk Upload</span>
+              <span className="sm:hidden">Upload</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Error/Success Messages */}
       {error && (
-        <div style={{
-          background: '#fef2f2',
-          border: '1px solid #fecaca',
-          borderRadius: '8px',
-          padding: '12px',
-          marginBottom: '24px',
-          color: '#dc2626'
-        }}>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div style={{
-          background: '#f0fdf4',
-          border: '1px solid #bbf7d0',
-          borderRadius: '8px',
-          padding: '12px',
-          marginBottom: '24px',
-          color: '#16a34a'
-        }}>
+        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-6">
           {successMessage}
         </div>
       )}
 
       {/* Stats Cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-        gap: '20px',
-        marginBottom: '32px'
-      }}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {statsCards.map((card, index) => {
           const IconComponent = card.icon
           return (
-            <div
-              key={index}
-              style={{
-                background: 'white',
-                borderRadius: '12px',
-                padding: '20px',
-                boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '16px'
-              }}
-            >
-              <div style={{
-                width: '48px',
-                height: '48px',
-                backgroundColor: card.color,
-                borderRadius: '12px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: 'white'
-              }}>
-                <IconComponent size={24} />
-              </div>
-              <div>
-                <div style={{
-                  fontSize: '24px',
-                  fontWeight: 'bold',
-                  color: card.color,
-                  marginBottom: '4px'
-                }}>
-                  {card.value}
+            <div key={index} className="bg-white rounded-lg border border-gray-200 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                    <IconComponent size={20} className="text-gray-600" />
+                  </div>
                 </div>
-                <div style={{
-                  fontSize: '14px',
-                  color: '#6b7280'
-                }}>
-                  {card.title}
+                <div className="min-w-0 flex-1">
+                  <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+                  <p className="text-sm text-gray-600 truncate">{card.title}</p>
                 </div>
               </div>
             </div>
@@ -672,58 +546,23 @@ export default function AllQuestions() {
       </div>
 
       {/* Filters */}
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        padding: '20px',
-        marginBottom: '24px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
-      }}>
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px'
-        }}>
-          <div>
-            <div style={{
-              position: 'relative'
-            }}>
-              <Search 
-                size={20} 
-                style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#6b7280'
-                }}
-              />
-              <input
-                type="text"
-                placeholder="Search questions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 12px 12px 40px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '14px'
-                }}
-              />
-            </div>
+      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="relative">
+            <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search questions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
           </div>
 
           <select
             value={subjectFilter}
             onChange={(e) => setSubjectFilter(e.target.value)}
-            style={{
-              padding: '12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '8px',
-              fontSize: '14px',
-              backgroundColor: 'white'
-            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
           >
             <option value="">All Subjects</option>
             {(lookupData.subjects || []).map(subject => (
@@ -734,13 +573,7 @@ export default function AllQuestions() {
           <select
             value={classFilter}
             onChange={(e) => setClassFilter(e.target.value)}
-            style={{
-              padding: '12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '8px',
-              fontSize: '14px',
-              backgroundColor: 'white'
-            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
           >
             <option value="">All Classes</option>
             {(lookupData.class_levels || []).map(classLevel => (
@@ -751,13 +584,7 @@ export default function AllQuestions() {
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            style={{
-              padding: '12px',
-              border: '1px solid #d1d5db',
-              borderRadius: '8px',
-              fontSize: '14px',
-              backgroundColor: 'white'
-            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
           >
             <option value="">All Types</option>
             <option value="multiple_choice">Multiple Choice</option>
@@ -767,249 +594,120 @@ export default function AllQuestions() {
       </div>
 
       {/* Questions List */}
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        padding: '24px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
-      }}>
-        <h2 style={{
-          fontSize: '20px',
-          fontWeight: 'bold',
-          color: '#1f2937',
-          marginBottom: '20px'
-        }}>
-          Questions ({filteredQuestions.length})
-        </h2>
+      <div className="bg-white rounded-lg border border-gray-200">
+        <div className="px-4 py-3 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Questions ({filteredQuestions.length})
+          </h2>
+        </div>
 
-        {filteredQuestions.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '60px 20px',
-            color: '#6b7280'
-          }}>
-            <BookOpen size={64} style={{ color: '#d1d5db', marginBottom: '16px' }} />
-            <h3 style={{
-              fontSize: '18px',
-              fontWeight: '600',
-              marginBottom: '8px'
-            }}>
-              No questions found
-            </h3>
-            <p style={{ margin: 0 }}>
-              {searchTerm || subjectFilter || classFilter || typeFilter
-                ? 'Try adjusting your filters'
-                : 'No questions have been created yet'
-              }
-            </p>
-          </div>
-        ) : (
-          <div style={{
-            display: 'grid',
-            gap: '16px'
-          }}>
-            {filteredQuestions.map((question, index) => (
-              <div
-                key={question.id}
-                style={{
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px',
-                  padding: '20px',
-                  background: '#f9fafb',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  marginBottom: '12px'
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      marginBottom: '8px'
-                    }}>
-                      <span style={{
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        color: '#6366f1',
-                        background: '#f0f9ff',
-                        padding: '4px 8px',
-                        borderRadius: '4px'
-                      }}>
-                        Q{index + 1}
-                      </span>
-                      <span style={{
-                        fontSize: '14px',
-                        color: '#6b7280'
-                      }}>
-                        {question.subject_name} • {question.class_level}
-                      </span>
-                      <span style={{
-                        fontSize: '12px',
-                        fontWeight: '500',
-                        color: question.question_type === 'true_false' ? '#7c3aed' : '#059669',
-                        background: question.question_type === 'true_false' ? '#f3f4f6' : '#ecfdf5',
-                        padding: '2px 6px',
-                        borderRadius: '4px'
-                      }}>
-                        {question.question_type === 'true_false' ? 'T/F' : 'MC'}
-                      </span>
-                    </div>
-                    <h4 style={{
-                      fontSize: '16px',
-                      fontWeight: '600',
-                      color: '#1f2937',
-                      margin: '0 0 8px 0',
-                      lineHeight: '1.4'
-                    }}>
-                      {question.question_text}
-                    </h4>
-                    <p style={{
-                      fontSize: '14px',
-                      color: '#6b7280',
-                      margin: '0'
-                    }}>
-                      Created by {question.created_by_name} • {new Date(question.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    gap: '8px'
-                  }}>
-                    <button
-                      onClick={() => {
-                        setOriginalQuestion(question)
-                        setEditingQuestion({ ...question })
-                      }}
-                      style={{
-                        padding: '8px',
-                        background: '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <Edit size={16} />
-                    </button>
-                    <button
-                      onClick={() => deleteQuestion(question.id)}
-                      style={{
-                        padding: '8px',
-                        background: '#ef4444',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '6px',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: question.question_type === 'true_false' ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(200px, 1fr))',
-                  gap: '8px',
-                  marginTop: '12px'
-                }}>
-                  {(question.question_type === 'true_false' ? ['A', 'B'] : ['A', 'B', 'C', 'D']).map(option => {
-                    const optionText = question[`option_${option.toLowerCase()}` as keyof Question] as string;
-                    if (!optionText && question.question_type === 'true_false' && (option === 'C' || option === 'D')) {
-                      return null; // Don't show empty C/D options for true/false
-                    }
-                    return (
-                    <div
-                      key={option}
-                      style={{
-                        padding: '8px 12px',
-                        background: question.correct_answer === option ? '#dcfce7' : '#ffffff',
-                        border: question.correct_answer === option ? '1px solid #22c55e' : '1px solid #e5e7eb',
-                        borderRadius: '6px',
-                        fontSize: '14px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                    >
-                      <span style={{
-                        fontWeight: '600',
-                        color: question.correct_answer === option ? '#16a34a' : '#6b7280'
-                      }}>
-                        {option}.
-                      </span>
-                      <span style={{
-                        color: question.correct_answer === option ? '#16a34a' : '#1f2937'
-                      }}>
-                        {optionText}
-                      </span>
-                      {question.correct_answer === option && (
-                        <span style={{
-                          fontSize: '12px',
-                          fontWeight: '500',
-                          color: '#16a34a',
-                          marginLeft: 'auto'
-                        }}>
-                          ✓ Correct
+        <div className="p-4">
+          {filteredQuestions.length === 0 ? (
+            <div className="text-center py-12">
+              <BookOpen size={48} className="mx-auto text-gray-300 mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No questions found</h3>
+              <p className="text-gray-600">
+                {searchTerm || subjectFilter || classFilter || typeFilter
+                  ? 'Try adjusting your filters'
+                  : 'No questions have been created yet'
+                }
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredQuestions.map((question, index) => (
+                <div key={question.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                          Q{index + 1}
                         </span>
-                      )}
+                        <span className="text-sm text-gray-600">
+                          {question.subject_name} • {question.class_level}
+                        </span>
+                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                          question.question_type === 'true_false' 
+                            ? 'bg-purple-100 text-purple-800' 
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {question.question_type === 'true_false' ? 'T/F' : 'MC'}
+                        </span>
+                      </div>
+
+                      <h4 className="text-base font-medium text-gray-900 mb-2 line-clamp-2">
+                        {question.question_text}
+                      </h4>
+
+                      <p className="text-sm text-gray-500">
+                        Created by {question.created_by_name} • {new Date(question.created_at).toLocaleDateString()}
+                      </p>
                     </div>
-                    );
-                  })}
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => {
+                          setOriginalQuestion(question)
+                          setEditingQuestion({ ...question })
+                        }}
+                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        onClick={() => deleteQuestion(question.id)}
+                        className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className={`grid gap-2 mt-4 ${
+                    question.question_type === 'true_false' 
+                      ? 'grid-cols-1 sm:grid-cols-2' 
+                      : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+                  }`}>
+                    {(question.question_type === 'true_false' ? ['A', 'B'] : ['A', 'B', 'C', 'D']).map(option => {
+                      const optionText = question[`option_${option.toLowerCase()}` as keyof Question] as string;
+                      if (!optionText && question.question_type === 'true_false' && (option === 'C' || option === 'D')) {
+                        return null;
+                      }
+
+                      const isCorrect = question.correct_answer === option;
+                      return (
+                        <div
+                          key={option}
+                          className={`flex items-center gap-2 p-3 rounded-lg border text-sm ${
+                            isCorrect 
+                              ? 'bg-green-50 border-green-200 text-green-800' 
+                              : 'bg-gray-50 border-gray-200 text-gray-700'
+                          }`}
+                        >
+                          <span className={`font-medium ${isCorrect ? 'text-green-800' : 'text-gray-600'}`}>
+                            {option}.
+                          </span>
+                          <span className="flex-1 min-w-0 truncate">{optionText}</span>
+                          {isCorrect && (
+                            <span className="text-green-600 text-xs font-medium flex-shrink-0">✓</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Edit Question Modal */}
       {editingQuestion && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '24px',
-            maxWidth: '600px',
-            width: '100%',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '20px'
-            }}>
-              <h3 style={{
-                fontSize: '20px',
-                fontWeight: 'bold',
-                color: '#1f2937',
-                margin: 0
-              }}>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
                 Edit Question #{originalQuestion?.id || editingQuestion.id}
               </h3>
               <button
@@ -1017,53 +715,27 @@ export default function AllQuestions() {
                   setEditingQuestion(null)
                   setOriginalQuestion(null)
                 }}
-                style={{
-                  padding: '8px',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  borderRadius: '4px',
-                  color: '#6b7280'
-                }}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div className="p-6 space-y-4">
               <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
-                }}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Question Text
                 </label>
                 <textarea
                   value={editingQuestion.question_text}
                   onChange={(e) => setEditingQuestion(prev => prev ? {...prev, question_text: e.target.value} : null)}
                   rows={3}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    resize: 'vertical'
-                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
-                }}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Question Type
                 </label>
                 <select
@@ -1073,1043 +745,34 @@ export default function AllQuestions() {
                     setEditingQuestion(prev => {
                       if (!prev) return null
                       const updated = { ...prev, question_type: newType }
-                      
-                      // Auto-set True/False options when changing to true_false
+
                       if (newType === 'true_false') {
                         updated.option_a = 'True'
                         updated.option_b = 'False'
                         updated.option_c = ''
                         updated.option_d = ''
-                        // Reset correct answer if it was C or D
                         if (updated.correct_answer === 'C' || updated.correct_answer === 'D') {
                           updated.correct_answer = 'A'
                         }
                       }
-                      
+
                       return updated
                     })
                   }}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    backgroundColor: 'white'
-                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                 >
                   <option value="multiple_choice">Multiple Choice</option>
                   <option value="true_false">True/False</option>
                 </select>
               </div>
 
-              {(editingQuestion.question_type === 'true_false' ? ['A', 'B'] : ['A', 'B', 'C', 'D']).map(option => (
-                <div key={option}>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#374151',
-                    marginBottom: '4px'
-                  }}>
-                    Option {option} {editingQuestion.question_type === 'true_false' ? (option === 'A' ? '(True)' : '(False)') : ''}
-                  </label>
-                  <input
-                    type="text"
-                    value={editingQuestion[`option_${option.toLowerCase()}` as keyof Question] as string || ''}
-                    onChange={(e) => setEditingQuestion(prev => prev ? {
-                      ...prev,
-                      [`option_${option.toLowerCase()}`]: e.target.value
-                    } : null)}
-                    readOnly={editingQuestion.question_type === 'true_false'}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      backgroundColor: editingQuestion.question_type === 'true_false' ? '#f9fafb' : 'white',
-                      cursor: editingQuestion.question_type === 'true_false' ? 'not-allowed' : 'text'
-                    }}
-                  />
-                </div>
-              ))}
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
-                }}>
-                  Correct Answer
-                </label>
-                <select
-                  value={editingQuestion.correct_answer}
-                  onChange={(e) => setEditingQuestion(prev => prev ? {...prev, correct_answer: e.target.value} : null)}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    backgroundColor: 'white'
-                  }}
-                >
-                  {editingQuestion.question_type === 'true_false' ? (
-                    <>
-                      <option value="A">A (True)</option>
-                      <option value="B">B (False)</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="A">A</option>
-                      <option value="B">B</option>
-                      <option value="C">C</option>
-                      <option value="D">D</option>
-                    </>
-                  )}
-                </select>
-              </div>
-
-              <div style={{
-                display: 'flex',
-                gap: '12px',
-                justifyContent: 'flex-end',
-                marginTop: '8px'
-              }}>
-                <button
-                  onClick={() => {
-                    setEditingQuestion(null)
-                    setOriginalQuestion(null)
-                  }}
-                  style={{
-                    padding: '12px 20px',
-                    background: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => editingQuestion && updateQuestion(editingQuestion)}
-                  disabled={savingEdit || !hasUnsavedChanges()}
-                  style={{
-                    padding: '12px 20px',
-                    background: (savingEdit || !hasUnsavedChanges()) ? '#9ca3af' : '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: (savingEdit || !hasUnsavedChanges()) ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
-                >
-                  {savingEdit ? (
-                    <>
-                      <div style={{
-                        width: '16px',
-                        height: '16px',
-                        border: '2px solid white',
-                        borderTop: '2px solid transparent',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite'
-                      }}></div>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save size={16} />
-                      Save Changes
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Bulk Upload Modal */}
-      {showBulkUpload && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '24px',
-            maxWidth: '600px',
-            width: '100%',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '20px'
-            }}>
-              <h3 style={{
-                fontSize: '20px',
-                fontWeight: 'bold',
-                color: '#1f2937',
-                margin: 0
-              }}>
-                Bulk Upload Questions
-              </h3>
-              <button
-                onClick={() => setShowBulkUpload(false)}
-                style={{
-                  padding: '8px',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  borderRadius: '4px',
-                  color: '#6b7280'
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {/* Instructions */}
-              <div style={{
-                background: '#f0f9ff',
-                border: '1px solid #bae6fd',
-                borderRadius: '8px',
-                padding: '16px'
-              }}>
-                <h4 style={{
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  color: '#0c4a6e',
-                  margin: '0 0 8px 0'
-                }}>
-                  How to Upload Questions
-                </h4>
-                <ol style={{
-                  fontSize: '14px',
-                  color: '#0369a1',
-                  margin: 0,
-                  paddingLeft: '20px'
-                }}>
-                  <li>Download the CSV template below</li>
-                  <li>Fill in your questions following the format</li>
-                  <li>Set default term and session for all questions</li>
-                  <li>Upload your completed CSV file</li>
-                </ol>
-              </div>
-
-              {/* Download Template */}
-              <div>
-                <button
-                  onClick={downloadTemplate}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '12px 20px',
-                    background: '#f3f4f6',
-                    color: '#374151',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    width: 'fit-content'
-                  }}
-                >
-                  <Download size={16} />
-                  Download CSV Template
-                </button>
-              </div>
-
-              {/* Default Term and Session */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#374151',
-                    marginBottom: '4px'
-                  }}>
-                    Default Term *
-                  </label>
-                  <select
-                    value={defaultTermId}
-                    onChange={(e) => setDefaultTermId(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '14px'
-                    }}
-                  >
-                    <option value="">Select Term</option>
-                    {lookupData.terms?.map(term => (
-                      <option key={term.id} value={term.id}>{term.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#374151',
-                    marginBottom: '4px'
-                  }}>
-                    Default Session *
-                  </label>
-                  <select
-                    value={defaultSessionId}
-                    onChange={(e) => setDefaultSessionId(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '14px'
-                    }}
-                  >
-                    <option value="">Select Session</option>
-                    {lookupData.sessions?.map(session => (
-                      <option key={session.id} value={session.id}>{session.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* File Upload */}
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '8px'
-                }}>
-                  Upload CSV File *
-                </label>
-                <div style={{
-                  border: '2px dashed #d1d5db',
-                  borderRadius: '8px',
-                  padding: '20px',
-                  textAlign: 'center',
-                  background: selectedFile ? '#f0fdf4' : '#fafafa'
-                }}>
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileSelect}
-                    style={{ display: 'none' }}
-                    id="csv-upload"
-                  />
-                  <label
-                    htmlFor="csv-upload"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '12px 20px',
-                      background: '#3b82f6',
-                      color: 'white',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500'
-                    }}
-                  >
-                    <Upload size={16} />
-                    Choose CSV File
-                  </label>
-                  {selectedFile && (
-                    <div style={{
-                      marginTop: '12px',
-                      padding: '8px 12px',
-                      background: '#dcfce7',
-                      border: '1px solid #bbf7d0',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      color: '#16a34a'
-                    }}>
-                      ✓ {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Upload Progress */}
-              {uploadProgress.length > 0 && (
-                <div style={{
-                  background: '#f9fafb',
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  padding: '16px'
-                }}>
-                  <h4 style={{
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    margin: '0 0 8px 0'
-                  }}>
-                    Upload Progress
-                  </h4>
-                  <div style={{
-                    maxHeight: '150px',
-                    overflowY: 'auto',
-                    fontSize: '13px',
-                    color: '#6b7280'
-                  }}>
-                    {uploadProgress.map((message, index) => (
-                      <div key={index} style={{ marginBottom: '4px' }}>
-                        {message}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <div style={{
-                display: 'flex',
-                gap: '12px',
-                justifyContent: 'flex-end',
-                marginTop: '20px'
-              }}>
-                <button
-                  onClick={() => setShowBulkUpload(false)}
-                  style={{
-                    padding: '12px 20px',
-                    background: '#f3f4f6',
-                    color: '#374151',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleBulkUpload}
-                  disabled={uploading || !selectedFile || !defaultTermId || !defaultSessionId}
-                  style={{
-                    padding: '12px 20px',
-                    background: (uploading || !selectedFile || !defaultTermId || !defaultSessionId) ? '#9ca3af' : '#16a34a',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: (uploading || !selectedFile || !defaultTermId || !defaultSessionId) ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
-                >
-                  {uploading ? (
-                    <>
-                      <div style={{
-                        width: '16px',
-                        height: '16px',
-                        border: '2px solid white',
-                        borderTop: '2px solid transparent',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite'
-                      }}></div>
-                      Uploading...
-                    </>
-                  ) : (
-                    <>
-                      <Upload size={16} />
-                      Upload Questions
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Manual Question Creation Modal */}
-      {showManualCreate && !showQuestionForm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '24px',
-            maxWidth: '500px',
-            width: '100%'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '20px'
-            }}>
-              <h3 style={{
-                fontSize: '20px',
-                fontWeight: 'bold',
-                color: '#1f2937',
-                margin: 0
-              }}>
-                Set Question Filters
-              </h3>
-              <button
-                onClick={() => setShowManualCreate(false)}
-                style={{
-                  padding: '8px',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  borderRadius: '4px',
-                  color: '#6b7280'
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
-                }}>
-                  Subject *
-                </label>
-                <select
-                  value={createFilters.subject_id}
-                  onChange={(e) => setCreateFilters(prev => ({ ...prev, subject_id: e.target.value }))}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}
-                >
-                  <option value="">Select Subject</option>
-                  {lookupData.subjects?.map(subject => (
-                    <option key={subject.id} value={subject.id}>{subject.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
-                }}>
-                  Class Level *
-                </label>
-                <select
-                  value={createFilters.class_level}
-                  onChange={(e) => setCreateFilters(prev => ({ ...prev, class_level: e.target.value }))}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}
-                >
-                  <option value="">Select Class</option>
-                  {(lookupData.class_levels || []).map(classLevel => (
-                    <option key={classLevel.id} value={classLevel.id}>{classLevel.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
-                }}>
-                  Term *
-                </label>
-                <select
-                  value={createFilters.term_id}
-                  onChange={(e) => setCreateFilters(prev => ({ ...prev, term_id: e.target.value }))}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}
-                >
-                  <option value="">Select Term</option>
-                  {lookupData.terms?.map(term => (
-                    <option key={term.id} value={term.id}>{term.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label style={{
-                  display: 'block',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  color: '#374151',
-                  marginBottom: '4px'
-                }}>
-                  Session *
-                </label>
-                <select
-                  value={createFilters.session_id}
-                  onChange={(e) => setCreateFilters(prev => ({ ...prev, session_id: e.target.value }))}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '14px'
-                  }}
-                >
-                  <option value="">Select Session</option>
-                  {lookupData.sessions?.map(session => (
-                    <option key={session.id} value={session.id}>{session.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{
-                display: 'flex',
-                gap: '12px',
-                justifyContent: 'flex-end',
-                marginTop: '20px'
-              }}>
-                <button
-                  onClick={() => setShowManualCreate(false)}
-                  style={{
-                    padding: '12px 20px',
-                    background: '#f3f4f6',
-                    color: '#374151',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleCreateFiltersSubmit}
-                  style={{
-                    padding: '12px 20px',
-                    background: '#10b981',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Continue to Create Questions
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Manual Question Form Modal */}
-      {showManualCreate && showQuestionForm && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
-          <div style={{
-            background: 'white',
-            borderRadius: '12px',
-            padding: '24px',
-            maxWidth: '800px',
-            width: '100%',
-            maxHeight: '90vh',
-            overflowY: 'auto'
-          }}>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '20px'
-            }}>
-              <h3 style={{
-                fontSize: '20px',
-                fontWeight: 'bold',
-                color: '#1f2937',
-                margin: 0
-              }}>
-                Create Questions ({manualQuestions.length} question{manualQuestions.length !== 1 ? 's' : ''})
-              </h3>
-              <button
-                onClick={() => {
-                  setShowManualCreate(false)
-                  setShowQuestionForm(false)
-                  setManualQuestions([])
-                }}
-                style={{
-                  padding: '8px',
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  borderRadius: '4px',
-                  color: '#6b7280'
-                }}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div style={{ marginBottom: '20px', padding: '12px', background: '#f9fafb', borderRadius: '8px' }}>
-              <strong>Filters:</strong> {lookupData.subjects?.find(s => s.id === parseInt(createFilters.subject_id))?.name} | {createFilters.class_level} | {lookupData.terms?.find(t => t.id === parseInt(createFilters.term_id))?.name} | {lookupData.sessions?.find(s => s.id === parseInt(createFilters.session_id))?.name}
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {manualQuestions.map((question, index) => (
-                <div key={index} style={{
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                  padding: '16px',
-                  background: '#fafafa'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '12px'
-                  }}>
-                    <h4 style={{ margin: 0, color: '#374151' }}>Question {index + 1}</h4>
-                    {manualQuestions.length > 1 && (
-                      <button
-                        onClick={() => removeManualQuestion(index)}
-                        style={{
-                          padding: '4px',
-                          background: '#fee2e2',
-                          color: '#dc2626',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    )}
-                  </div>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '4px'
-                      }}>
-                        Question Text *
-                      </label>
-                      <textarea
-                        value={question.question_text}
-                        onChange={(e) => updateManualQuestion(index, 'question_text', e.target.value)}
-                        rows={3}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '6px',
-                          fontSize: '14px'
-                        }}
-                        placeholder="Enter the question..."
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '4px'
-                      }}>
-                        Question Type *
-                      </label>
-                      <select
-                        value={question.question_type}
-                        onChange={(e) => updateManualQuestion(index, 'question_type', e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '6px',
-                          fontSize: '14px'
-                        }}
-                      >
-                        <option value="multiple_choice">Multiple Choice</option>
-                        <option value="true_false">True/False</option>
-                      </select>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: question.question_type === 'true_false' ? '1fr 1fr' : '1fr 1fr', gap: '12px' }}>
-                      {question.question_type === 'true_false' ? 
-                        ['A', 'B'].map(option => (
-                        <div key={option}>
-                          <label style={{
-                            display: 'block',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            color: '#374151',
-                            marginBottom: '4px'
-                          }}>
-                            Option {option} {option === 'A' ? '(True)' : '(False)'} *
-                          </label>
-                          <input
-                            type="text"
-                            value={question[`option_${option.toLowerCase()}` as keyof typeof question]}
-                            onChange={(e) => updateManualQuestion(index, `option_${option.toLowerCase()}`, e.target.value)}
-                            readOnly={true}
-                            style={{
-                              width: '100%',
-                              padding: '8px',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '6px',
-                              fontSize: '14px',
-                              backgroundColor: '#f9fafb',
-                              cursor: 'not-allowed'
-                            }}
-                            placeholder={option === 'A' ? 'True' : 'False'}
-                          />
-                        </div>
-                      )) :
-                        ['A', 'B', 'C', 'D'].map(option => (
-                        <div key={option}>
-                          <label style={{
-                            display: 'block',
-                            fontSize: '14px',
-                            fontWeight: '500',
-                            color: '#374151',
-                            marginBottom: '4px'
-                          }}>
-                            Option {option} *
-                          </label>
-                          <input
-                            type="text"
-                            value={question[`option_${option.toLowerCase()}` as keyof typeof question]}
-                            onChange={(e) => updateManualQuestion(index, `option_${option.toLowerCase()}`, e.target.value)}
-                            style={{
-                              width: '100%',
-                              padding: '8px',
-                              border: '1px solid #d1d5db',
-                              borderRadius: '6px',
-                              fontSize: '14px'
-                            }}
-                            placeholder={`Option ${option}`}
-                          />
-                        </div>
-                      ))}
-                    </div>
-
-                    <div>
-                      <label style={{
-                        display: 'block',
-                        fontSize: '14px',
-                        fontWeight: '500',
-                        color: '#374151',
-                        marginBottom: '4px'
-                      }}>
-                        Correct Answer *
-                      </label>
-                      <select
-                        value={question.correct_answer}
-                        onChange={(e) => updateManualQuestion(index, 'correct_answer', e.target.value)}
-                        style={{
-                          width: '100%',
-                          padding: '8px',
-                          border: '1px solid #d1d5db',
-                          borderRadius: '6px',
-                          fontSize: '14px'
-                        }}
-                      >
-                        {question.question_type === 'true_false' ? (
-                          <>
-                            <option value="A">A (True)</option>
-                            <option value="B">B (False)</option>
-                          </>
-                        ) : (
-                          <>
-                            <option value="A">A</option>
-                            <option value="B">B</option>
-                            <option value="C">C</option>
-                            <option value="D">D</option>
-                          </>
-                        )}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <div style={{
-                display: 'flex',
-                gap: '12px',
-                justifyContent: 'space-between',
-                marginTop: '20px'
-              }}>
-                <button
-                  onClick={addAnotherQuestion}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '12px 20px',
-                    background: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Plus size={16} />
-                  Add Another Question
-                </button>
-
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <button
-                    onClick={() => {
-                      setShowQuestionForm(false)
-                      setManualQuestions([])
-                    }}
-                    style={{
-                      padding: '12px 20px',
-                      background: '#f3f4f6',
-                      color: '#374151',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={submitManualQuestions}
-                    disabled={creatingQuestions || manualQuestions.length === 0}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '12px 20px',
-                      background: creatingQuestions ? '#9ca3af' : '#10b981',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      cursor: creatingQuestions ? 'not-allowed' : 'pointer'
-                    }}
-                  >
-                    {creatingQuestions ? (
-                      <>
-                        <div style={{
-                          width: '16px',
-                          height: '16px',
-                          border: '2px solid white',
-                          borderTop: '2px solid transparent',
-                          borderRadius: '50%',
-                          animation: 'spin 1s linear infinite'
-                        }}></div>
-                        Creating Questions...
-                      </>
-                    ) : (
-                      <>
-                        <Save size={16} />
-                        Upload Questions ({manualQuestions.length})
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false)
-          setQuestionToDelete(null)
-        }}
-        onConfirm={confirmDeleteQuestion}
-        title="Delete Question"
-        message={questionToDelete ? `Are you sure you want to delete this question? This action cannot be undone.` : ""}
-        confirmText="Delete"
-        cancelText="Cancel"
-        isDestructive={true}
-        loading={deleting}
-      />
-    </div>
-  )
-}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {(editingQuestion.question_type === 'true_false' ? ['A', 'B'] : ['A', 'B', 'C', 'D']).map(option => (
+                  <div key={option}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Option {option} {editingQuestion.question_type === 'true_false' ? (option === 'A' ? '(True)' : '(False)') : ''}
+                    </label>
+                    <input
+                      type="text"
+                      value={editingQuestion[`option_${option.toLowerCase()}` as keyof Question] as string || ''}
+                      onChange={(e) => setEditingQuestion
