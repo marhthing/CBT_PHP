@@ -22,15 +22,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
         handlePut($db, $user);
         break;
     case 'DELETE':
-        // Check if this is a bulk delete request
-        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $path_segments = explode('/', trim($path, '/'));
-        
-        if (end($path_segments) === 'bulk' || strpos($path, '/bulk') !== false) {
-            handleBulkDelete($db, $user);
-        } else {
-            handleDelete($db, $user);
-        }
+        handleDelete($db, $user);
         break;
     default:
         Response::methodNotAllowed();
@@ -355,70 +347,6 @@ function handleDelete($db, $user) {
     } catch (Exception $e) {
         error_log("Error deleting question: " . $e->getMessage());
         Response::serverError('Failed to delete question');
-    }
-}
-
-function handleBulkDelete($db, $user) {
-    try {
-        $input = json_decode(file_get_contents('php://input'), true);
-        
-        if (!$input || !isset($input['question_ids']) || !is_array($input['question_ids'])) {
-            Response::validationError('Question IDs array is required');
-        }
-        
-        $question_ids = $input['question_ids'];
-        
-        if (empty($question_ids)) {
-            Response::validationError('At least one question ID is required');
-        }
-        
-        // Validate all question IDs are numeric
-        foreach ($question_ids as $id) {
-            if (!is_numeric($id)) {
-                Response::validationError('All question IDs must be numeric');
-            }
-        }
-        
-        // Check if any questions are used in test results
-        $placeholders = str_repeat('?,', count($question_ids) - 1) . '?';
-        $usage_check = $db->prepare("
-            SELECT question_id, COUNT(*) as usage_count 
-            FROM test_answers 
-            WHERE question_id IN ({$placeholders})
-            GROUP BY question_id
-        ");
-        $usage_check->execute($question_ids);
-        $used_questions = $usage_check->fetchAll();
-        
-        if (!empty($used_questions)) {
-            $used_ids = array_column($used_questions, 'question_id');
-            Response::error('Cannot delete questions with IDs: ' . implode(', ', $used_ids) . '. They have been used in tests.');
-        }
-        
-        // Check which questions exist
-        $check_stmt = $db->prepare("SELECT id FROM questions WHERE id IN ({$placeholders})");
-        $check_stmt->execute($question_ids);
-        $existing_questions = $check_stmt->fetchAll(PDO::FETCH_COLUMN);
-        
-        if (empty($existing_questions)) {
-            Response::notFound('No questions found with the provided IDs');
-        }
-        
-        // Delete questions
-        $delete_stmt = $db->prepare("DELETE FROM questions WHERE id IN ({$placeholders})");
-        $delete_stmt->execute($existing_questions);
-        
-        $deleted_count = $delete_stmt->rowCount();
-        
-        Response::logRequest('admin/questions/bulk', 'DELETE', $user['id']);
-        Response::success('Questions deleted successfully', [
-            'deleted_count' => $deleted_count,
-            'requested_count' => count($question_ids)
-        ]);
-        
-    } catch (Exception $e) {
-        error_log("Error bulk deleting questions: " . $e->getMessage());
-        Response::serverError('Failed to delete questions');
     }
 }
 
