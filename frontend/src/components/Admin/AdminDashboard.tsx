@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
 import ErrorNotification from '../ui/ErrorNotification'
-import { BarChart3, FileText, PlayCircle, Users, GraduationCap, Clock, Plus, UserPlus, BookOpen, Activity, Database } from 'lucide-react'
+import { BarChart3, FileText, PlayCircle, Users, GraduationCap, Clock, Plus, UserPlus, BookOpen, Activity, Database, Shield } from 'lucide-react'
 
 interface DashboardStats {
   total_questions: number
