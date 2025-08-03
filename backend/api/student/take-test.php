@@ -53,7 +53,7 @@ try {
     
     // Get random questions for the test
     $questions_stmt = $db->prepare("
-        SELECT id, question_text, option_a, option_b, option_c, option_d
+        SELECT id, question_text, option_a, option_b, option_c, option_d, question_type
         FROM questions 
         WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
         ORDER BY RANDOM()

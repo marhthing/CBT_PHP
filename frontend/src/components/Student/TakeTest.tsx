@@ -10,6 +10,7 @@ interface Question {
   option_b: string
   option_c: string
   option_d: string
+  question_type: 'multiple_choice' | 'true_false'
 }
 
 interface TestData {
@@ -140,7 +141,7 @@ export default function TakeTest() {
     setSubmitting(true)
 
     try {
-      const timeTaken = (testPreview?.duration_minutes || 0) * 60 - timeLeft
+      const timeTaken = (testData?.duration_minutes || 0) * 60 - timeLeft
       await api.post('/student/submit-test', {
         test_code: inputTestCode.toUpperCase(),
         answers,
@@ -636,9 +637,14 @@ export default function TakeTest() {
 
         {/* Options */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          {['A', 'B', 'C', 'D'].map((letter) => {
+          {(question.question_type === 'true_false' ? ['A', 'B'] : ['A', 'B', 'C', 'D']).map((letter) => {
             const optionText = question[`option_${letter.toLowerCase()}` as keyof Question] as string
             const isSelected = answers[question.id] === letter
+            
+            // Skip empty options
+            if (!optionText || optionText.trim() === '') {
+              return null
+            }
             
             return (
               <button
