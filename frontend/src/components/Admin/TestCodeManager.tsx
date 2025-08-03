@@ -72,7 +72,7 @@ export default function TestCodeManager() {
     subject_id: '',
     class_level: '',
     duration_minutes: 60,
-    total_questions: 20,
+    total_questions: 10,
     term_id: '',
     session_id: '',
     expires_at: '',
