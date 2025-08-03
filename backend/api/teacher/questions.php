@@ -93,6 +93,46 @@ function handleGet($db, $user) {
             $stats_stmt->execute([$user['id']]);
             $stats = $stats_stmt->fetch();
             
+            // Get breakdown by subject
+            $subject_stmt = $db->prepare("
+                SELECT s.name, COUNT(*) as count
+                FROM questions q
+                LEFT JOIN subjects s ON q.subject_id = s.id
+                WHERE q.teacher_id = ?
+                GROUP BY s.name
+            ");
+            $subject_stmt->execute([$user['id']]);
+            $by_subject = [];
+            while ($row = $subject_stmt->fetch()) {
+                $by_subject[$row['name']] = (int)$row['count'];
+            }
+            
+            // Get breakdown by class
+            $class_stmt = $db->prepare("
+                SELECT class_level, COUNT(*) as count
+                FROM questions
+                WHERE teacher_id = ?
+                GROUP BY class_level
+            ");
+            $class_stmt->execute([$user['id']]);
+            $by_class = [];
+            while ($row = $class_stmt->fetch()) {
+                $by_class[$row['class_level']] = (int)$row['count'];
+            }
+            
+            // Get breakdown by type
+            $type_stmt = $db->prepare("
+                SELECT question_type, COUNT(*) as count
+                FROM questions
+                WHERE teacher_id = ?
+                GROUP BY question_type
+            ");
+            $type_stmt->execute([$user['id']]);
+            $by_type = [];
+            while ($row = $type_stmt->fetch()) {
+                $by_type[$row['question_type']] = (int)$row['count'];
+            }
+            
             // Get recent questions
             $recent_stmt = $db->prepare("
                 SELECT id, question_text, subject_id, class_level, created_at
@@ -104,9 +144,17 @@ function handleGet($db, $user) {
             $recent_stmt->execute([$user['id']]);
             $recent_questions = $recent_stmt->fetchAll();
             
-            $stats['recent_questions'] = $recent_questions;
+            $response_data = [
+                'total_questions' => (int)$stats['total_questions'],
+                'by_subject' => $by_subject,
+                'by_class' => $by_class,
+                'by_type' => $by_type,
+                'subjects_count' => (int)$stats['subjects_count'],
+                'this_week' => (int)$stats['this_week'],
+                'recent_questions' => $recent_questions
+            ];
             
-            Response::success('Stats retrieved', $stats);
+            Response::success('Stats retrieved', $response_data);
         }
         
         // Build query with filters
