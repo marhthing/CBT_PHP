@@ -100,7 +100,6 @@ export default function TestCodeManager() {
       })
       setTestCodes(response.data.data || [])
     } catch (error: any) {
-      console.error('Failed to fetch test codes:', error)
       setError('Failed to load test codes')
     } finally {
       setLoading(false)
@@ -113,7 +112,7 @@ export default function TestCodeManager() {
       const response = await api.get('/system/lookup')
       setLookupData(response.data.data)
     } catch (error: any) {
-      console.error('Failed to fetch lookup data:', error)
+      // Error handled silently
     }
   }, [])
 
@@ -285,7 +284,6 @@ export default function TestCodeManager() {
       // Auto-clear success message
       setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
-      console.error('Failed to create test codes:', error)
       setError(error.response?.data?.message || 'Failed to create test codes')
     } finally {
       setCreating(false)
@@ -314,7 +312,6 @@ export default function TestCodeManager() {
       // Auto-clear success message
       setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
-      console.error('Failed to toggle batch activation:', error)
       setError(error.response?.data?.message || 'Failed to toggle batch activation')
     }
   }
@@ -351,7 +348,6 @@ export default function TestCodeManager() {
       setSuccessMessage('Test code batch deleted successfully')
       setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
-      console.error('Failed to delete test code batch:', error)
       setError(error.response?.data?.message || 'Failed to delete test code batch')
     } finally {
       setDeleting(false)
@@ -547,115 +543,60 @@ export default function TestCodeManager() {
 
       {/* Test Code Batches */}
       {filteredBatches.length > 0 ? (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
-          gap: '24px'
-        }}>
+        <div className="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {filteredBatches.map((batch) => (
             <div 
               key={batch.batchId} 
-              style={{
-                background: '#ffffff',
-                borderRadius: '12px',
-                padding: '24px',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                border: '1px solid #e5e7eb',
-                transition: 'all 0.2s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)'
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)'
-              }}
+              className="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-200 hover:shadow-lg hover:-translate-y-1 transition-all duration-200"
             >
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start',
-                marginBottom: '16px'
-              }}>
-                <div>
-                  <div style={{
-                    fontSize: '18px',
-                    fontWeight: 'bold',
-                    color: '#3b82f6',
-                    marginBottom: '4px'
-                  }}>
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex-1 min-w-0">
+                  <div className="text-base sm:text-lg font-bold text-blue-600 mb-1">
                     Batch of {batch.codes.length} Codes
                   </div>
-                  <h3 style={{
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    color: '#1f2937',
-                    margin: 0,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap'
-                  }}>
+                  <h3 className="text-sm font-medium text-gray-900 truncate">
                     {batch.title}
                   </h3>
                 </div>
-                <span style={{
-                  padding: '4px 8px',
-                  borderRadius: '12px',
-                  fontSize: '12px',
-                  fontWeight: '500',
-                  background: batch.isActivated ? '#f0fdf4' : '#fef2f2',
-                  color: batch.isActivated ? '#166534' : '#dc2626'
-                }}>
+                <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
+                  batch.isActivated 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
                   {batch.isActivated ? 'Active' : 'Inactive'}
                 </span>
               </div>
 
-              <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                fontSize: '14px',
-                color: '#6b7280',
-                marginBottom: '16px'
-              }}>
-                <div><strong>Subject:</strong> {batch.codes[0].subject_name}</div>
-                <div><strong>Class:</strong> {batch.codes[0].class_level}</div>
-                <div><strong>Type:</strong> {batch.codes[0].test_type === 'examination' ? 'Examination' : 'Test'}</div>
-                <div><strong>Duration:</strong> {batch.codes[0].duration_minutes} minutes</div>
-                <div><strong>Questions:</strong> {batch.codes[0].total_questions}</div>
+              <div className="space-y-2 text-sm text-gray-600 mb-4">
+                <div><span className="font-medium">Subject:</span> {batch.codes[0].subject_name}</div>
+                <div><span className="font-medium">Class:</span> {batch.codes[0].class_level}</div>
+                <div><span className="font-medium">Type:</span> {batch.codes[0].test_type === 'examination' ? 'Examination' : 'Test'}</div>
+                <div><span className="font-medium">Duration:</span> {batch.codes[0].duration_minutes} minutes</div>
+                <div><span className="font-medium">Questions:</span> {batch.codes[0].total_questions}</div>
                 {batch.hasUsedCodes && (
-                  <div style={{ color: '#dc2626', fontWeight: '500' }}>
+                  <div className="text-red-600 font-medium">
                     ⚠️ Some codes in this batch have been used
                   </div>
                 )}
               </div>
 
               {/* Batch Actions */}
-              <div style={{
-                display: 'flex',
-                gap: '8px',
-                marginBottom: '16px'
-              }}>
+              <div className="flex flex-col sm:flex-row gap-2 mb-4">
                 <button
                   onClick={(e) => {
                     e.preventDefault()
                     handleToggleBatchActivation(batch.batchId, batch.isActivated)
                   }}
                   disabled={batch.hasUsedCodes && !batch.isActivated}
-                  style={{
-                    flex: 1,
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    border: 'none',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    cursor: batch.hasUsedCodes && !batch.isActivated ? 'not-allowed' : 'pointer',
-                    opacity: batch.hasUsedCodes && !batch.isActivated ? 0.5 : 1,
-                    background: batch.isActivated ? '#dc2626' : '#16a34a',
-                    color: 'white',
-                    transition: 'all 0.2s ease'
-                  }}
+                  className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
+                    batch.hasUsedCodes && !batch.isActivated
+                      ? 'opacity-50 cursor-not-allowed'
+                      : 'cursor-pointer'
+                  } ${
+                    batch.isActivated 
+                      ? 'bg-red-600 hover:bg-red-700 text-white' 
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
                 >
                   {batch.isActivated ? 'Deactivate Batch' : 'Activate Batch'}
                 </button>
@@ -665,17 +606,7 @@ export default function TestCodeManager() {
                     setSelectedBatch(batch)
                     setShowViewModal(true)
                   }}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid #3b82f6',
-                    backgroundColor: 'white',
-                    color: '#3b82f6',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease'
-                  }}
+                  className="px-3 py-2 rounded-md border border-blue-600 bg-white text-blue-600 text-xs font-medium hover:bg-blue-50 transition-colors"
                 >
                   View
                 </button>
