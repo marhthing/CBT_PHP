@@ -350,36 +350,18 @@ export default function TeacherAssignment() {
       </div>
 
       {/* Assignments List */}
-      <div style={{
-        background: 'white',
-        borderRadius: '12px',
-        padding: '24px',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)'
-      }}>
-        <h2 style={{
-          fontSize: '20px',
-          fontWeight: 'bold',
-          color: '#1f2937',
-          marginBottom: '20px'
-        }}>
+      <div className="bg-white rounded-lg p-4 sm:p-6 shadow-sm">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">
           Assignments ({filteredAssignments.length})
         </h2>
 
         {filteredAssignments.length === 0 ? (
-          <div style={{
-            textAlign: 'center',
-            padding: '60px 20px',
-            color: '#6b7280'
-          }}>
-            <UserPlus size={64} style={{ color: '#d1d5db', marginBottom: '16px' }} />
-            <h3 style={{
-              fontSize: '18px',
-              fontWeight: '600',
-              marginBottom: '8px'
-            }}>
+          <div className="text-center py-12 sm:py-16 text-gray-500">
+            <UserPlus size={64} className="text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">
               No assignments found
             </h3>
-            <p style={{ margin: 0 }}>
+            <p className="text-sm">
               {teacherFilter || subjectFilter || classFilter
                 ? 'Try adjusting your filters'
                 : 'No teacher assignments have been created yet'
@@ -387,106 +369,48 @@ export default function TeacherAssignment() {
             </p>
           </div>
         ) : (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
-            gap: '20px'
-          }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredAssignments.map((assignment) => (
               <div
                 key={assignment.id}
-                style={{
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '12px',
-                  padding: '20px',
-                  background: '#f9fafb',
-                  transition: 'all 0.3s ease'
-                }}
+                className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:shadow-md transition-all duration-200"
               >
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  marginBottom: '12px'
-                }}>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{
-                      fontSize: '18px',
-                      fontWeight: '600',
-                      color: '#1f2937',
-                      margin: '0 0 8px 0'
-                    }}>
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                       {assignment.teacher_name}
                     </h4>
-                    <p style={{
-                      fontSize: '14px',
-                      color: '#6b7280',
-                      margin: '0 0 8px 0'
-                    }}>
+                    <p className="text-sm text-gray-600 truncate">
                       {assignment.teacher_email}
                     </p>
                   </div>
                   <button
                     onClick={() => handleDeleteAssignment(assignment.id)}
-                    style={{
-                      padding: '8px',
-                      background: '#ef4444',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
+                    className="ml-2 p-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors flex-shrink-0"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
 
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
-                }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                    <BookOpen size={16} style={{ color: '#6366f1' }} />
-                    <span style={{
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#6366f1'
-                    }}>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <BookOpen size={14} className="text-indigo-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-indigo-600 truncate">
                       {assignment.subject_name}
                     </span>
                   </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                    <GraduationCap size={16} style={{ color: '#8b5cf6' }} />
-                    <span style={{
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      color: '#8b5cf6'
-                    }}>
+                  <div className="flex items-center gap-2">
+                    <GraduationCap size={14} className="text-purple-600 flex-shrink-0" />
+                    <span className="text-sm font-medium text-purple-600 truncate">
                       {assignment.class_level}
                     </span>
                   </div>
                 </div>
 
-                <div style={{
-                  marginTop: '12px',
-                  paddingTop: '12px',
-                  borderTop: '1px solid #e5e7eb',
-                  fontSize: '12px',
-                  color: '#9ca3af'
-                }}>
-                  Created {new Date(assignment.created_at).toLocaleDateString()}
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <p className="text-xs text-gray-500">
+                    Created {new Date(assignment.created_at).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
             ))}
