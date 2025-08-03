@@ -86,6 +86,11 @@ export default function AllQuestions() {
   const [questionToDelete, setQuestionToDelete] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [questionsPerPage] = useState(10)
+  const [totalQuestions, setTotalQuestions] = useState(0)
+
   // Memoized fetch functions for performance
   const fetchQuestions = useCallback(async () => {
     try {
@@ -95,16 +100,18 @@ export default function AllQuestions() {
       if (subjectFilter) params.append('subject', subjectFilter)
       if (classFilter) params.append('class', classFilter)
       if (typeFilter) params.append('type', typeFilter)
-      params.append('limit', '50')
+      params.append('page', String(currentPage))
+      params.append('limit', String(questionsPerPage))
 
       const response = await api.get(`/admin/questions?${params.toString()}`)
       setQuestions(response.data.data?.questions || [])
+      setTotalQuestions(response.data.data?.total || 0)
     } catch (error: any) {
       setError(error.response?.data?.message || 'Failed to load questions')
     } finally {
       setLoading(false)
     }
-  }, [searchTerm, subjectFilter, classFilter, typeFilter])
+  }, [searchTerm, subjectFilter, classFilter, typeFilter, currentPage, questionsPerPage])
 
   const fetchQuestionStats = useCallback(async () => {
     try {
@@ -467,6 +474,11 @@ export default function AllQuestions() {
     }
   ], [stats])
 
+  // Calculate total pages
+  const totalPages = useMemo(() => {
+    return Math.ceil(totalQuestions / questionsPerPage)
+  }, [totalQuestions, questionsPerPage])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -529,7 +541,7 @@ export default function AllQuestions() {
           const bgColors = ['bg-blue-50', 'bg-green-50', 'bg-purple-50', 'bg-amber-50']
           const color = colors[index % colors.length]
           const bgColor = bgColors[index % bgColors.length]
-          
+
           return (
             <div key={index} className={`${bgColor} rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200`}>
               <div className="flex items-center justify-between">
@@ -706,6 +718,71 @@ export default function AllQuestions() {
             </div>
           )}
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="px-4 py-3 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-gray-600">
+                Showing {((currentPage - 1) * questionsPerPage) + 1} to {Math.min(currentPage * questionsPerPage, totalQuestions)} of {totalQuestions} questions
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1 rounded text-sm ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-2 py-1 rounded text-sm ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1 rounded text-sm ${
+                    currentPage === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Edit Question Modal */}

@@ -105,6 +105,10 @@ export default function TeacherAllQuestions() {
   const [questionToDelete, setQuestionToDelete] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [questionsPerPage] = useState(10)
+
   // Derived data based on teacher assignments
   const availableSubjects = useMemo(() => {
     const subjectIds = new Set(assignments.map(a => a.subject_id))
@@ -526,6 +530,14 @@ export default function TeacherAllQuestions() {
     )
   }, [editingQuestion, originalQuestion])
 
+    // Get current questions
+    const indexOfLastQuestion = currentPage * questionsPerPage;
+    const indexOfFirstQuestion = indexOfLastQuestion - questionsPerPage;
+    const currentQuestions = questions.slice(indexOfFirstQuestion, indexOfLastQuestion);
+
+  // Change page
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -698,14 +710,14 @@ export default function TeacherAllQuestions() {
               </div>
             ) : (
               <div className="space-y-4">
-                {questions.map((question, index) => (
+                {currentQuestions.map((question, index) => (
                   <div key={question.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-2">
                           <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                            Q{index + 1}
-                          </span>
+                          Q{(currentPage - 1) * questionsPerPage + index + 1}
+                        </span>
                           <span className="text-sm text-gray-600">
                             {question.subject_name} • {question.class_level}
                           </span>
@@ -783,6 +795,47 @@ export default function TeacherAllQuestions() {
               </div>
             )}
           </div>
+              {/* Pagination */}
+              <nav className="flex items-center justify-between p-4 sm:px-6 bg-white border-t border-gray-200">
+                <div className="hidden sm:flex sm:items-center sm:justify-between w-full">
+                  <p className="text-sm text-gray-700">
+                    Showing <span className="font-medium">{(currentPage - 1) * questionsPerPage + 1}</span> to <span className="font-medium">{Math.min(currentPage * questionsPerPage, questions.length)}</span> of <span className="font-medium">{questions.length}</span> questions
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => paginate(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() => paginate(currentPage + 1)}
+                      disabled={currentPage * questionsPerPage >= questions.length}
+                      className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+                <div className="flex sm:hidden items-center justify-center py-2">
+                  <button
+                    onClick={() => paginate(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <span className="mx-2 text-sm text-gray-700">Page {currentPage}</span>
+                  <button
+                    onClick={() => paginate(currentPage + 1)}
+                    disabled={currentPage * questionsPerPage >= questions.length}
+                    className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </nav>
         </div>
       </div>
 
