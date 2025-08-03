@@ -8,6 +8,17 @@ require_once __DIR__ . '/../../includes/response.php';
 $request_method = $_SERVER['REQUEST_METHOD'];
 $path_info = $_SERVER['PATH_INFO'] ?? '';
 
+// If PATH_INFO is empty, try to get path from REQUEST_URI (for direct routing through index.php)
+if (empty($path_info)) {
+    $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+    $path = parse_url($request_uri, PHP_URL_PATH);
+    
+    // Remove the base path and extract the admin/test-codes part
+    if (strpos($path, '/admin/test-codes') !== false) {
+        $path_info = $path;
+    }
+}
+
 // Initialize auth and verify admin role
 $auth = new Auth();
 $user = $auth->getCurrentUser();
@@ -25,15 +36,21 @@ try {
         $path_parts = array_slice($path_parts, 2);
     }
     
+    // Filter out empty parts
+    $path_parts = array_values(array_filter($path_parts, function($part) {
+        return $part !== '';
+    }));
+    
     // Handle special cases first (bulk, etc.)
     $is_bulk = isset($path_parts[0]) && $path_parts[0] === 'bulk';
+    $is_batch = isset($path_parts[0]) && $path_parts[0] === 'batch';
     $test_code_id = null;
     $action = null;
     
     if ($is_bulk) {
         // For bulk operations: /admin/test-codes/bulk
         $action = 'bulk';
-    } elseif (isset($path_parts[0]) && $path_parts[0] === 'batch') {
+    } elseif ($is_batch) {
         // For batch operations: /admin/test-codes/batch/{batch_id}/{action}
         $action = 'batch';
     } elseif (isset($path_parts[0]) && is_numeric($path_parts[0])) {
@@ -260,7 +277,11 @@ try {
                     Response::badRequest('is_activated cannot be empty');
                 }
                 
-                if (is_string($input['is_activated'])) {
+                // Handle proper boolean conversion
+                $is_activated = false; // default
+                if (is_bool($input['is_activated'])) {
+                    $is_activated = $input['is_activated'];
+                } elseif (is_string($input['is_activated'])) {
                     if (strtolower($input['is_activated']) === 'true' || $input['is_activated'] === '1') {
                         $is_activated = true;
                     } elseif (strtolower($input['is_activated']) === 'false' || $input['is_activated'] === '0') {
@@ -293,7 +314,10 @@ try {
                     WHERE batch_id = ?
                 ");
                 $activated_at = $is_activated ? date('Y-m-d H:i:s') : null;
-                $stmt->execute([$is_activated, $activated_at, $batch_id]);
+                
+                // Ensure boolean is properly converted for PostgreSQL
+                $is_activated_pg = $is_activated ? 'true' : 'false';
+                $stmt->execute([$is_activated_pg, $activated_at, $batch_id]);
                 
                 if ($stmt->rowCount() > 0) {
                     Response::success('Test code batch activation updated', [
@@ -352,7 +376,7 @@ try {
                 $stmt->execute();
                 
                 Response::success('All test codes have been deleted successfully');
-            } elseif ($action === 'batch' && isset($path_parts[1])) {
+            } elseif ($is_batch && isset($path_parts[1])) {
                 // Delete entire batch: /admin/test-codes/batch/{batch_id}
                 $batch_id = $path_parts[1];
                 
