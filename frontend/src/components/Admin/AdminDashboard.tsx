@@ -335,6 +335,20 @@ export default function AdminDashboard() {
     }
   ], [stats, navigate])
 
+  const fetchHealthData = useCallback(async () => {
+    setLoadingHealth(true)
+    try {
+      const response = await api.get('/health')
+      setHealthData(response.data)
+      setShowHealthModal(true)
+    } catch (error) {
+      console.error('Failed to fetch health data:', error)
+      setError('Failed to fetch system health data')
+    } finally {
+      setLoadingHealth(false)
+    }
+  }, [])
+
   // Memoized quick actions for performance
   const quickActions = useMemo(() => [
     {
@@ -366,20 +380,6 @@ export default function AdminDashboard() {
       color: '#f59e0b'
     }
   ], [navigate, fetchHealthData])
-
-  const fetchHealthData = useCallback(async () => {
-    setLoadingHealth(true)
-    try {
-      const response = await api.get('/health')
-      setHealthData(response.data)
-      setShowHealthModal(true)
-    } catch (error) {
-      console.error('Failed to fetch health data:', error)
-      setError('Failed to fetch system health data')
-    } finally {
-      setLoadingHealth(false)
-    }
-  }, [])
 
   const formatDate = useCallback((dateString: string) => {
     return new Date(dateString).toLocaleString('en-US', {
