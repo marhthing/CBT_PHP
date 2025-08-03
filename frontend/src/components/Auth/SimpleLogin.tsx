@@ -1,10 +1,10 @@
+
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 
 export default function SimpleLogin() {
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
-
   const [error, setError] = useState('')
   
   const { login, loginLoading } = useAuth()
@@ -24,89 +24,96 @@ export default function SimpleLogin() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-800 via-primary-600 to-primary-400 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md space-y-8">
-        <div className="bg-white rounded-2xl shadow-strong p-6 sm:p-8 border border-white/10">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary-600 to-primary-700 rounded-full flex items-center justify-center mb-4 shadow-moderate">
-              <span className="text-white text-xl font-bold">SFCS</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              CBT Portal
-            </h1>
-            <p className="text-gray-600 text-sm font-medium">
-              Sure Foundation Comprehensive School
-            </p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        {/* Header */}
+        <div className="text-center">
+          <div className="mx-auto h-20 w-20 flex items-center justify-center rounded-full bg-primary-600 mb-6">
+            <span className="text-white text-xl font-bold">SFCS</span>
           </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            CBT Portal
+          </h2>
+          <p className="text-gray-600">
+            Sure Foundation Comprehensive School
+          </p>
+        </div>
 
-          {/* Error Message */}
+        {/* Login Form */}
+        <div className="card">
           {error && (
-            <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg mb-6 text-sm font-medium">
+            <div className="mb-6 bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-lg text-sm">
               {error}
             </div>
           )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Identifier Input */}
+          <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label className="form-label">
+              <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-2">
                 Username / Registration Number
               </label>
               <input
+                id="identifier"
+                name="identifier"
                 type="text"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Enter username or registration number"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="Enter username or registration number"
-                required
-                className="form-input"
               />
             </div>
 
-            {/* Password Input */}
             <div>
-              <label className="form-label">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
               <input
+                id="password"
+                name="password"
                 type="password"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-                className="form-input"
               />
             </div>
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={loginLoading}
-              className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-all duration-200 ${
-                loginLoading 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'btn-primary transform hover:scale-105 hover:shadow-lg'
-              }`}
-            >
-              {loginLoading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="loading-spinner w-4 h-4"></div>
-                  <span>Signing in...</span>
-                </div>
-              ) : (
-                'Sign In'
-              )}
-            </button>
+            <div>
+              <button
+                type="submit"
+                disabled={loginLoading}
+                className="btn btn-primary w-full py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loginLoading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="loading-spinner w-5 h-5 mr-2"></div>
+                    Signing in...
+                  </div>
+                ) : (
+                  'Sign In'
+                )}
+              </button>
+            </div>
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="text-xs font-semibold text-gray-700 mb-2">Demo Credentials:</div>
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <div className="text-xs font-medium text-gray-700 mb-3">Demo Credentials:</div>
             <div className="text-xs text-gray-600 space-y-1">
-              <div>• Admin: admin / password</div>
-              <div>• Teacher: teacher1 / password</div>
-              <div>• Student: SFGS/2024/001 / password</div>
+              <div className="flex justify-between">
+                <span>Admin:</span>
+                <span className="font-mono">admin / password</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Teacher:</span>
+                <span className="font-mono">teacher1 / password</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Student:</span>
+                <span className="font-mono">SFGS/2024/001 / password</span>
+              </div>
             </div>
           </div>
         </div>
