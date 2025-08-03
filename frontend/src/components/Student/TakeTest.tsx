@@ -90,6 +90,7 @@ export default function TakeTest() {
         // Set test preview data from validation response
         setTestPreview(response.data.data)
         setInputTestCode(inputTestCode.toUpperCase())
+        // Note: Once validated, the test code is locked to "using" status and cannot be cancelled
       }
     } catch (error: any) {
       setError(error.response?.data?.message || 'Invalid test code')
