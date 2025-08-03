@@ -1,6 +1,18 @@
+
 import { useState, ReactNode, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { 
+  Home, 
+  FileText, 
+  BarChart3, 
+  Users, 
+  Key, 
+  BookOpen, 
+  LogOut, 
+  Menu, 
+  X 
+} from 'lucide-react'
 
 interface ResponsiveLayoutProps {
   children: ReactNode
@@ -15,13 +27,16 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
 
   useEffect(() => {
     const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 1024)
+      const newIsMobile = window.innerWidth < 1024
+      if (newIsMobile !== isMobile) {
+        setIsMobile(newIsMobile)
+      }
     }
     
     checkIfMobile()
     window.addEventListener('resize', checkIfMobile)
     return () => window.removeEventListener('resize', checkIfMobile)
-  }, [])
+  }, [isMobile])
 
   const handleLogout = async () => {
     await logout()
@@ -32,30 +47,30 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
     if (!user) return []
 
     const baseItems = [
-      { name: 'Dashboard', path: `/${user.role}`, icon: '🏠' }
+      { name: 'Dashboard', path: `/${user.role}`, icon: Home }
     ]
 
     if (user.role === 'student') {
       return [
         ...baseItems,
-        { name: 'Take Test', path: '/student/test', icon: '📝' },
-        { name: 'My Results', path: '/student/results', icon: '📊' }
+        { name: 'Take Test', path: '/student/test', icon: FileText },
+        { name: 'My Results', path: '/student/results', icon: BarChart3 }
       ]
     }
 
     if (user.role === 'teacher') {
       return [
         ...baseItems,
-        { name: 'Question Bank', path: '/teacher/questions', icon: '📚' }
+        { name: 'Question Bank', path: '/teacher/questions', icon: BookOpen }
       ]
     }
 
     if (user.role === 'admin') {
       return [
         ...baseItems,
-        { name: 'Test Codes', path: '/admin/test-codes', icon: '🔑' },
-        { name: 'All Questions', path: '/admin/questions', icon: '📚' },
-        { name: 'Teachers', path: '/admin/teachers', icon: '👥' }
+        { name: 'Test Codes', path: '/admin/test-codes', icon: Key },
+        { name: 'All Questions', path: '/admin/questions', icon: BookOpen },
+        { name: 'Teachers', path: '/admin/teachers', icon: Users }
       ]
     }
 
@@ -84,23 +99,26 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
       {/* Navigation */}
       <nav className="flex-1 py-6 px-2">
         <div className="sidebar-nav">
-          {navigationItems.map((item) => (
-            <button
-              key={item.path}
-              onClick={() => {
-                navigate(item.path)
-                if (isMobile) setIsSidebarOpen(false)
-              }}
-              className={`nav-item w-full ${
-                location.pathname === item.path 
-                  ? 'bg-white/15 text-white' 
-                  : 'text-white/80 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              <span className="text-lg">{item.icon}</span>
-              <span className="truncate">{item.name}</span>
-            </button>
-          ))}
+          {navigationItems.map((item) => {
+            const IconComponent = item.icon
+            return (
+              <button
+                key={item.path}
+                onClick={() => {
+                  navigate(item.path)
+                  if (isMobile) setIsSidebarOpen(false)
+                }}
+                className={`nav-item w-full flex items-center space-x-3 px-4 py-3 mx-2 rounded-lg transition-all duration-200 ${
+                  location.pathname === item.path 
+                    ? 'bg-white/15 text-white' 
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                <IconComponent size={20} />
+                <span className="truncate">{item.name}</span>
+              </button>
+            )
+          })}
         </div>
       </nav>
 
@@ -111,7 +129,7 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
           className="w-full bg-danger-500/20 border border-danger-500/30 text-white py-3 px-4 rounded-lg font-medium transition-all duration-200 hover:bg-danger-500/30 hover:border-danger-500/40"
         >
           <span className="flex items-center justify-center space-x-2">
-            <span>🚪</span>
+            <LogOut size={18} />
             <span>Logout</span>
           </span>
         </button>
@@ -129,9 +147,7 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
               onClick={() => setIsSidebarOpen(true)}
               className="bg-white/20 p-2 rounded-lg hover:bg-white/30 transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <Menu size={20} />
             </button>
             <div>
               <div className="font-bold text-lg">SFCS CBT</div>
@@ -143,9 +159,10 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
 
           <button
             onClick={handleLogout}
-            className="bg-white/20 px-3 py-2 rounded-lg text-xs font-medium hover:bg-white/30 transition-colors"
+            className="bg-white/20 px-3 py-2 rounded-lg text-xs font-medium hover:bg-white/30 transition-colors flex items-center space-x-2"
           >
-            Logout
+            <LogOut size={14} />
+            <span>Logout</span>
           </button>
         </header>
 
@@ -159,35 +176,48 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
               className="w-80 h-full bg-white transform transition-transform duration-300 ease-in-out"
               onClick={(e) => e.stopPropagation()}
             >
-              <SidebarContent />
+              <div className="flex justify-end p-4">
+                <button
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  <X size={20} className="text-gray-600" />
+                </button>
+              </div>
+              <div className="h-full bg-gradient-to-b from-secondary-800 to-secondary-900">
+                <SidebarContent />
+              </div>
             </div>
           </div>
         )}
 
-        {/* Main Content */}
+        {/* Main Content with bottom padding for navigation */}
         <main className="p-4 pb-20 min-h-screen">
           {children}
         </main>
 
-        {/* Bottom Navigation for Mobile */}
-        {user?.role === 'student' && (
-          <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 flex justify-around shadow-moderate z-40">
-            {navigationItems.slice(0, 3).map((item) => (
+        {/* Bottom Navigation Bar */}
+        <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-2 flex justify-around shadow-lg z-40">
+          {navigationItems.map((item) => {
+            const IconComponent = item.icon
+            return (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center space-y-1 py-2 px-3 rounded-lg transition-colors ${
+                className={`flex flex-col items-center space-y-1 py-2 px-3 rounded-lg transition-colors min-w-0 flex-1 ${
                   location.pathname === item.path 
                     ? 'text-primary-600 bg-primary-50' 
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                <span className="text-lg">{item.icon}</span>
-                <span className="text-xs font-medium">{item.name.split(' ')[0]}</span>
+                <IconComponent size={20} />
+                <span className="text-xs font-medium truncate">
+                  {item.name.split(' ')[0]}
+                </span>
               </button>
-            ))}
-          </nav>
-        )}
+            )
+          })}
+        </nav>
       </div>
     )
   }

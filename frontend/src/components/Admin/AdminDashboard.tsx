@@ -365,7 +365,7 @@ export default function AdminDashboard() {
       onClick: () => fetchHealthData(),
       color: '#f59e0b'
     }
-  ], [navigate])
+  ], [navigate, fetchHealthData])
 
   const fetchHealthData = useCallback(async () => {
     setLoadingHealth(true)
@@ -945,16 +945,17 @@ export default function AdminDashboard() {
           border: '1px solid #e5e7eb'
         }}>
           <h2 style={{
-            fontSize: '16px',
-            fontWeight: 'bold',
-            color: '#1f2937',
-            margin: '0 0 16px 0',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}>
-            🔧 System Monitor
-          </h2>
+              fontSize: '16px',
+              fontWeight: 'bold',
+              color: '#1f2937',
+              margin: '0 0 16px 0',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}>
+              <Database size={16} />
+              <span>System Monitor</span>
+            </h2>
 
           <div style={{
             display: 'grid',
@@ -1132,14 +1133,14 @@ export default function AdminDashboard() {
               borderLeft: '3px solid #ef4444',
               gridColumn: 'span 2'
             }}>
-              <div style={{
-                fontSize: '12px',
-                fontWeight: '600',
-                color: '#991b1b',
-                marginBottom: '8px'
-              }}>
-                🚨 System Tools
-              </div>
+            <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <Activity size={14} />
+            <span>System Tools</span>
+          </div>
               <div style={{
                 display: 'flex',
                 gap: '8px',
