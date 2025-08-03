@@ -361,7 +361,15 @@ export default function TakeTest() {
             gap: '12px'
           }}>
             <button
-              onClick={() => {
+              onClick={async () => {
+                // Revert test code from "using" back to "active"
+                try {
+                  await api.post('/student/cancel-test-code', {
+                    test_code: inputTestCode
+                  })
+                } catch (error) {
+                  console.warn('Failed to cancel test code:', error)
+                }
                 setTestPreview(null)
                 setInputTestCode('')
                 setError('')

@@ -397,16 +397,29 @@ export default function TestResults() {
                     </div>
 
                     <div style={{
-                      background: gradeColors.bg,
-                      color: gradeColors.color,
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      fontWeight: '700',
-                      textAlign: 'center',
-                      minWidth: '60px'
+                      textAlign: 'right'
                     }}>
-                      {result.percentage}%
+                      {/* Primary Score Display */}
+                      <div style={{
+                        fontSize: '18px',
+                        fontWeight: '800',
+                        color: '#1e293b',
+                        marginBottom: '2px'
+                      }}>
+                        {result.score}/{result.total_questions}
+                      </div>
+                      {/* Secondary Percentage Display */}
+                      <div style={{
+                        background: gradeColors.bg,
+                        color: gradeColors.color,
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        display: 'inline-block'
+                      }}>
+                        {result.percentage}%
+                      </div>
                     </div>
                   </div>
 
@@ -418,9 +431,6 @@ export default function TestResults() {
                     color: '#64748b'
                   }}>
                     <div>
-                      <span style={{ fontWeight: '500' }}>Score:</span> {result.score}/{result.total_questions}
-                    </div>
-                    <div>
                       <span style={{ fontWeight: '500' }}>Duration:</span> {Math.round(result.time_taken / 60)} min
                     </div>
                     <div>
@@ -429,6 +439,11 @@ export default function TestResults() {
                         result.percentage >= 70 ? 'B' :
                         result.percentage >= 60 ? 'C' :
                         result.percentage >= 50 ? 'D' : 'F'
+                      }
+                    </div>
+                    <div>
+                      <span style={{ fontWeight: '500' }}>Status:</span> {
+                        result.percentage >= 50 ? 'Passed' : 'Failed'
                       }
                     </div>
                   </div>

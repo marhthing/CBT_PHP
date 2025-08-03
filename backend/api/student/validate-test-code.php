@@ -39,7 +39,7 @@ try {
     $stmt = $db->prepare("
         SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level,
                tc.duration_minutes, tc.total_questions as question_count, tc.expires_at,
-               tc.is_active, tc.is_activated, tc.is_used, tc.used_at, tc.used_by
+               tc.is_active, tc.is_activated, tc.status
         FROM test_codes tc
         LEFT JOIN subjects s ON tc.subject_id = s.id
         WHERE tc.code = ?
@@ -59,8 +59,12 @@ try {
         Response::badRequest('Test code is not activated yet');
     }
 
-    if ($test['is_used']) {
-        Response::badRequest('This test code has already been used');
+    if ($test['status'] === 'used') {
+        Response::badRequest('This test code has already been used and is permanently deactivated');
+    }
+
+    if ($test['status'] === 'using') {
+        Response::badRequest('This test code is currently being used by another student');
     }
 
     if ($test['expires_at'] && strtotime($test['expires_at']) < time()) {
@@ -92,6 +96,20 @@ try {
     if ($available_questions < $test['question_count']) {
         Response::badRequest('Not enough questions available for this test');
     }
+
+    // Mark test code as "using" - security state change
+    $update_stmt = $db->prepare("
+        UPDATE test_codes 
+        SET status = 'using', used_by = ?, used_at = CURRENT_TIMESTAMP 
+        WHERE id = ? AND status = 'active'
+    ");
+    $update_stmt->execute([$user['id'], $test['id']]);
+
+    if ($update_stmt->rowCount() === 0) {
+        Response::badRequest('Test code is no longer available');
+    }
+
+    Response::logRequest('student/validate-test-code', 'POST', $user['id']);
 
     Response::success('Test code is valid', [
         'test_id' => $test['id'],

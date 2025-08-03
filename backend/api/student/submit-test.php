@@ -121,10 +121,10 @@ try {
             $answer_stmt->execute([$result_id, $question_id, strtoupper($student_answer), $is_correct ? 'true' : 'false']);
         }
         
-        // Mark test code as used
+        // Mark test code as used (permanently deactivated)
         $used_stmt = $db->prepare("
             UPDATE test_codes 
-            SET is_used = true, used_at = CURRENT_TIMESTAMP, used_by = ?
+            SET status = 'used', is_used = true, used_at = CURRENT_TIMESTAMP, used_by = ?
             WHERE id = ?
         ");
         $used_stmt->execute([$user['id'], $test['id']]);
@@ -138,7 +138,8 @@ try {
             'score' => $score,
             'total_questions' => $total_questions,
             'percentage' => round(($score / $total_questions) * 100, 2),
-            'time_taken' => $time_taken
+            'time_taken' => $time_taken,
+            'score_display' => "$score/$total_questions"
         ]);
         
     } catch (Exception $e) {

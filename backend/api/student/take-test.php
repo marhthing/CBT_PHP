@@ -26,17 +26,22 @@ try {
     
     // Get test information and validate
     $stmt = $db->prepare("
-        SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level, tc.duration_minutes, tc.total_questions as question_count, tc.is_active, tc.expires_at, tc.subject_id, tc.term_id, tc.session_id
+        SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level, tc.duration_minutes, tc.total_questions as question_count, tc.is_active, tc.expires_at, tc.subject_id, tc.term_id, tc.session_id, tc.status, tc.used_by
         FROM test_codes tc
         LEFT JOIN subjects s ON tc.subject_id = s.id
-        WHERE tc.code = ? AND tc.is_active = true AND tc.is_activated = true
+        WHERE tc.code = ? AND tc.is_active = true AND tc.is_activated = true AND tc.status = 'using'
     ");
     
     $stmt->execute([$test_code]);
     $test = $stmt->fetch();
     
     if (!$test) {
-        Response::notFound('Test code not found or expired');
+        Response::notFound('Test code not found, expired, or not in "using" status');
+    }
+
+    // Verify the student trying to take the test is the same one who validated it
+    if ($test['used_by'] != $user['id']) {
+        Response::unauthorized('This test code was validated by another student');
     }
     
     // Check if student has already taken this test
