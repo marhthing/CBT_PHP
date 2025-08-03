@@ -5,13 +5,15 @@ This project is a Computer-Based Testing (CBT) Portal designed for secondary sch
 ## Migration Status: COMPLETED (August 3, 2025 - 4:30 PM)
 Successfully migrated from Replit Agent to standard Replit environment with PostgreSQL database integration. Database schema deployed with proper password hashing and all authentication verified working. All hardcoded class levels removed and replaced with dynamic database-driven system. Complete educational data structure implemented with 15 subjects, 3 terms, 3 sessions, and configurable class levels. Project fully functional with no hardcoded academic data.
 
-### Dynamic Data Implementation (August 3, 2025 - 4:30 PM)
+### Dynamic Data Implementation (August 3, 2025 - 4:44 PM)
 ✓ **Class Levels Table**: Created class_levels database table with 6 standard levels (JSS1-JSS3, SS1-SS3)
 ✓ **Backend APIs Updated**: All validation and lookup endpoints now use database-driven class levels
 ✓ **Frontend Components Updated**: All forms and filters now dynamically load class levels from API
 ✓ **No Hardcoded Data**: Completely eliminated hardcoded class levels from all backend PHP files and React components
 ✓ **Type Safety**: Updated all LookupData interfaces to include class_levels property
 ✓ **Consistent Data Structure**: All academic data now follows the same pattern of database-driven dynamic loading
+✓ **Test Duration System**: Added duration input field to test code creation form, backend already supports configurable duration
+✓ **Score Calculation Fix**: Fixed student results to show proper score using score_per_question (e.g., 20/20 instead of 20/4)
 
 ### Latest Data Setup (August 3, 2025 - 4:26 PM)
 ✓ **Complete Sample Data**: Added 15 subjects, 3 terms, 3 sessions, 6 class levels, and 8 teacher assignments

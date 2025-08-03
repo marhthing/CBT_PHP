@@ -5,6 +5,7 @@ interface TestResult {
   id: number
   score: number
   total_questions: number
+  max_possible_score: number
   percentage: number
   grade: string
   time_taken: number
@@ -406,7 +407,7 @@ export default function TestResults() {
                         color: '#1e293b',
                         marginBottom: '2px'
                       }}>
-                        {result.score}/{result.total_questions}
+                        {result.score}/{result.max_possible_score}
                       </div>
                       {/* Secondary Percentage Display */}
                       <div style={{
