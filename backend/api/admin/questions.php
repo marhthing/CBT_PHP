@@ -115,10 +115,7 @@ function handleGet($db, $user) {
             $params[] = $_GET['class'];
         }
         
-        if (isset($_GET['type']) && !empty($_GET['type'])) {
-            $where_conditions[] = 'q.question_type = ?';
-            $params[] = $_GET['type'];
-        }
+        // Note: All questions are multiple choice type, so type filter is not needed
         
         $limit = min(100, max(1, intval($_GET['limit'] ?? 50)));
         $offset = max(0, intval($_GET['offset'] ?? 0));
