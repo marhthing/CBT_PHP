@@ -1,0 +1,14 @@
+[vite] connecting...
+chunk-G3PMV62Z.js:8 Download the React DevTools for a better development experience: https://react.dev/link/react-devtools
+client:827 [vite] connected.
+2AdminDashboard.tsx:86 Fetching dashboard stats...
+2AdminDashboard.tsx:86 Fetching dashboard stats...
+2AdminDashboard.tsx:95 Stats request was cancelled
+AdminDashboard.tsx:91 Dashboard stats response: {success: true, message: 'Dashboard statistics retrieved', timestamp: '2025-08-03T20:51:47+00:00', data: {…}}data: {total_questions: 0, total_test_codes: 0, active_test_codes: 0, total_teachers: 1, total_students: 1, …}message: "Dashboard statistics retrieved"success: truetimestamp: "2025-08-03T20:51:47+00:00"[[Prototype]]: Object
+AdminDashboard.tsx:133 Activities API response time: 10366ms
+AdminDashboard.tsx:134 Activities API response: {success: true, message: 'Test codes retrieved', timestamp: '2025-08-03T20:51:50+00:00', data: Array(0)}data: []message: "Test codes retrieved"success: truetimestamp: "2025-08-03T20:51:50+00:00"[[Prototype]]: Object
+AdminDashboard.tsx:91 Dashboard stats response: {success: true, message: 'Dashboard statistics retrieved', timestamp: '2025-08-03T20:51:58+00:00', data: {…}}data: {total_questions: 0, total_test_codes: 0, active_test_codes: 0, total_teachers: 1, total_students: 1, …}message: "Dashboard statistics retrieved"success: truetimestamp: "2025-08-03T20:51:58+00:00"[[Prototype]]: Object
+AdminDashboard.tsx:241 Health check response time: 11755ms
+AdminDashboard.tsx:133 Activities API response time: 22617ms
+AdminDashboard.tsx:134 Activities API response: {success: true, message: 'Test codes retrieved', timestamp: '2025-08-03T20:52:03+00:00', data: Array(0)}data: []message: "Test codes retrieved"success: truetimestamp: "2025-08-03T20:52:03+00:00"[[Prototype]]: Object
+AdminDashboard.tsx:251 API health check failed: AxiosError {message: 'timeout of 15000ms exceeded', name: 'AxiosError', code: 'ECONNABORTED', config: {…}, request: XMLHttpRequest, …}code: "ECONNABORTED"config: {transitional: {…}, adapter: Array(3), transformRequest: Array(1), transformResponse: Array(1), timeout: 15000, …}message: "timeout of 15000ms exceeded"name: "AxiosError"request: XMLHttpRequest {onreadystatechange: null, readyState: 4, timeout: 15000, withCredentials: false, upload: XMLHttpRequestUpload, …}stack: "AxiosError: timeout of 15000ms exceeded\n    at XMLHttpRequest.handleTimeout (https://8b3f253b-9ac8-454d-ae71-a600f62401eb-00-1rn223zqqztej.kirk.replit.dev/node_modules/.vite/deps/axios.js?v=167e3605:1624:14)\n    at Axios.request (https://8b3f253b-9ac8-454d-ae71-a600f62401eb-00-1rn223zqqztej.kirk.replit.dev/node_modules/.vite/deps/axios.js?v=167e3605:2143:41)\n    at async measureApiResponseTime (https://8b3f253b-9ac8-454d-ae71-a600f62401eb-00-1rn223zqqztej.kirk.replit.dev/src/components/Admin/AdminDashboard.tsx:187:26)"[[Prototype]]: Error
