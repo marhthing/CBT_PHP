@@ -773,6 +773,397 @@ export default function AllQuestions() {
                       Option {option} {editingQuestion.question_type === 'true_false' ? (option === 'A' ? '(True)' : '(False)') : ''}
                     </label>
                     <input
-                      type="text"
-                      value={editingQuestion[`option_${option.toLowerCase()}` as keyof Question] as string || ''}
-                      onChange={(e) => setEditingQuestion
+                        type="text"
+                        value={editingQuestion[`option_${option.toLowerCase()}` as keyof Question] as string || ''}
+                        onChange={(e) => setEditingQuestion(prev => prev ? {
+                          ...prev,
+                          [`option_${option.toLowerCase()}`]: e.target.value
+                        } : null)}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Correct Answer
+                </label>
+                <select
+                  value={editingQuestion.correct_answer}
+                  onChange={(e) => setEditingQuestion(prev => prev ? {...prev, correct_answer: e.target.value} : null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  {editingQuestion.question_type === 'true_false' ? (
+                    <>
+                      <option value="A">A (True)</option>
+                      <option value="B">B (False)</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </>
+                  )}
+                </select>
+              </div>
+            </div>
+
+            <div className="p-6 flex justify-end gap-4">
+              <button
+                onClick={() => {
+                  setEditingQuestion(null)
+                  setOriginalQuestion(null)
+                }}
+                className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (editingQuestion) {
+                    updateQuestion(editingQuestion)
+                  }
+                }}
+                disabled={savingEdit || !hasUnsavedChanges()}
+                className={`px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors ${savingEdit || !hasUnsavedChanges() ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {savingEdit ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Upload Modal */}
+      {showBulkUpload && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Bulk Upload Questions
+              </h3>
+              <button
+                onClick={() => setShowBulkUpload(false)}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select CSV File
+                </label>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileSelect}
+                  className="w-full"
+                />
+                {selectedFile && (
+                  <p className="mt-2 text-sm text-gray-500">
+                    Selected file: {selectedFile.name}
+                  </p>
+                )}
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Default Term
+                  </label>
+                  <select
+                    value={defaultTermId}
+                    onChange={(e) => setDefaultTermId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option value="">Select Term</option>
+                    {(lookupData.terms || []).map(term => (
+                      <option key={term.id} value={term.id}>{term.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Default Session
+                  </label>
+                  <select
+                    value={defaultSessionId}
+                    onChange={(e) => setDefaultSessionId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option value="">Select Session</option>
+                    {(lookupData.sessions || []).map(session => (
+                      <option key={session.id} value={session.id}>{session.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={downloadTemplate}
+                className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800"
+              >
+                <Download size={16} />
+                Download CSV Template
+              </button>
+            </div>
+
+            <div className="p-6 flex justify-end gap-4">
+              <button
+                onClick={() => setShowBulkUpload(false)}
+                className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBulkUpload}
+                disabled={uploading || !selectedFile || !defaultTermId || !defaultSessionId}
+                className={`px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors ${uploading || !selectedFile || !defaultTermId || !defaultSessionId ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                {uploading ? 'Uploading...' : 'Upload'}
+              </button>
+            </div>
+
+            {uploadProgress.length > 0 && (
+              <div className="p-6">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Upload Progress</h4>
+                <ul className="list-disc pl-5">
+                  {uploadProgress.map((message, index) => (
+                    <li key={index} className="text-sm text-gray-600">{message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Manual Question Creation Modal */}
+      {showManualCreate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Manual Question Creation
+              </h3>
+              <button
+                onClick={() => {
+                  setShowManualCreate(false)
+                  setShowQuestionForm(false)
+                  setManualQuestions([])
+                  setCreateFilters({ subject_id: '', class_level: '', term_id: '', session_id: '' })
+                  setError('')
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {!showQuestionForm ? (
+              <div className="p-6 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Subject
+                    </label>
+                    <select
+                      value={createFilters.subject_id}
+                      onChange={(e) => setCreateFilters(prev => ({ ...prev, subject_id: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    >
+                      <option value="">Select Subject</option>
+                      {(lookupData.subjects || []).map(subject => (
+                        <option key={subject.id} value={String(subject.id)}>{subject.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Class Level
+                    </label>
+                    <select
+                      value={createFilters.class_level}
+                      onChange={(e) => setCreateFilters(prev => ({ ...prev, class_level: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    >
+                      <option value="">Select Class Level</option>
+                      {(lookupData.class_levels || []).map(classLevel => (
+                        <option key={classLevel.id} value={classLevel.id}>{classLevel.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Term
+                    </label>
+                    <select
+                      value={createFilters.term_id}
+                      onChange={(e) => setCreateFilters(prev => ({ ...prev, term_id: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    >
+                      <option value="">Select Term</option>
+                      {(lookupData.terms || []).map(term => (
+                        <option key={term.id} value={String(term.id)}>{term.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Session
+                    </label>
+                    <select
+                      value={createFilters.session_id}
+                      onChange={(e) => setCreateFilters(prev => ({ ...prev, session_id: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    >
+                      <option value="">Select Session</option>
+                      {(lookupData.sessions || []).map(session => (
+                        <option key={session.id} value={String(session.id)}>{session.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex justify-end">
+                  <button
+                    onClick={handleCreateFiltersSubmit}
+                    className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Next: Add Questions
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 space-y-4">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  Add Questions ({manualQuestions.length})
+                </h4>
+
+                {manualQuestions.map((question, index) => (
+                  <div key={index} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <h5 className="text-sm font-medium text-gray-700">Question {index + 1}</h5>
+                      <button
+                        onClick={() => removeManualQuestion(index)}
+                        className="p-2 text-gray-400 hover:text-gray-600 rounded-lg"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Question Text
+                      </label>
+                      <textarea
+                        value={question.question_text}
+                        onChange={(e) => updateManualQuestion(index, 'question_text', e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Question Type
+                      </label>
+                      <select
+                        value={question.question_type}
+                        onChange={(e) => updateManualQuestion(index, 'question_type', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      >
+                        <option value="multiple_choice">Multiple Choice</option>
+                        <option value="true_false">True/False</option>
+                      </select>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {(question.question_type === 'true_false' ? ['A', 'B'] : ['A', 'B', 'C', 'D']).map(option => (
+                        <div key={option}>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Option {option} {question.question_type === 'true_false' ? (option === 'A' ? '(True)' : '(False)') : ''}
+                          </label>
+                          <input
+                            type="text"
+                            value={question[`option_${option.toLowerCase()}` as keyof typeof question] || ''}
+                            onChange={(e) => updateManualQuestion(index, `option_${option.toLowerCase()}`, e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Correct Answer
+                      </label>
+                      <select
+                        value={question.correct_answer}
+                        onChange={(e) => updateManualQuestion(index, 'correct_answer', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      >
+                        {question.question_type === 'true_false' ? (
+                          <>
+                            <option value="A">A (True)</option>
+                            <option value="B">B (False)</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+                ))}
+
+                <div className="flex justify-between items-center">
+                  <button
+                    onClick={addAnotherQuestion}
+                    className="px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                  >
+                    Add Another Question
+                  </button>
+                  <button
+                    onClick={submitManualQuestions}
+                    disabled={creatingQuestions}
+                    className={`px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors ${creatingQuestions ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {creatingQuestions ? 'Creating...' : 'Create Questions'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={confirmDeleteQuestion}
+        isLoading={deleting}
+        title="Delete Question"
+        message="Are you sure you want to delete this question? This action cannot be undone."
+        confirmButtonText="Delete"
+        cancelButtonText="Cancel"
+      />
+    </div>
+  )
+}
