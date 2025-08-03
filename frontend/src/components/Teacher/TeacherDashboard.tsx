@@ -6,9 +6,10 @@ import { useNavigate } from 'react-router-dom'
 interface Question {
   id: number
   question_text: string
+  question_type: string
+  difficulty_level: string
   subject: string
   class_level: string
-  difficulty: string
   created_at: string
 }
 
@@ -293,18 +294,30 @@ export default function TeacherDashboard() {
                   <span>
                     {question.subject} • {question.class_level}
                   </span>
-                  <span style={{
-                    background: question.difficulty === 'Easy' ? '#dcfce7' : 
-                               question.difficulty === 'Medium' ? '#fef3c7' : '#fef2f2',
-                    color: question.difficulty === 'Easy' ? '#166534' : 
-                           question.difficulty === 'Medium' ? '#92400e' : '#dc2626',
-                    padding: '2px 4px',
-                    borderRadius: '3px',
-                    fontSize: '10px',
-                    fontWeight: '500'
-                  }}>
-                    {question.difficulty}
-                  </span>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <span style={{
+                      background: question.question_type === 'multiple_choice' ? '#dbeafe' : '#fef3c7',
+                      color: question.question_type === 'multiple_choice' ? '#1d4ed8' : '#92400e',
+                      padding: '2px 4px',
+                      borderRadius: '3px',
+                      fontSize: '10px',
+                      fontWeight: '500'
+                    }}>
+                      {question.question_type === 'multiple_choice' ? 'MC' : 'T/F'}
+                    </span>
+                    <span style={{
+                      background: question.difficulty_level === 'Easy' ? '#dcfce7' : 
+                                 question.difficulty_level === 'Medium' ? '#fef3c7' : '#fef2f2',
+                      color: question.difficulty_level === 'Easy' ? '#166534' : 
+                             question.difficulty_level === 'Medium' ? '#92400e' : '#dc2626',
+                      padding: '2px 4px',
+                      borderRadius: '3px',
+                      fontSize: '10px',
+                      fontWeight: '500'
+                    }}>
+                      {question.difficulty_level}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}

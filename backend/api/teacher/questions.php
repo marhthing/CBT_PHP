@@ -138,8 +138,18 @@ function handleGet($db, $user) {
             $params[] = $_GET['session'];
         }
         
+        if (isset($_GET['type']) && !empty($_GET['type'])) {
+            $where_conditions[] = 'question_type = ?';
+            $params[] = $_GET['type'];
+        }
+        
+        if (isset($_GET['difficulty']) && !empty($_GET['difficulty'])) {
+            $where_conditions[] = 'difficulty_level = ?';
+            $params[] = $_GET['difficulty'];
+        }
+        
         $sql = "
-            SELECT q.id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d,
+            SELECT q.id, q.question_text, q.question_type, q.difficulty_level, q.option_a, q.option_b, q.option_c, q.option_d,
                    q.correct_answer, s.name as subject_name, q.subject_id, q.class_level, 
                    q.term_id, q.session_id, q.created_at
             FROM questions q
@@ -171,7 +181,7 @@ function handlePost($db, $user) {
         
         // Validate required fields
         $required_fields = [
-            'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
+            'question_text', 'question_type', 'difficulty_level', 'option_a', 'option_b',
             'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
         ];
         Response::validateRequired($input, $required_fields);
@@ -189,13 +199,15 @@ function handlePost($db, $user) {
         // Insert question
         $stmt = $db->prepare("
             INSERT INTO questions (
-                question_text, option_a, option_b, option_c, option_d,
+                question_text, question_type, difficulty_level, option_a, option_b, option_c, option_d,
                 correct_answer, subject_id, class_level, term_id, session_id, teacher_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
             $input['question_text'],
+            $input['question_type'],
+            $input['difficulty_level'],
             $input['option_a'],
             $input['option_b'],
             $input['option_c'],
@@ -244,7 +256,7 @@ function handlePut($db, $user) {
         $params = [];
         
         $allowed_fields = [
-            'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
+            'question_text', 'question_type', 'difficulty_level', 'option_a', 'option_b', 'option_c', 'option_d',
             'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
         ];
         

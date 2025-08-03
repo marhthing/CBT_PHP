@@ -7,6 +7,8 @@ import ConfirmationModal from '../ui/ConfirmationModal'
 interface Question {
   id: number
   question_text: string
+  question_type: string
+  difficulty_level: string
   option_a: string
   option_b: string
   option_c: string
@@ -43,6 +45,8 @@ interface QuestionStats {
   total_questions: number
   by_subject: Record<string, number>
   by_class: Record<string, number>
+  by_difficulty: Record<string, number>
+  by_type: Record<string, number>
 }
 
 export default function TeacherAllQuestions() {
@@ -76,11 +80,15 @@ export default function TeacherAllQuestions() {
   const [classFilter, setClassFilter] = useState('')
   const [termFilter, setTermFilter] = useState('')
   const [sessionFilter, setSessionFilter] = useState('')
+  const [typeFilter, setTypeFilter] = useState('')
+  const [difficultyFilter, setDifficultyFilter] = useState('')
 
   // Manual question creation state
   const [showManualCreate, setShowManualCreate] = useState(false)
   const [manualQuestions, setManualQuestions] = useState<Array<{
     question_text: string
+    question_type: string
+    difficulty_level: string
     option_a: string
     option_b: string
     option_c: string
@@ -132,6 +140,8 @@ export default function TeacherAllQuestions() {
       if (classFilter) params.append('class', classFilter)
       if (termFilter) params.append('term', termFilter)
       if (sessionFilter) params.append('session', sessionFilter)
+      if (typeFilter) params.append('type', typeFilter)
+      if (difficultyFilter) params.append('difficulty', difficultyFilter)
       params.append('limit', '100')
 
       const response = await api.get(`/teacher/questions?${params.toString()}`)
@@ -142,7 +152,7 @@ export default function TeacherAllQuestions() {
     } finally {
       setLoading(false)
     }
-  }, [searchTerm, subjectFilter, classFilter, termFilter, sessionFilter])
+  }, [searchTerm, subjectFilter, classFilter, termFilter, sessionFilter, typeFilter, difficultyFilter])
 
   const fetchAssignments = useCallback(async () => {
     try {
@@ -166,7 +176,9 @@ export default function TeacherAllQuestions() {
     const stats: QuestionStats = {
       total_questions: questions.length,
       by_subject: {},
-      by_class: {}
+      by_class: {},
+      by_difficulty: {},
+      by_type: {}
     }
 
     questions.forEach(q => {
@@ -182,6 +194,20 @@ export default function TeacherAllQuestions() {
         stats.by_class[q.class_level]++
       } else {
         stats.by_class[q.class_level] = 1
+      }
+
+      // By difficulty
+      if (stats.by_difficulty[q.difficulty_level]) {
+        stats.by_difficulty[q.difficulty_level]++
+      } else {
+        stats.by_difficulty[q.difficulty_level] = 1
+      }
+
+      // By type
+      if (stats.by_type[q.question_type]) {
+        stats.by_type[q.question_type]++
+      } else {
+        stats.by_type[q.question_type] = 1
       }
     })
 
@@ -210,7 +236,7 @@ export default function TeacherAllQuestions() {
     }, 300)
     
     return () => clearTimeout(timeoutId)
-  }, [searchTerm, subjectFilter, classFilter, termFilter, sessionFilter, fetchQuestions])
+  }, [searchTerm, subjectFilter, classFilter, termFilter, sessionFilter, typeFilter, difficultyFilter, fetchQuestions])
 
   const deleteQuestion = useCallback((questionId: number) => {
     setQuestionToDelete(questionId)
@@ -245,6 +271,8 @@ export default function TeacherAllQuestions() {
     try {
       const response = await api.put(`/teacher/questions?id=${originalQuestion.id}`, {
         question_text: updatedQuestion.question_text,
+        question_type: updatedQuestion.question_type,
+        difficulty_level: updatedQuestion.difficulty_level,
         option_a: updatedQuestion.option_a,
         option_b: updatedQuestion.option_b,
         option_c: updatedQuestion.option_c,
@@ -361,6 +389,8 @@ export default function TeacherAllQuestions() {
     if (manualQuestions.length === 0) {
       setManualQuestions([{
         question_text: '',
+        question_type: 'multiple_choice',
+        difficulty_level: 'Easy',
         option_a: '',
         option_b: '',
         option_c: '',
@@ -373,6 +403,8 @@ export default function TeacherAllQuestions() {
   const addAnotherQuestion = useCallback(() => {
     setManualQuestions(prev => [...prev, {
       question_text: '',
+      question_type: 'multiple_choice',
+      difficulty_level: 'Easy',
       option_a: '',
       option_b: '',
       option_c: '',
@@ -386,17 +418,56 @@ export default function TeacherAllQuestions() {
   }, [])
 
   const updateManualQuestion = useCallback((index: number, field: string, value: string) => {
-    setManualQuestions(prev => prev.map((q, i) => 
-      i === index ? { ...q, [field]: value } : q
-    ))
+    setManualQuestions(prev => prev.map((q, i) => {
+      if (i === index) {
+        const updatedQuestion = { ...q, [field]: value }
+        
+        // Auto-set True/False options when question type changes to true_false
+        if (field === 'question_type' && value === 'true_false') {
+          updatedQuestion.option_a = 'True'
+          updatedQuestion.option_b = 'False'
+          updatedQuestion.option_c = ''
+          updatedQuestion.option_d = ''
+          // Reset correct answer to A if it was C or D
+          if (updatedQuestion.correct_answer === 'C' || updatedQuestion.correct_answer === 'D') {
+            updatedQuestion.correct_answer = 'A'
+          }
+        }
+        
+        return updatedQuestion
+      }
+      return q
+    }))
   }, [])
 
   const handleCreateQuestions = useCallback(async () => {
-    const validQuestions = manualQuestions.filter(q => 
-      q.question_text.trim() && q.option_a.trim() && q.option_b.trim()
-    )
+    // Validate all questions
+    for (let i = 0; i < manualQuestions.length; i++) {
+      const q = manualQuestions[i]
+      if (!q.question_text || !q.option_a || !q.option_b) {
+        setError(`Question ${i + 1} is incomplete. Please fill required fields.`)
+        return
+      }
+      
+      // For multiple choice, also validate options C and D
+      if (q.question_type === 'multiple_choice' && (!q.option_c || !q.option_d)) {
+        setError(`Question ${i + 1} is Multiple Choice but missing options C or D.`)
+        return
+      }
+      
+      // Validate correct answer based on question type
+      if (q.question_type === 'true_false' && !['A', 'B'].includes(q.correct_answer)) {
+        setError(`Question ${i + 1} is True/False but correct answer is not A or B.`)
+        return
+      }
+      
+      if (q.question_type === 'multiple_choice' && !['A', 'B', 'C', 'D'].includes(q.correct_answer)) {
+        setError(`Question ${i + 1} is Multiple Choice but correct answer is not A, B, C, or D.`)
+        return
+      }
+    }
 
-    if (validQuestions.length === 0) {
+    if (manualQuestions.length === 0) {
       setError('Please add at least one complete question')
       return
     }
@@ -405,25 +476,23 @@ export default function TeacherAllQuestions() {
     setError('')
 
     try {
-      const promises = validQuestions.map(question => 
-        api.post('/teacher/questions', {
-          ...question,
-          subject_id: parseInt(createFilters.subject_id),
-          class_level: createFilters.class_level,
-          term_id: parseInt(createFilters.term_id),
-          session_id: parseInt(createFilters.session_id)
-        })
-      )
+      const response = await api.post('/teacher/questions/bulk', {
+        questions: manualQuestions,
+        subject_id: parseInt(createFilters.subject_id),
+        class_level: createFilters.class_level,
+        term_id: parseInt(createFilters.term_id),
+        session_id: parseInt(createFilters.session_id)
+      })
 
-      await Promise.all(promises)
-      await fetchQuestions()
-      
-      setShowManualCreate(false)
-      setShowQuestionForm(false)
-      setManualQuestions([])
-      setCreateFilters({ subject_id: '', class_level: '', term_id: '', session_id: '' })
-      setSuccessMessage(`Successfully created ${validQuestions.length} questions!`)
-      setTimeout(() => setSuccessMessage(''), 3000)
+      if (response.data.success) {
+        await fetchQuestions()
+        setShowManualCreate(false)
+        setShowQuestionForm(false)
+        setManualQuestions([])
+        setCreateFilters({ subject_id: '', class_level: '', term_id: '', session_id: '' })
+        setSuccessMessage(`Successfully created ${response.data.data.created_count || manualQuestions.length} questions!`)
+        setTimeout(() => setSuccessMessage(''), 3000)
+      }
     } catch (error: any) {
       console.error('Failed to create questions:', error)
       setError('Failed to create questions: ' + (error.response?.data?.message || error.message))
@@ -453,12 +522,12 @@ export default function TeacherAllQuestions() {
       color: '#10b981'
     },
     {
-      title: 'Assignments',
-      value: assignments.length,
+      title: 'Question Types',
+      value: Object.keys(stats?.by_type || {}).length,
       icon: FileText,
       color: '#f59e0b'
     }
-  ], [stats, assignments])
+  ], [stats])
 
   // Check if any changes were made to the editing question
   const hasUnsavedChanges = useCallback(() => {
@@ -466,6 +535,8 @@ export default function TeacherAllQuestions() {
     
     return (
       editingQuestion.question_text !== originalQuestion.question_text ||
+      editingQuestion.question_type !== originalQuestion.question_type ||
+      editingQuestion.difficulty_level !== originalQuestion.difficulty_level ||
       editingQuestion.option_a !== originalQuestion.option_a ||
       editingQuestion.option_b !== originalQuestion.option_b ||
       editingQuestion.option_c !== originalQuestion.option_c ||
@@ -779,6 +850,39 @@ export default function TeacherAllQuestions() {
               <option key={session.id} value={session.id.toString()}>{session.name}</option>
             ))}
           </select>
+
+          <select
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            style={{
+              padding: '12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              fontSize: '14px',
+              backgroundColor: 'white'
+            }}
+          >
+            <option value="">All Types</option>
+            <option value="multiple_choice">Multiple Choice</option>
+            <option value="true_false">True/False</option>
+          </select>
+
+          <select
+            value={difficultyFilter}
+            onChange={(e) => setDifficultyFilter(e.target.value)}
+            style={{
+              padding: '12px',
+              border: '1px solid #d1d5db',
+              borderRadius: '8px',
+              fontSize: '14px',
+              backgroundColor: 'white'
+            }}
+          >
+            <option value="">All Difficulties</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
         </div>
       </div>
 
@@ -813,7 +917,7 @@ export default function TeacherAllQuestions() {
               No questions found
             </h3>
             <p style={{ margin: 0 }}>
-              {searchTerm || subjectFilter || classFilter || termFilter || sessionFilter
+              {searchTerm || subjectFilter || classFilter || termFilter || sessionFilter || typeFilter || difficultyFilter
                 ? 'Try adjusting your filters'
                 : 'No questions have been created yet'
               }
@@ -858,12 +962,36 @@ export default function TeacherAllQuestions() {
                       }}>
                         Q{index + 1}
                       </span>
-                      <span style={{
-                        fontSize: '14px',
-                        color: '#6b7280'
-                      }}>
-                        {question.subject_name} • {question.class_level}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{
+                          fontSize: '14px',
+                          color: '#6b7280'
+                        }}>
+                          {question.subject_name} • {question.class_level}
+                        </span>
+                        <span style={{
+                          background: question.question_type === 'multiple_choice' ? '#dbeafe' : '#fef3c7',
+                          color: question.question_type === 'multiple_choice' ? '#1d4ed8' : '#92400e',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '500'
+                        }}>
+                          {question.question_type === 'multiple_choice' ? 'MC' : 'T/F'}
+                        </span>
+                        <span style={{
+                          background: question.difficulty_level === 'Easy' ? '#dcfce7' : 
+                                     question.difficulty_level === 'Medium' ? '#fef3c7' : '#fef2f2',
+                          color: question.difficulty_level === 'Easy' ? '#166534' : 
+                                 question.difficulty_level === 'Medium' ? '#92400e' : '#dc2626',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '500'
+                        }}>
+                          {question.difficulty_level}
+                        </span>
+                      </div>
                     </div>
                     {editingQuestion?.id === question.id ? (
                       <textarea
@@ -1814,6 +1942,60 @@ export default function TeacherAllQuestions() {
                           color: '#374151',
                           marginBottom: '4px'
                         }}>
+                          Question Type *
+                        </label>
+                        <select
+                          value={question.question_type}
+                          onChange={(e) => updateManualQuestion(index, 'question_type', e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '8px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            fontSize: '14px'
+                          }}
+                        >
+                          <option value="multiple_choice">Multiple Choice</option>
+                          <option value="true_false">True/False</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{
+                          display: 'block',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          color: '#374151',
+                          marginBottom: '4px'
+                        }}>
+                          Difficulty Level *
+                        </label>
+                        <select
+                          value={question.difficulty_level}
+                          onChange={(e) => updateManualQuestion(index, 'difficulty_level', e.target.value)}
+                          style={{
+                            width: '100%',
+                            padding: '8px',
+                            border: '1px solid #d1d5db',
+                            borderRadius: '6px',
+                            fontSize: '14px'
+                          }}
+                        >
+                          <option value="Easy">Easy</option>
+                          <option value="Medium">Medium</option>
+                          <option value="Hard">Hard</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div>
+                        <label style={{
+                          display: 'block',
+                          fontSize: '14px',
+                          fontWeight: '500',
+                          color: '#374151',
+                          marginBottom: '4px'
+                        }}>
                           Option A *
                         </label>
                         <input
@@ -1862,20 +2044,23 @@ export default function TeacherAllQuestions() {
                           color: '#374151',
                           marginBottom: '4px'
                         }}>
-                          Option C
+                          Option C {question.question_type === 'multiple_choice' ? '*' : ''}
                         </label>
                         <input
                           type="text"
                           value={question.option_c}
                           onChange={(e) => updateManualQuestion(index, 'option_c', e.target.value)}
+                          disabled={question.question_type === 'true_false'}
                           style={{
                             width: '100%',
                             padding: '8px',
                             border: '1px solid #d1d5db',
                             borderRadius: '6px',
-                            fontSize: '14px'
+                            fontSize: '14px',
+                            backgroundColor: question.question_type === 'true_false' ? '#f9fafb' : 'white',
+                            opacity: question.question_type === 'true_false' ? 0.5 : 1
                           }}
-                          placeholder="Option C (optional)"
+                          placeholder={question.question_type === 'multiple_choice' ? "Option C" : "Not used for True/False"}
                         />
                       </div>
                       <div>
@@ -1886,20 +2071,23 @@ export default function TeacherAllQuestions() {
                           color: '#374151',
                           marginBottom: '4px'
                         }}>
-                          Option D
+                          Option D {question.question_type === 'multiple_choice' ? '*' : ''}
                         </label>
                         <input
                           type="text"
                           value={question.option_d}
                           onChange={(e) => updateManualQuestion(index, 'option_d', e.target.value)}
+                          disabled={question.question_type === 'true_false'}
                           style={{
                             width: '100%',
                             padding: '8px',
                             border: '1px solid #d1d5db',
                             borderRadius: '6px',
-                            fontSize: '14px'
+                            fontSize: '14px',
+                            backgroundColor: question.question_type === 'true_false' ? '#f9fafb' : 'white',
+                            opacity: question.question_type === 'true_false' ? 0.5 : 1
                           }}
-                          placeholder="Option D (optional)"
+                          placeholder={question.question_type === 'multiple_choice' ? "Option D" : "Not used for True/False"}
                         />
                       </div>
                     </div>
@@ -1925,10 +2113,14 @@ export default function TeacherAllQuestions() {
                           fontSize: '14px'
                         }}
                       >
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
+                        <option value="A">A - {question.option_a || 'Option A'}</option>
+                        <option value="B">B - {question.option_b || 'Option B'}</option>
+                        {question.question_type === 'multiple_choice' && (
+                          <>
+                            <option value="C">C - {question.option_c || 'Option C'}</option>
+                            <option value="D">D - {question.option_d || 'Option D'}</option>
+                          </>
+                        )}
                       </select>
                     </div>
                   </div>
