@@ -121,7 +121,7 @@ try {
                              tc.duration_minutes, tc.total_questions, tc.term_id, 
                              tc.session_id, tc.is_active, tc.is_activated, tc.expires_at,
                              tc.created_by, tc.created_at, tc.description,
-                             tc.pass_score, tc.activated_at, tc.batch_id,
+                             tc.pass_score, tc.activated_at, tc.batch_id, tc.test_type,
                              s.name, t.name, sess.name, u.full_name
                     ORDER BY tc.created_at DESC
                     LIMIT ? OFFSET ?

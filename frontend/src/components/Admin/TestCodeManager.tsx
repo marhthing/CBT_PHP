@@ -26,6 +26,7 @@ interface TestCode {
   expires_at: string
   created_by_name: string
   batch_id?: string
+  test_type?: string
 }
 
 interface LookupData {
@@ -244,7 +245,8 @@ export default function TestCodeManager() {
           created_at: new Date().toISOString(),
           expires_at: createForm.expires_at,
           created_by_name: 'admin',
-          batch_id: response.data.data.batch_id
+          batch_id: response.data.data.batch_id,
+          test_type: createForm.test_type
         }))
         
         setTestCodes(prevCodes => [...prevCodes, ...newCodes])
@@ -662,6 +664,7 @@ export default function TestCodeManager() {
               }}>
                 <div><strong>Subject:</strong> {batch.codes[0].subject_name}</div>
                 <div><strong>Class:</strong> {batch.codes[0].class_level}</div>
+                <div><strong>Type:</strong> {batch.codes[0].test_type === 'examination' ? 'Examination' : 'Test'}</div>
                 <div><strong>Duration:</strong> {batch.codes[0].duration_minutes} minutes</div>
                 <div><strong>Questions:</strong> {batch.codes[0].total_questions}</div>
                 {batch.hasUsedCodes && (
@@ -934,6 +937,7 @@ export default function TestCodeManager() {
               }}>
                 <div><strong>Subject:</strong> {selectedBatch.codes[0].subject_name}</div>
                 <div><strong>Class:</strong> {selectedBatch.codes[0].class_level}</div>
+                <div><strong>Type:</strong> {selectedBatch.codes[0].test_type === 'examination' ? 'Examination' : 'Test'}</div>
                 <div><strong>Duration:</strong> {selectedBatch.codes[0].duration_minutes} minutes</div>
                 <div><strong>Questions:</strong> {selectedBatch.codes[0].total_questions}</div>
                 <div><strong>Status:</strong> 
