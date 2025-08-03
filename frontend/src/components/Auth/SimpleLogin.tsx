@@ -22,21 +22,20 @@ export default function SimpleLogin() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 to-blue-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-lg bg-blue-600 mb-4 shadow-sm">
-            <span className="text-white text-sm font-medium tracking-wide">SFCS</span>
-          </div>
-          <h1 className="text-2xl font-semibold text-blue-900 mb-2">
-            CBT Portal
-          </h1>
-          <p className="text-blue-700 text-sm">
-            Sure Foundation Comprehensive School
-          </p>
-        </div>
-
         {/* Login Form */}
         <div className="bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-sky-200 p-6">
+          {/* Header inside form */}
+          <div className="text-center mb-6">
+            <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-lg bg-blue-600 mb-4 shadow-sm">
+              <span className="text-white text-sm font-medium tracking-wide">SFCS</span>
+            </div>
+            <h1 className="text-2xl font-semibold text-blue-900 mb-2">
+              CBT Portal
+            </h1>
+            <p className="text-blue-700 text-sm">
+              Sure Foundation Comprehensive School
+            </p>
+          </div>
           {error && (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-md text-xs">
               {error}
