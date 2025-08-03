@@ -39,6 +39,8 @@ export default function AllQuestions() {
   const [loading, setLoading] = useState(true)
 
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
+  const [originalQuestion, setOriginalQuestion] = useState<Question | null>(null)
+  const [savingEdit, setSavingEdit] = useState(false)
   const [showBulkUpload, setShowBulkUpload] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
@@ -153,8 +155,11 @@ export default function AllQuestions() {
   }, [fetchQuestions, fetchQuestionStats])
 
   const updateQuestion = useCallback(async (updatedQuestion: Question) => {
+    if (!originalQuestion) return
+    
+    setSavingEdit(true)
     try {
-      const response = await api.put(`/admin/questions/${updatedQuestion.id}`, {
+      const response = await api.put(`/admin/questions/${originalQuestion.id}`, {
         question_text: updatedQuestion.question_text,
         question_type: updatedQuestion.question_type,
         option_a: updatedQuestion.option_a,
@@ -167,14 +172,17 @@ export default function AllQuestions() {
       if (response.data.success) {
         await fetchQuestions()
         setEditingQuestion(null)
+        setOriginalQuestion(null)
         setSuccessMessage('Question updated successfully!')
         setTimeout(() => setSuccessMessage(''), 3000)
       }
     } catch (error: any) {
       console.error('Failed to update question:', error)
       setError('Failed to update question: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setSavingEdit(false)
     }
-  }, [fetchQuestions])
+  }, [fetchQuestions, originalQuestion])
 
   const handleBulkUpload = useCallback(async () => {
     if (!selectedFile || !defaultTermId || !defaultSessionId) {
@@ -326,6 +334,21 @@ export default function AllQuestions() {
   const removeManualQuestion = useCallback((index: number) => {
     setManualQuestions(prev => prev.filter((_, i) => i !== index))
   }, [])
+
+  // Check if any changes were made to the editing question
+  const hasUnsavedChanges = useCallback(() => {
+    if (!editingQuestion || !originalQuestion) return false
+    
+    return (
+      editingQuestion.question_text !== originalQuestion.question_text ||
+      editingQuestion.question_type !== originalQuestion.question_type ||
+      editingQuestion.option_a !== originalQuestion.option_a ||
+      editingQuestion.option_b !== originalQuestion.option_b ||
+      editingQuestion.option_c !== originalQuestion.option_c ||
+      editingQuestion.option_d !== originalQuestion.option_d ||
+      editingQuestion.correct_answer !== originalQuestion.correct_answer
+    )
+  }, [editingQuestion, originalQuestion])
 
 
 
@@ -841,7 +864,10 @@ export default function AllQuestions() {
                     gap: '8px'
                   }}>
                     <button
-                      onClick={() => setEditingQuestion(question)}
+                      onClick={() => {
+                        setOriginalQuestion(question)
+                        setEditingQuestion({ ...question })
+                      }}
                       style={{
                         padding: '8px',
                         background: '#3b82f6',
@@ -967,10 +993,13 @@ export default function AllQuestions() {
                 color: '#1f2937',
                 margin: 0
               }}>
-                Edit Question #{editingQuestion.id}
+                Edit Question #{originalQuestion?.id || editingQuestion.id}
               </h3>
               <button
-                onClick={() => setEditingQuestion(null)}
+                onClick={() => {
+                  setEditingQuestion(null)
+                  setOriginalQuestion(null)
+                }}
                 style={{
                   padding: '8px',
                   background: 'transparent',
@@ -1134,7 +1163,10 @@ export default function AllQuestions() {
                 marginTop: '8px'
               }}>
                 <button
-                  onClick={() => setEditingQuestion(null)}
+                  onClick={() => {
+                    setEditingQuestion(null)
+                    setOriginalQuestion(null)
+                  }}
                   style={{
                     padding: '12px 20px',
                     background: '#6b7280',
@@ -1150,22 +1182,22 @@ export default function AllQuestions() {
                 </button>
                 <button
                   onClick={() => editingQuestion && updateQuestion(editingQuestion)}
-                  disabled={loading}
+                  disabled={savingEdit || !hasUnsavedChanges()}
                   style={{
                     padding: '12px 20px',
-                    background: loading ? '#9ca3af' : '#3b82f6',
+                    background: (savingEdit || !hasUnsavedChanges()) ? '#9ca3af' : '#3b82f6',
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
                     fontSize: '14px',
                     fontWeight: '500',
-                    cursor: loading ? 'not-allowed' : 'pointer',
+                    cursor: (savingEdit || !hasUnsavedChanges()) ? 'not-allowed' : 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px'
                   }}
                 >
-                  {loading ? (
+                  {savingEdit ? (
                     <>
                       <div style={{
                         width: '16px',
