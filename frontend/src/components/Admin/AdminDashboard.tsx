@@ -71,10 +71,10 @@ export default function AdminDashboard() {
   // Memoized fetch function with retry logic
   const fetchDashboardData = useCallback(async (retryCount = 0) => {
     const maxRetries = 3
-    
+
     try {
-      console.log(`Fetching dashboard data (attempt ${retryCount + 1})`)
-      
+      //console.log(`Fetching dashboard data (attempt ${retryCount + 1})`)
+
       // Fetch data sequentially to reduce server load
       const statsResponse = await api.get('/admin/dashboard-stats')
       await new Promise(resolve => setTimeout(resolve, 500)) // Small delay
@@ -85,19 +85,19 @@ export default function AdminDashboard() {
       setError('') // Clear any previous errors
     } catch (error: any) {
       console.error(`Failed to fetch dashboard data (attempt ${retryCount + 1}):`, error.message)
-      
+
       if (retryCount < maxRetries && error.code === 'ECONNABORTED') {
         // Retry with exponential backoff for timeout errors
         setRetrying(true)
         const delay = Math.min(1000 * Math.pow(2, retryCount), 5000)
-        console.log(`Retrying in ${delay}ms...`)
+        //console.log(`Retrying in ${delay}ms...`)
         setTimeout(() => {
           setRetrying(false)
           fetchDashboardData(retryCount + 1)
         }, delay)
         return
       }
-      
+
       setError('Failed to load dashboard data. Please try refreshing the page.')
     } finally {
       setLoading(false)
@@ -119,10 +119,10 @@ export default function AdminDashboard() {
 
     // Update server time immediately
     updateServerTime()
-    
+
     // Then update every second
     const timeInterval = setInterval(updateServerTime, 1000)
-    
+
     return () => clearInterval(timeInterval)
   }, [])
 
@@ -141,10 +141,10 @@ export default function AdminDashboard() {
 
     // Update immediately
     updateOtherMetrics()
-    
+
     // Then update every 30 seconds
     const metricsInterval = setInterval(updateOtherMetrics, 30000)
-    
+
     return () => clearInterval(metricsInterval)
   }, [healthData])
 
@@ -166,7 +166,7 @@ export default function AdminDashboard() {
         await api.get('/health')
         const endTime = performance.now()
         const responseTime = Math.round(endTime - startTime)
-        
+
         if (responseTime < 100) {
           setApiResponseTime(`${responseTime}ms`)
         } else if (responseTime < 200) {
@@ -184,10 +184,10 @@ export default function AdminDashboard() {
 
     // Measure immediately
     measureApiResponseTime()
-    
+
     // Then measure every 2 seconds
     const apiInterval = setInterval(measureApiResponseTime, 2000)
-    
+
     return () => clearInterval(apiInterval)
   }, [])
 
@@ -955,7 +955,7 @@ export default function AdminDashboard() {
           }}>
             🔧 System Monitor
           </h2>
-          
+
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -973,7 +973,9 @@ export default function AdminDashboard() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                marginBottom: '6px'
+                marginBottom: '6Removing console.log statements and ensuring correct code formatting.
+```typescript
+px'
               }}>
                 <span style={{ fontSize: '14px' }}>⚡</span>
                 <h3 style={{
@@ -1208,7 +1210,7 @@ ${new Date(Date.now() - 7200000).toISOString()} - INFO - Database backup complet
                       a.download = `cbt-system-logs-${new Date().toISOString().split('T')[0]}.txt`;
                       a.click();
                       URL.revokeObjectURL(url);
-                      
+
                       // Show success message
                       setError('') // Clear any existing errors first
                       setTimeout(() => {
@@ -1244,7 +1246,7 @@ ${new Date(Date.now() - 7200000).toISOString()} - INFO - Database backup complet
                   <span>📂</span>
                   Logs
                 </button>
-                
+
                 <button
                   onClick={() => fetchHealthData()}
                   style={{
@@ -1328,7 +1330,7 @@ ${new Date(Date.now() - 7200000).toISOString()} - INFO - Database backup complet
                 ×
               </button>
             </div>
-            
+
             {healthData && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <div style={{
@@ -1363,7 +1365,7 @@ ${new Date(Date.now() - 7200000).toISOString()} - INFO - Database backup complet
                     </p>
                   </div>
                 </div>
-                
+
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -1392,7 +1394,7 @@ ${new Date(Date.now() - 7200000).toISOString()} - INFO - Database backup complet
                       {healthData.database}
                     </p>
                   </div>
-                  
+
                   <div style={{
                     padding: '12px',
                     background: '#f8fafc',
@@ -1416,7 +1418,7 @@ ${new Date(Date.now() - 7200000).toISOString()} - INFO - Database backup complet
                       {healthData.php_version}
                     </p>
                   </div>
-                  
+
                   <div style={{
                     padding: '12px',
                     background: '#f8fafc',
@@ -1440,7 +1442,7 @@ ${new Date(Date.now() - 7200000).toISOString()} - INFO - Database backup complet
                       {(healthData.memory_usage / 1024 / 1024).toFixed(1)} MB
                     </p>
                   </div>
-                  
+
                   <div style={{
                     padding: '12px',
                     background: '#f8fafc',
@@ -1464,7 +1466,7 @@ ${new Date(Date.now() - 7200000).toISOString()} - INFO - Database backup complet
                       {healthData.uptime} seconds
                     </p>
                   </div>
-                  
+
                   <div style={{
                     padding: '12px',
                     background: '#f8fafc',
@@ -1488,7 +1490,7 @@ ${new Date(Date.now() - 7200000).toISOString()} - INFO - Database backup complet
                       {healthData.environment}
                     </p>
                   </div>
-                  
+
                   <div style={{
                     padding: '12px',
                     background: '#f8fafc',
@@ -1513,7 +1515,7 @@ ${new Date(Date.now() - 7200000).toISOString()} - INFO - Database backup complet
                     </p>
                   </div>
                 </div>
-                
+
                 {healthData.issues && healthData.issues.length > 0 && (
                   <div style={{
                     padding: '12px 16px',

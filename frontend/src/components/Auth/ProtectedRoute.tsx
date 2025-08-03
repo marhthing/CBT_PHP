@@ -49,17 +49,16 @@ export default function ProtectedRoute({
   // Check role if required
   if (requiredRole && user.role !== requiredRole) {
     console.log(`ProtectedRoute: User role ${user.role} doesn't match required ${requiredRole}`)
-    
+
     // Redirect to user's appropriate dashboard
     const redirectPath = user.role === 'student' 
       ? '/student' 
       : user.role === 'teacher' 
       ? '/teacher' 
       : '/admin'
-    
+
     return <Navigate to={redirectPath} replace />
   }
 
-  console.log(`ProtectedRoute: Access granted for user ${user.username} with role ${user.role}`)
   return <>{children}</>
 }
