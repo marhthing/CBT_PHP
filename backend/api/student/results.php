@@ -30,11 +30,12 @@ try {
             tr.submitted_at,
             tc.code,
             tc.title,
-            tc.subject,
+            s.name as subject,
             tc.class_level,
             tc.duration_minutes
         FROM test_results tr
         JOIN test_codes tc ON tr.test_code_id = tc.id
+        LEFT JOIN subjects s ON tc.subject_id = s.id
         WHERE tr.student_id = ?
         ORDER BY tr.submitted_at DESC
     ";

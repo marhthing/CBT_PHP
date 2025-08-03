@@ -26,7 +26,7 @@ try {
     // Get available test codes for student
     $stmt = $db->prepare("
         SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level,
-               tc.duration_minutes, tc.question_count, tc.is_active, tc.is_activated,
+               tc.duration_minutes, tc.total_questions as question_count, tc.is_active, tc.is_activated,
                tc.expires_at
         FROM test_codes tc
         LEFT JOIN subjects s ON tc.subject_id = s.id

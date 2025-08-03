@@ -28,11 +28,9 @@ interface TestResult {
 export default function StudentDashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [testCode, setTestCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [availableTests, setAvailableTests] = useState<TestCode[]>([])
   const [recentResults, setRecentResults] = useState<TestResult[]>([])
-  const [error, setError] = useState('')
 
   useEffect(() => {
     fetchAvailableTests()
@@ -57,30 +55,7 @@ export default function StudentDashboard() {
     }
   }
 
-  const handleStartTest = async (code?: string) => {
-    const testCodeToUse = code || testCode
-    if (!testCodeToUse.trim()) {
-      setError('Please enter a test code')
-      return
-    }
 
-    setLoading(true)
-    setError('')
-
-    try {
-      const response = await api.post('/student/validate-test-code', {
-        test_code: testCodeToUse.toUpperCase()
-      })
-      
-      if (response.data.success) {
-        navigate(`/student/test/${testCodeToUse.toUpperCase()}`)
-      }
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Invalid test code')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <div style={{
@@ -109,11 +84,11 @@ export default function StudentDashboard() {
           opacity: 0.9,
           margin: '0'
         }}>
-          Ready to take your test? Enter a test code below
+          View your dashboard and take tests when ready
         </p>
       </div>
 
-      {/* Test Code Input */}
+      {/* Quick Actions */}
       <div style={{
         background: 'white',
         padding: '20px 16px',
@@ -127,58 +102,56 @@ export default function StudentDashboard() {
           color: '#1e293b',
           margin: '0 0 12px 0'
         }}>
-          Enter Test Code
+          Quick Actions
         </h2>
         
-        {error && (
-          <div style={{
-            background: '#fef2f2',
-            border: '1px solid #fecaca',
-            color: '#dc2626',
-            padding: '10px 12px',
-            borderRadius: '6px',
-            marginBottom: '12px',
-            fontSize: '13px',
-            fontWeight: '500'
-          }}>
-            {error}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
-          <input
-            type="text"
-            value={testCode}
-            onChange={(e) => setTestCode(e.target.value.toUpperCase())}
-            placeholder="Enter test code (e.g. ABC123)"
-            style={{
-              flex: 1,
-              padding: '12px',
-              border: '2px solid #e2e8f0',
-              borderRadius: '8px',
-              fontSize: '14px',
-              outline: 'none',
-              textTransform: 'uppercase'
-            }}
-            onFocus={(e) => e.target.style.borderColor = '#3b82f6'}
-            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-          />
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: '12px'
+        }}>
           <button
-            onClick={() => handleStartTest()}
-            disabled={loading}
+            onClick={() => navigate('/student/test')}
             style={{
-              background: loading ? '#94a3b8' : 'linear-gradient(135deg, #1e40af, #3b82f6)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
               color: 'white',
               border: 'none',
-              padding: '12px 16px',
+              padding: '16px 12px',
               borderRadius: '8px',
               fontSize: '13px',
               fontWeight: '600',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              whiteSpace: 'nowrap'
+              cursor: 'pointer',
+              textAlign: 'center'
             }}
           >
-            {loading ? 'Starting...' : 'Start Test'}
+            <span style={{ fontSize: '20px' }}>📝</span>
+            Take Test
+          </button>
+          
+          <button
+            onClick={() => navigate('/student/results')}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'linear-gradient(135deg, #059669, #10b981)',
+              color: 'white',
+              border: 'none',
+              padding: '16px 12px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              textAlign: 'center'
+            }}
+          >
+            <span style={{ fontSize: '20px' }}>📊</span>
+            View Results
           </button>
         </div>
       </div>
@@ -246,8 +219,8 @@ export default function StudentDashboard() {
                 </div>
                 
                 <button
-                  onClick={() => handleStartTest(test.code)}
-                  disabled={!test.is_activated || loading}
+                  onClick={() => navigate(`/student/test?code=${test.code}`)}
+                  disabled={!test.is_activated}
                   style={{
                     background: test.is_activated ? '#1e40af' : '#94a3b8',
                     color: 'white',

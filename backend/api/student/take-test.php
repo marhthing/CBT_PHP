@@ -26,9 +26,10 @@ try {
     
     // Get test information and validate
     $stmt = $db->prepare("
-        SELECT id, code, title, subject, class_level, duration_minutes, question_count, is_active, expires_at
-        FROM test_codes 
-        WHERE code = ? AND is_active = true AND expires_at > CURRENT_TIMESTAMP
+        SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level, tc.duration_minutes, tc.total_questions as question_count, tc.is_active, tc.expires_at
+        FROM test_codes tc
+        LEFT JOIN subjects s ON tc.subject_id = s.id
+        WHERE tc.code = ? AND tc.is_active = true AND tc.expires_at > CURRENT_TIMESTAMP
     ");
     
     $stmt->execute([$test_code]);

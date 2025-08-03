@@ -23,10 +23,10 @@ try {
             tc.id,
             tc.code,
             tc.title,
-            tc.subject,
+            s.name as subject,
             tc.class_level,
             tc.duration_minutes,
-            tc.question_count,
+            tc.total_questions as question_count,
             tc.is_active,
             tc.expires_at,
             tc.created_at,
@@ -35,6 +35,7 @@ try {
                 ELSE false 
             END as completed
         FROM test_codes tc
+        LEFT JOIN subjects s ON tc.subject_id = s.id
         LEFT JOIN test_results tr ON tc.id = tr.test_code_id AND tr.student_id = ?
         WHERE tc.is_active = true 
         AND tc.expires_at > CURRENT_TIMESTAMP

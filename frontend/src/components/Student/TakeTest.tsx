@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { api } from '../../lib/api'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 interface Question {
   id: number
@@ -25,7 +25,9 @@ export default function TakeTest() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { testCode } = useParams()
-  const [inputTestCode, setInputTestCode] = useState(testCode || '')
+  const [searchParams] = useSearchParams()
+  const queryCode = searchParams.get('code')
+  const [inputTestCode, setInputTestCode] = useState(testCode || queryCode || '')
   const [testData, setTestData] = useState<TestData | null>(null)
   const [answers, setAnswers] = useState<{ [key: number]: string }>({})
   const [timeLeft, setTimeLeft] = useState(0)
@@ -36,10 +38,11 @@ export default function TakeTest() {
   const [testStarted, setTestStarted] = useState(false)
 
   useEffect(() => {
-    if (testCode) {
-      validateAndStartTest(testCode)
+    const codeToUse = testCode || queryCode
+    if (codeToUse) {
+      validateAndStartTest(codeToUse)
     }
-  }, [testCode])
+  }, [testCode, queryCode])
 
   useEffect(() => {
     if (testStarted && timeLeft > 0) {
