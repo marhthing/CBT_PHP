@@ -18,7 +18,7 @@ try {
     $db = $database->getConnection();
     
     // Get test code from URL parameter
-    $test_code = $_GET['code'] ?? '';
+    $test_code = $_GET['test_code'] ?? '';
     
     if (empty($test_code)) {
         Response::validationError('Test code is required');
@@ -26,10 +26,10 @@ try {
     
     // Get test information and validate
     $stmt = $db->prepare("
-        SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level, tc.duration_minutes, tc.total_questions as question_count, tc.is_active, tc.expires_at
+        SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level, tc.duration_minutes, tc.total_questions as question_count, tc.is_active, tc.expires_at, tc.subject_id, tc.term_id, tc.session_id
         FROM test_codes tc
         LEFT JOIN subjects s ON tc.subject_id = s.id
-        WHERE tc.code = ? AND tc.is_active = true AND tc.expires_at > CURRENT_TIMESTAMP
+        WHERE tc.code = ? AND tc.is_active = true AND tc.is_activated = true
     ");
     
     $stmt->execute([$test_code]);
@@ -55,12 +55,12 @@ try {
     $questions_stmt = $db->prepare("
         SELECT id, question_text, option_a, option_b, option_c, option_d
         FROM questions 
-        WHERE subject = ? AND class_level = ?
+        WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
         ORDER BY RANDOM()
         LIMIT ?
     ");
     
-    $questions_stmt->execute([$test['subject'], $test['class_level'], $test['question_count']]);
+    $questions_stmt->execute([$test['subject_id'], $test['class_level'], $test['term_id'], $test['session_id'], $test['question_count']]);
     $questions = $questions_stmt->fetchAll();
     
     if (count($questions) < $test['question_count']) {
@@ -70,7 +70,11 @@ try {
     Response::logRequest('student/take-test', 'GET', $user['id']);
     
     Response::success('Test data retrieved', [
-        'test_code' => $test,
+        'id' => $test['id'],
+        'title' => $test['title'],
+        'subject' => $test['subject'],
+        'class_level' => $test['class_level'],
+        'duration_minutes' => $test['duration_minutes'],
         'questions' => $questions
     ]);
     

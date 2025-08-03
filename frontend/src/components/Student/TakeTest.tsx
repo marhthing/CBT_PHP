@@ -21,13 +21,23 @@ interface TestData {
   questions: Question[]
 }
 
+interface TestPreview {
+  test_id: number
+  title: string
+  subject: string
+  class_level: string
+  duration_minutes: number
+  question_count: number
+}
+
 export default function TakeTest() {
-  const { user } = useAuth()
+  const { } = useAuth() // Remove unused user variable
   const navigate = useNavigate()
   const { testCode } = useParams()
   const [searchParams] = useSearchParams()
   const queryCode = searchParams.get('code')
   const [inputTestCode, setInputTestCode] = useState(testCode || queryCode || '')
+  const [testPreview, setTestPreview] = useState<TestPreview | null>(null)
   const [testData, setTestData] = useState<TestData | null>(null)
   const [answers, setAnswers] = useState<{ [key: number]: string }>({})
   const [timeLeft, setTimeLeft] = useState(0)
@@ -40,7 +50,8 @@ export default function TakeTest() {
   useEffect(() => {
     const codeToUse = testCode || queryCode
     if (codeToUse) {
-      validateAndStartTest(codeToUse)
+      setInputTestCode(codeToUse.toUpperCase())
+      setTimeout(() => validateTestCode(), 100) // Small delay to ensure function is available
     }
   }, [testCode, queryCode])
 
@@ -75,7 +86,9 @@ export default function TakeTest() {
       })
 
       if (response.data.success) {
-        validateAndStartTest(inputTestCode.toUpperCase())
+        // Set test preview data from validation response
+        setTestPreview(response.data.data)
+        setInputTestCode(inputTestCode.toUpperCase())
       }
     } catch (error: any) {
       setError(error.response?.data?.message || 'Invalid test code')
@@ -84,18 +97,19 @@ export default function TakeTest() {
     }
   }
 
-  const validateAndStartTest = async (code: string) => {
+  const startTest = async () => {
     setLoading(true)
     setError('')
 
     try {
-      const response = await api.get(`/student/take-test?test_code=${code}`)
+      const response = await api.get(`/student/take-test?test_code=${inputTestCode}`)
       
       if (response.data.success) {
         const test = response.data.data
         setTestData(test)
         setTimeLeft(test.duration_minutes * 60)
         setTestStarted(true)
+        setTestPreview(null) // Clear preview
       }
     } catch (error: any) {
       setError(error.response?.data?.message || 'Failed to start test')
@@ -126,9 +140,11 @@ export default function TakeTest() {
     setSubmitting(true)
 
     try {
+      const timeTaken = (testPreview?.duration_minutes || 0) * 60 - timeLeft
       await api.post('/student/submit-test', {
         test_code: inputTestCode.toUpperCase(),
-        answers
+        answers,
+        time_taken: timeTaken
       })
 
       navigate('/student/results', { 
@@ -150,6 +166,241 @@ export default function TakeTest() {
     if (timeLeft <= 300) return '#dc2626' // Red for last 5 minutes
     if (timeLeft <= 600) return '#f59e0b' // Yellow for last 10 minutes
     return '#059669' // Green
+  }
+
+  // Show test preview if we have validated test code but haven't started
+  if (testPreview && !testStarted) {
+    return (
+      <div style={{
+        maxWidth: '600px',
+        margin: '0 auto',
+        padding: '16px',
+        fontFamily: 'system-ui, -apple-system, sans-serif'
+      }}>
+        {/* Header */}
+        <div style={{
+          background: 'linear-gradient(135deg, #1e40af, #3b82f6)',
+          color: 'white',
+          padding: '20px',
+          borderRadius: '12px',
+          marginBottom: '20px',
+          textAlign: 'center'
+        }}>
+          <h1 style={{
+            fontSize: '20px',
+            fontWeight: 'bold',
+            margin: '0 0 8px 0'
+          }}>
+            Test Preview
+          </h1>
+          <p style={{ 
+            fontSize: '14px', 
+            opacity: 0.9,
+            margin: '0'
+          }}>
+            Review test details before starting
+          </p>
+        </div>
+
+        {/* Test Details Card */}
+        <div style={{
+          background: 'white',
+          padding: '24px',
+          borderRadius: '12px',
+          border: '1px solid #e2e8f0',
+          marginBottom: '20px'
+        }}>
+          <h2 style={{
+            fontSize: '18px',
+            fontWeight: '600',
+            color: '#1e293b',
+            margin: '0 0 16px 0'
+          }}>
+            {testPreview.title}
+          </h2>
+
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '16px',
+              marginBottom: '16px'
+            }}>
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#64748b',
+                  marginBottom: '4px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  Subject
+                </label>
+                <span style={{
+                  fontSize: '14px',
+                  color: '#1e293b',
+                  fontWeight: '500'
+                }}>
+                  {testPreview.subject}
+                </span>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#64748b',
+                  marginBottom: '4px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  Class
+                </label>
+                <span style={{
+                  fontSize: '14px',
+                  color: '#1e293b',
+                  fontWeight: '500'
+                }}>
+                  {testPreview.class_level}
+                </span>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#64748b',
+                  marginBottom: '4px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  Duration
+                </label>
+                <span style={{
+                  fontSize: '14px',
+                  color: '#1e293b',
+                  fontWeight: '500'
+                }}>
+                  {testPreview.duration_minutes} minutes
+                </span>
+              </div>
+
+              <div>
+                <label style={{
+                  display: 'block',
+                  fontSize: '12px',
+                  fontWeight: '600',
+                  color: '#64748b',
+                  marginBottom: '4px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  Questions
+                </label>
+                <span style={{
+                  fontSize: '14px',
+                  color: '#1e293b',
+                  fontWeight: '500'
+                }}>
+                  {testPreview.question_count} questions
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Test Instructions */}
+          <div style={{
+            background: '#f8fafc',
+            padding: '16px',
+            borderRadius: '8px',
+            marginBottom: '20px'
+          }}>
+            <h3 style={{
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#374151',
+              margin: '0 0 8px 0'
+            }}>
+              Instructions:
+            </h3>
+            <ul style={{
+              fontSize: '13px',
+              color: '#64748b',
+              margin: '0',
+              paddingLeft: '20px'
+            }}>
+              <li>Read each question carefully before selecting your answer</li>
+              <li>You can navigate between questions using the Previous/Next buttons</li>
+              <li>Your test will auto-submit when time expires</li>
+              <li>Make sure you have a stable internet connection</li>
+            </ul>
+          </div>
+
+          {error && (
+            <div style={{
+              background: '#fef2f2',
+              border: '1px solid #fecaca',
+              color: '#dc2626',
+              padding: '12px',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              fontSize: '14px'
+            }}>
+              {error}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div style={{
+            display: 'flex',
+            gap: '12px'
+          }}>
+            <button
+              onClick={() => {
+                setTestPreview(null)
+                setInputTestCode('')
+                setError('')
+              }}
+              style={{
+                flex: '1',
+                background: '#f1f5f9',
+                color: '#475569',
+                border: '1px solid #e2e8f0',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              Back to Code Entry
+            </button>
+            
+            <button
+              onClick={startTest}
+              disabled={loading}
+              style={{
+                flex: '2',
+                background: loading ? '#9ca3af' : 'linear-gradient(135deg, #16a34a, #22c55e)',
+                color: 'white',
+                border: 'none',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '600',
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
+            >
+              {loading ? 'Starting Test...' : 'Start Test'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   if (!testStarted) {
