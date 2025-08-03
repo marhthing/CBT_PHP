@@ -285,7 +285,7 @@ export default function AdminDashboard() {
               </h2>
               {recentActivities.length > 0 ? (
                 <div className="space-y-3">
-                  {recentActivities.slice(0, 6).map((activity) => (
+                  {recentActivities.slice(0, 4).map((activity) => (
                     <div
                       key={activity.id}
                       className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50"

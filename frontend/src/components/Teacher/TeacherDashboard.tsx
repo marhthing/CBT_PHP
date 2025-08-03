@@ -207,7 +207,7 @@ const TeacherDashboard: React.FC = () => {
               </h2>
               {stats.recent_questions.length > 0 ? (
                 <div className="space-y-3">
-                  {stats.recent_questions.slice(0, 5).map((question) => (
+                  {stats.recent_questions.slice(0, 4).map((question) => (
                     <div
                       key={question.id}
                       className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50"
