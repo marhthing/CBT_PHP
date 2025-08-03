@@ -356,45 +356,17 @@ export default function TakeTest() {
             </div>
           )}
 
-          {/* Action Buttons */}
+          {/* Action Button */}
           <div style={{
             display: 'flex',
-            gap: '12px'
+            justifyContent: 'center'
           }}>
-            <button
-              onClick={async () => {
-                // Revert test code from "using" back to "active"
-                try {
-                  await api.post('/student/cancel-test-code', {
-                    test_code: inputTestCode
-                  })
-                } catch (error) {
-                  console.warn('Failed to cancel test code:', error)
-                }
-                setTestPreview(null)
-                setInputTestCode('')
-                setError('')
-              }}
-              style={{
-                flex: '1',
-                background: '#f1f5f9',
-                color: '#475569',
-                border: '1px solid #e2e8f0',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: '600',
-                cursor: 'pointer'
-              }}
-            >
-              Back to Code Entry
-            </button>
-            
             <button
               onClick={startTest}
               disabled={loading}
               style={{
-                flex: '2',
+                width: '100%',
+                maxWidth: '300px',
                 background: loading ? '#9ca3af' : 'linear-gradient(135deg, #16a34a, #22c55e)',
                 color: 'white',
                 border: 'none',
