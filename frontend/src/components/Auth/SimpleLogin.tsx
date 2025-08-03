@@ -53,6 +53,7 @@ export default function SimpleLogin() {
                 name="identifier"
                 type="text"
                 required
+                autoComplete="username"
                 className="w-full px-3 py-2 border border-sky-300 rounded-md text-sm placeholder-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-sky-50/50"
                 placeholder="Enter username or registration number"
                 value={identifier}
@@ -69,6 +70,7 @@ export default function SimpleLogin() {
                 name="password"
                 type="password"
                 required
+                autoComplete="current-password"
                 className="w-full px-3 py-2 border border-sky-300 rounded-md text-sm placeholder-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-colors bg-sky-50/50"
                 placeholder="Enter your password"
                 value={password}
