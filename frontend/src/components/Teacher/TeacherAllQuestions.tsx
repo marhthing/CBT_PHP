@@ -436,7 +436,7 @@ export default function TeacherAllQuestions() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="loading-shimmer animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
   }
@@ -481,7 +481,7 @@ export default function TeacherAllQuestions() {
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="system-status-grid grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-lg border p-6">
             <div className="flex items-center">
               <div className="p-3 rounded-full bg-blue-100">
@@ -534,7 +534,7 @@ export default function TeacherAllQuestions() {
 
       {/* Search and Filters */}
       <div className="bg-white rounded-lg border p-6">
-        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+        <div className="responsive-grid grid grid-cols-1 md:grid-cols-6 gap-4">
           <div className="md:col-span-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -543,7 +543,7 @@ export default function TeacherAllQuestions() {
                 placeholder="Search questions..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus-visible:focus-visible"
               />
             </div>
           </div>
