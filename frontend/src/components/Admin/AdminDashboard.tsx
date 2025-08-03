@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../../lib/api'
 import ErrorNotification from '../ui/ErrorNotification'
-import { BarChart3, FileText, PlayCircle, Users, GraduationCap, Clock, Plus, UserPlus, BookOpen, Activity, Database, Server, Shield, HardDrive } from 'lucide-react'
+import { BarChart3, FileText, PlayCircle, Users, GraduationCap, Clock, Plus, UserPlus, BookOpen, Activity, Database } from 'lucide-react'
 
 interface DashboardStats {
   total_questions: number
@@ -269,7 +269,7 @@ export default function AdminDashboard() {
       title: 'System Health',
       description: 'Monitor system status',
       icon: Activity,
-      onClick: () => window.open('/health', '_blank'),
+      onClick: () => window.open('/api/health', '_blank'),
       color: '#f59e0b'
     }
   ], [navigate])
@@ -893,7 +893,7 @@ export default function AdminDashboard() {
             System Metrics
           </h2>
           <button
-            onClick={() => window.open('/health', '_blank')}
+            onClick={() => window.open('/api/health', '_blank')}
             style={{
               background: '#6b7280',
               color: 'white',
