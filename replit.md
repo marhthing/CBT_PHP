@@ -112,6 +112,29 @@ Preferred communication style: Simple, everyday language.
 - **Teacher**: username: `teacher1`, password: `password123`  
 - **Student**: reg_number: `2023001`, password: `password123`
 
+## Agent Setup Instructions
+
+When setting up this project from scratch, agents should ensure proper password security by updating all user password hashes in the database. The system uses PHP's `password_hash()` function with `PASSWORD_DEFAULT` for secure password storage.
+
+**Required Step**: After database creation and sample data insertion, run the password hash update script to convert all plain text passwords to properly hashed versions:
+
+```php
+// Update all user passwords to proper hashes
+$users = [
+    ['id' => 1, 'password' => 'password123'], // admin
+    ['id' => 2, 'password' => 'password123'], // teacher1  
+    ['id' => 3, 'password' => 'password123']  // student (2023001)
+];
+
+foreach ($users as $user) {
+    $hashed = password_hash($user['password'], PASSWORD_DEFAULT);
+    $stmt = $pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+    $stmt->execute([$hashed, $user['id']]);
+}
+```
+
+This ensures all authentication uses secure password verification via `password_verify()` rather than plain text comparison.
+
 # External Dependencies
 
 ## Core Dependencies
