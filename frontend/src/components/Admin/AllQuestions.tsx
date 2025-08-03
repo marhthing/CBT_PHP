@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
 import { Search, BookOpen, Edit, Trash2, BarChart3, FileText, GraduationCap, X, Save, Upload, Download, Plus } from 'lucide-react'
+import ConfirmationModal from '../ui/ConfirmationModal'
 
 interface Question {
   id: number
@@ -77,6 +78,11 @@ export default function AllQuestions() {
   })
   const [showQuestionForm, setShowQuestionForm] = useState(false)
   const [creatingQuestions, setCreatingQuestions] = useState(false)
+  
+  // Delete confirmation modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [questionToDelete, setQuestionToDelete] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   // Memoized fetch functions for performance
   const fetchQuestions = useCallback(async () => {
@@ -137,11 +143,17 @@ export default function AllQuestions() {
     return () => clearTimeout(timeoutId)
   }, [searchTerm, subjectFilter, classFilter, typeFilter, fetchQuestions])
 
-  const deleteQuestion = useCallback(async (questionId: number) => {
-    if (!confirm('Are you sure you want to delete this question?')) return
+  const deleteQuestion = useCallback((questionId: number) => {
+    setQuestionToDelete(questionId)
+    setShowDeleteModal(true)
+  }, [])
+
+  const confirmDeleteQuestion = useCallback(async () => {
+    if (!questionToDelete) return
     
+    setDeleting(true)
     try {
-      const response = await api.delete(`/admin/questions/${questionId}`)
+      const response = await api.delete(`/admin/questions/${questionToDelete}`)
       if (response.data.success) {
         await fetchQuestions()
         await fetchQuestionStats()
@@ -151,8 +163,12 @@ export default function AllQuestions() {
     } catch (error: any) {
       console.error('Failed to delete question:', error)
       setError('Failed to delete question: ' + (error.response?.data?.message || error.message))
+    } finally {
+      setDeleting(false)
+      setShowDeleteModal(false)
+      setQuestionToDelete(null)
     }
-  }, [fetchQuestions, fetchQuestionStats])
+  }, [fetchQuestions, fetchQuestionStats, questionToDelete])
 
   const updateQuestion = useCallback(async (updatedQuestion: Question) => {
     if (!originalQuestion) return
@@ -2080,6 +2096,22 @@ export default function AllQuestions() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setQuestionToDelete(null)
+        }}
+        onConfirm={confirmDeleteQuestion}
+        title="Delete Question"
+        message={questionToDelete ? `Are you sure you want to delete this question? This action cannot be undone.` : ""}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
+        loading={deleting}
+      />
     </div>
   )
 }

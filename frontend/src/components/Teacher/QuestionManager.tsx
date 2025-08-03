@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { api } from '../../lib/api'
+import ConfirmationModal from '../ui/ConfirmationModal'
 
 interface Question {
   id: number
@@ -40,6 +41,11 @@ export default function QuestionManager() {
   const [lookupData, setLookupData] = useState<any>({})
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
+  
+  // Delete confirmation modal states
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [questionToDelete, setQuestionToDelete] = useState<number | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     fetchQuestions()
@@ -96,14 +102,24 @@ export default function QuestionManager() {
     })
   }
 
-  const deleteQuestion = async (questionId: number) => {
-    if (!confirm('Are you sure you want to delete this question?')) return
+  const deleteQuestion = (questionId: number) => {
+    setQuestionToDelete(questionId)
+    setShowDeleteModal(true)
+  }
 
+  const confirmDeleteQuestion = async () => {
+    if (!questionToDelete) return
+    
+    setDeleting(true)
     try {
-      await api.delete(`/teacher/questions/${questionId}`)
-      setQuestions(prev => prev.filter(q => q.id !== questionId))
+      await api.delete(`/teacher/questions/${questionToDelete}`)
+      setQuestions(prev => prev.filter(q => q.id !== questionToDelete))
     } catch (error) {
       console.error('Failed to delete question:', error)
+    } finally {
+      setDeleting(false)
+      setShowDeleteModal(false)
+      setQuestionToDelete(null)
     }
   }
 
@@ -553,6 +569,22 @@ export default function QuestionManager() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false)
+          setQuestionToDelete(null)
+        }}
+        onConfirm={confirmDeleteQuestion}
+        title="Delete Question"
+        message={questionToDelete ? `Are you sure you want to delete this question? This action cannot be undone.` : ""}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
+        loading={deleting}
+      />
     </div>
   )
 }

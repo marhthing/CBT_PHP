@@ -9,6 +9,7 @@ export default function BulkUpload() {
   const [classLevel, setClassLevel] = useState('')
   const [difficulty, setDifficulty] = useState('medium')
   const [uploadResults, setUploadResults] = useState<any>(null)
+  const [error, setError] = useState('')
 
   const queryClient = useQueryClient()
 
@@ -56,17 +57,19 @@ export default function BulkUpload() {
       if (allowedTypes.includes(selectedFile.type)) {
         setFile(selectedFile)
         setUploadResults(null)
+        setError('')
       } else {
-        alert('Please select a CSV or Excel file')
+        setError('Please select a CSV or Excel file')
       }
     }
   }
 
   const handleUpload = () => {
     if (!file || !subject || !classLevel) {
-      alert('Please fill in all required fields and select a file')
+      setError('Please fill in all required fields and select a file')
       return
     }
+    setError('')
 
     const formData = new FormData()
     formData.append('file', file)
@@ -425,6 +428,20 @@ export default function BulkUpload() {
           {uploadMutation.isPending ? 'Uploading...' : 'Upload Questions'}
         </button>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div style={{
+          ...styles.alertError,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: '20px'
+        }}>
+          <AlertCircle size={16} style={{ color: '#ef4444' }} />
+          <strong>Error:</strong> {error}
+        </div>
+      )}
 
       {/* Upload Results */}
       {uploadResults && (
