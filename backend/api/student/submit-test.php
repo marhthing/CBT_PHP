@@ -118,7 +118,7 @@ try {
             $is_correct = isset($correct_answers[$question_id]) && 
                          strtoupper($student_answer) === strtoupper($correct_answers[$question_id]);
             
-            $answer_stmt->execute([$result_id, $question_id, strtoupper($student_answer), $is_correct]);
+            $answer_stmt->execute([$result_id, $question_id, strtoupper($student_answer), $is_correct ? 'true' : 'false']);
         }
         
         // Mark test code as used
