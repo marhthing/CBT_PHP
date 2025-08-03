@@ -7,8 +7,7 @@ import StudentDashboard from './components/Student/StudentDashboard'
 import TakeTest from './components/Student/TakeTest'
 import TestResults from './components/Student/TestResults'
 import TeacherDashboard from './components/Teacher/TeacherDashboard'
-import QuestionManager from './components/Teacher/QuestionManager'
-import BulkUpload from './components/Teacher/BulkUpload'
+import TeacherAllQuestions from './components/Teacher/TeacherAllQuestions'
 import AdminDashboard from './components/Admin/AdminDashboard'
 import TestCodeManager from './components/Admin/TestCodeManager'
 import TeacherAssignment from './components/Admin/TeacherAssignment'
@@ -117,15 +116,7 @@ function App() {
                   path="/teacher/questions"
                   element={
                     <ProtectedRoute requiredRole="teacher">
-                      <QuestionManager />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/teacher/upload"
-                  element={
-                    <ProtectedRoute requiredRole="teacher">
-                      <BulkUpload />
+                      <TeacherAllQuestions />
                     </ProtectedRoute>
                   }
                 />

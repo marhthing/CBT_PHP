@@ -128,6 +128,16 @@ function handleGet($db, $user) {
             $params[] = $_GET['class'];
         }
         
+        if (isset($_GET['term']) && !empty($_GET['term'])) {
+            $where_conditions[] = 'term_id = ?';
+            $params[] = $_GET['term'];
+        }
+        
+        if (isset($_GET['session']) && !empty($_GET['session'])) {
+            $where_conditions[] = 'session_id = ?';
+            $params[] = $_GET['session'];
+        }
+        
         $sql = "
             SELECT q.id, q.question_text, q.option_a, q.option_b, q.option_c, q.option_d,
                    q.correct_answer, s.name as subject_name, q.subject_id, q.class_level, 

@@ -46,8 +46,7 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
     if (user.role === 'teacher') {
       return [
         ...baseItems,
-        { name: 'Questions', path: '/teacher/questions', icon: '❓' },
-        { name: 'Upload Questions', path: '/teacher/upload', icon: '📤' }
+        { name: 'Question Bank', path: '/teacher/questions', icon: '📚' }
       ]
     }
 
