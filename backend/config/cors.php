@@ -4,7 +4,7 @@ class CORS {
     
     public static function handle() {
         // Get allowed origins from environment or use defaults
-        $allowed_origins = $_ENV['CORS_ALLOWED_ORIGINS'] ?? 'http://localhost:8000,http://localhost:5000,http://localhost:3000,http://0.0.0.0:8000,http://0.0.0.0:5000';
+        $allowed_origins = $_ENV['CORS_ALLOWED_ORIGINS'] ?? 'http://localhost:8000,http://localhost:5000,http://localhost:3000,http://0.0.0.0:8000,http://0.0.0.0:5000,http://127.0.0.1:8000';
         $origins = array_map('trim', explode(',', $allowed_origins));
         
         $allowed_methods = $_ENV['CORS_ALLOWED_METHODS'] ?? 'GET,POST,PUT,DELETE,OPTIONS,PATCH';
@@ -15,6 +15,7 @@ class CORS {
         
         // For Replit environment, allow broader origins
         if (strpos($origin, 'http://localhost:') === 0 || 
+            strpos($origin, 'http://127.0.0.1:') === 0 ||
             strpos($origin, 'http://0.0.0.0:') === 0 || 
             strpos($origin, '.replit.dev') !== false ||
             strpos($origin, '.replit.app') !== false ||
@@ -22,7 +23,7 @@ class CORS {
             in_array('*', $origins)) {
             header("Access-Control-Allow-Origin: " . ($origin ?: 'http://localhost:8000'));
         } else {
-            // Default to localhost:8000 for unified architecture
+            // Allow localhost:8000 by default since both frontend and backend are on same port
             header("Access-Control-Allow-Origin: http://localhost:8000");
         }
         
@@ -51,7 +52,7 @@ class CORS {
                "script-src 'self' 'unsafe-inline'; " .
                "style-src 'self' 'unsafe-inline' fonts.googleapis.com; " .
                "font-src 'self' fonts.gstatic.com; " .
-               "connect-src 'self' http://localhost:8000 http://0.0.0.0:8000; " .
+               "connect-src 'self' http://localhost:8000 http://127.0.0.1:8000 http://0.0.0.0:8000; " .
                "img-src 'self' data:;";
         header("Content-Security-Policy: " . $csp);
     }
