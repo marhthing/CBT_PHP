@@ -4,7 +4,7 @@ class CORS {
     
     public static function handle() {
         // Get allowed origins from environment or use defaults
-        $allowed_origins = $_ENV['CORS_ALLOWED_ORIGINS'] ?? 'http://localhost:8000,http://localhost:5000,http://localhost:3000,http://0.0.0.0:8000,http://0.0.0.0:5000,http://127.0.0.1:8000';
+        $allowed_origins = $_ENV['CORS_ALLOWED_ORIGINS'] ?? 'https://your-domain.infinityfreeapp.com,http://localhost:8000,http://localhost:5000,http://localhost:3000,http://0.0.0.0:8000,http://0.0.0.0:5000,http://127.0.0.1:8000';
         $origins = array_map('trim', explode(',', $allowed_origins));
         
         $allowed_methods = $_ENV['CORS_ALLOWED_METHODS'] ?? 'GET,POST,PUT,DELETE,OPTIONS,PATCH';

@@ -13,17 +13,23 @@ class EnvManager {
         
         // Set default environment variables if not already set
         $defaults = [
-            'API_BASE_URL' => 'http://0.0.0.0:8000',
-            'FRONTEND_URL' => 'http://0.0.0.0:8000', 
-            'BACKEND_PORT' => '8000',
-            'CORS_ORIGIN' => '*',
+            'API_BASE_URL' => 'https://your-domain.infinityfreeapp.com',
+            'FRONTEND_URL' => 'https://your-domain.infinityfreeapp.com', 
+            'BACKEND_PORT' => '80',
+            'CORS_ORIGIN' => 'https://your-domain.infinityfreeapp.com',
             'CORS_METHODS' => 'GET,POST,PUT,DELETE,OPTIONS,PATCH',
             'CORS_HEADERS' => 'Content-Type,Authorization,X-Requested-With',
-            'JWT_SECRET' => 'cbt-portal-secret-key-2025',
+            'JWT_SECRET' => 'your-unique-jwt-secret-key-here-change-this',
             'JWT_EXPIRY' => '86400',
             'APP_ENV' => 'production',
             'APP_DEBUG' => 'false',
-            'TIMEZONE' => 'UTC'
+            'TIMEZONE' => 'UTC',
+            // MySQL Database Configuration for InfinityFree
+            'DB_HOST' => 'sql200.infinityfree.com',
+            'DB_PORT' => '3306',
+            'DB_NAME' => '',  // Set your database name
+            'DB_USER' => '',  // Set your database username  
+            'DB_PASS' => ''   // Set your database password
         ];
         
         foreach ($defaults as $key => $value) {

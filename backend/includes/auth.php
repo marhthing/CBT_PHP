@@ -10,8 +10,8 @@ class Auth {
     public function __construct() {
         $database = new Database();
         $this->db = $database->getConnection();
-        $this->jwt_secret = $_ENV['JWT_SECRET'] ?? 'your-default-secret-key';
-        $this->jwt_expires_in = $_ENV['JWT_EXPIRES_IN'] ?? 86400; // 24 hours
+        $this->jwt_secret = $_ENV['JWT_SECRET'] ?? 'your-unique-jwt-secret-key-here-change-this';
+        $this->jwt_expires_in = $_ENV['JWT_EXPIRY'] ?? 86400; // 24 hours
     }
 
     // Generate JWT token
