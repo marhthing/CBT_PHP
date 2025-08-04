@@ -1,0 +1,43 @@
+Refused to load the stylesheet 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap' because it violates the following Content Security Policy directive: "style-src 'self' 'unsafe-inline'". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback.
+Understand this error
+index-CwAifkRx.js:62 Refused to connect to 'http://localhost:8000/auth/auto-login' because it violates the following Content Security Policy directive: "default-src 'self'". Note that 'connect-src' was not explicitly set, so 'default-src' is used as a fallback.
+
+(anonymous) @ index-CwAifkRx.js:62Understand this error
+login:1 Refused to load the stylesheet 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap' because it violates the following Content Security Policy directive: "style-src 'self' 'unsafe-inline'". Note that 'style-src-elem' was not explicitly set, so 'style-src' is used as a fallback.
+Understand this error
+index-CwAifkRx.js:62 Refused to connect to 'http://localhost:8000/auth/auto-login' because it violates the following Content Security Policy directive: "default-src 'self'". Note that 'connect-src' was not explicitly set, so 'default-src' is used as a fallback.
+
+(anonymous) @ index-CwAifkRx.js:62
+xhr @ index-CwAifkRx.js:62
+Gm @ index-CwAifkRx.js:64
+Promise.then
+_request @ index-CwAifkRx.js:65
+request @ index-CwAifkRx.js:64
+(anonymous) @ index-CwAifkRx.js:65
+(anonymous) @ index-CwAifkRx.js:60
+N @ index-CwAifkRx.js:65
+g @ index-CwAifkRx.js:245
+Mh @ index-CwAifkRx.js:48
+(anonymous) @ index-CwAifkRx.js:48
+Hc @ index-CwAifkRx.js:48
+ju @ index-CwAifkRx.js:48
+zu @ index-CwAifkRx.js:49
+Pg @ index-CwAifkRx.js:49Understand this error
+index-CwAifkRx.js:62 Refused to connect to 'http://localhost:8000/auth/auto-login' because it violates the following Content Security Policy directive: "default-src 'self'". Note that 'connect-src' was not explicitly set, so 'default-src' is used as a fallback.
+
+(anonymous) @ index-CwAifkRx.js:62
+xhr @ index-CwAifkRx.js:62
+Gm @ index-CwAifkRx.js:64
+Promise.then
+_request @ index-CwAifkRx.js:65
+request @ index-CwAifkRx.js:64
+(anonymous) @ index-CwAifkRx.js:65
+(anonymous) @ index-CwAifkRx.js:60
+N @ index-CwAifkRx.js:65
+g @ index-CwAifkRx.js:245
+Mh @ index-CwAifkRx.js:48
+(anonymous) @ index-CwAifkRx.js:48
+Hc @ index-CwAifkRx.js:48
+ju @ index-CwAifkRx.js:48
+zu @ index-CwAifkRx.js:49
+Pg @ index-CwAifkRx.js:49Understand this error

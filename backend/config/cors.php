@@ -46,8 +46,13 @@ class CORS {
         header("X-XSS-Protection: 1; mode=block");
         header("Referrer-Policy: strict-origin-when-cross-origin");
         
-        // Content Security Policy (basic)
-        $csp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;";
+        // Content Security Policy - Allow necessary connections for the app
+        $csp = "default-src 'self'; " .
+               "script-src 'self' 'unsafe-inline'; " .
+               "style-src 'self' 'unsafe-inline' fonts.googleapis.com; " .
+               "font-src 'self' fonts.gstatic.com; " .
+               "connect-src 'self' http://localhost:8000 http://0.0.0.0:8000; " .
+               "img-src 'self' data:;";
         header("Content-Security-Policy: " . $csp);
     }
     
