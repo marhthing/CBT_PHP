@@ -35,6 +35,7 @@ if (($_ENV['APP_ENV'] ?? 'production') === 'development') {
 date_default_timezone_set($_ENV['TIMEZONE'] ?? 'UTC');
 
 // Include necessary files
+require_once __DIR__ . '/config/env.php';
 require_once __DIR__ . '/config/cors.php';
 require_once __DIR__ . '/config/app.php';
 require_once __DIR__ . '/includes/response.php';
