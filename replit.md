@@ -6,6 +6,15 @@ This project is a Computer-Based Testing (CBT) Portal for secondary schools, pro
 
 Preferred communication style: Simple, everyday language.
 
+# Migration Notes
+
+Successfully migrated from Replit Agent to standard Replit environment on August 4, 2025:
+- Created PostgreSQL database and imported complete schema
+- Optimized API performance by combining multiple database queries
+- Added database indexes for improved query performance  
+- Both frontend (React/TypeScript on port 5000) and backend (PHP on port 8000) running successfully
+- All authentication and role-based access working properly
+
 # System Architecture
 
 ## Frontend Architecture

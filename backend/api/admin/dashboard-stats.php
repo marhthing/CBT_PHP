@@ -21,77 +21,41 @@ try {
     $database = new Database();
     $db = $database->getConnection();
 
-    // Get dashboard statistics
+    // Get dashboard statistics with optimized combined query
     $stats = [];
 
-    // Total questions
-    $stmt = $db->prepare("SELECT COUNT(*) as total FROM questions");
-    $stmt->execute();
-    $stats['total_questions'] = $stmt->fetch()['total'];
-
-    // Total test codes
-    $stmt = $db->prepare("SELECT COUNT(*) as total FROM test_codes");
-    $stmt->execute();
-    $stats['total_test_codes'] = $stmt->fetch()['total'];
-
-    // Active test codes
-    $stmt = $db->prepare("SELECT COUNT(*) as total FROM test_codes WHERE is_active = true AND is_activated = true");
-    $stmt->execute();
-    $stats['active_test_codes'] = $stmt->fetch()['total'];
-
-    // Total teachers
-    $stmt = $db->prepare("SELECT COUNT(*) as total FROM users WHERE role = 'teacher' AND is_active = true");
-    $stmt->execute();
-    $stats['total_teachers'] = $stmt->fetch()['total'];
-
-    // Total students
-    $stmt = $db->prepare("SELECT COUNT(*) as total FROM users WHERE role = 'student' AND is_active = true");
-    $stmt->execute();
-    $stats['total_students'] = $stmt->fetch()['total'];
-
-    // Recent tests (last 7 days)
+    // Combine multiple counts into a single query for better performance
     $stmt = $db->prepare("
-        SELECT COUNT(*) as total 
-        FROM test_results 
-        WHERE submitted_at >= NOW() - INTERVAL '7 days'
+        SELECT 
+            (SELECT COUNT(*) FROM questions) as total_questions,
+            (SELECT COUNT(*) FROM test_codes) as total_test_codes,
+            (SELECT COUNT(*) FROM test_codes WHERE is_active = true AND is_activated = true) as active_test_codes,
+            (SELECT COUNT(*) FROM test_codes WHERE is_active = false OR is_activated = false) as inactive_test_codes,
+            (SELECT COUNT(*) FROM users WHERE role = 'teacher' AND is_active = true) as total_teachers,
+            (SELECT COUNT(*) FROM users WHERE role = 'student' AND is_active = true) as total_students,
+            (SELECT COUNT(*) FROM users WHERE role = 'admin' AND is_active = true) as total_admins,
+            (SELECT COUNT(*) FROM teacher_assignments) as total_assignments,
+            (SELECT COUNT(*) FROM test_results WHERE submitted_at >= NOW() - INTERVAL '7 days') as recent_tests,
+            (SELECT COUNT(*) FROM test_results WHERE DATE(submitted_at) = CURRENT_DATE) as tests_today,
+            (SELECT COALESCE(ROUND(AVG(score::decimal / total_questions * 100), 1), 0) FROM test_results WHERE total_questions > 0) as average_score
     ");
     $stmt->execute();
-    $stats['recent_tests'] = $stmt->fetch()['total'];
+    $main_stats = $stmt->fetch();
+    
+    // Assign the stats
+    $stats['total_questions'] = (int)$main_stats['total_questions'];
+    $stats['total_test_codes'] = (int)$main_stats['total_test_codes'];
+    $stats['active_test_codes'] = (int)$main_stats['active_test_codes'];
+    $stats['inactive_test_codes'] = (int)$main_stats['inactive_test_codes'];
+    $stats['total_teachers'] = (int)$main_stats['total_teachers'];
+    $stats['total_students'] = (int)$main_stats['total_students'];
+    $stats['total_admins'] = (int)$main_stats['total_admins'];
+    $stats['total_assignments'] = (int)$main_stats['total_assignments'];
+    $stats['recent_tests'] = (int)$main_stats['recent_tests'];
+    $stats['tests_today'] = (int)$main_stats['tests_today'];
+    $stats['average_score'] = (float)$main_stats['average_score'];
 
-    // Tests taken today
-    $stmt = $db->prepare("
-        SELECT COUNT(*) as total 
-        FROM test_results 
-        WHERE DATE(submitted_at) = CURRENT_DATE
-    ");
-    $stmt->execute();
-    $stats['tests_today'] = $stmt->fetch()['total'];
-
-    // Average score across all tests
-    $stmt = $db->prepare("
-        SELECT COALESCE(ROUND(AVG(score::decimal / total_questions * 100), 1), 0) as avg_score
-        FROM test_results 
-        WHERE total_questions > 0
-    ");
-    $stmt->execute();
-    $stats['average_score'] = $stmt->fetch()['avg_score'];
-
-    // Inactive test codes
-    $stmt = $db->prepare("SELECT COUNT(*) as total FROM test_codes WHERE is_active = false OR is_activated = false");
-    $stmt->execute();
-    $stats['inactive_test_codes'] = $stmt->fetch()['total'];
-
-    // Total admins
-    $stmt = $db->prepare("SELECT COUNT(*) as total FROM users WHERE role = 'admin' AND is_active = true");
-    $stmt->execute();
-    $stats['total_admins'] = $stmt->fetch()['total'];
-
-    // Teacher assignments count
-    $stmt = $db->prepare("SELECT COUNT(*) as total FROM teacher_assignments");
-    $stmt->execute();
-    $stats['total_assignments'] = $stmt->fetch()['total'];
-
-    // Most active subject (by questions)
+    // Most active subject (separate query for clarity)
     $stmt = $db->prepare("
         SELECT s.name as subject_name, COUNT(q.id) as question_count
         FROM subjects s
@@ -103,9 +67,9 @@ try {
     $stmt->execute();
     $most_active = $stmt->fetch();
     $stats['most_active_subject'] = $most_active ? $most_active['subject_name'] : 'No subjects';
-    $stats['most_active_subject_count'] = $most_active ? $most_active['question_count'] : 0;
+    $stats['most_active_subject_count'] = $most_active ? (int)$most_active['question_count'] : 0;
 
-    // Test completion rate
+    // Test completion rate (separate query for clarity)
     $stmt = $db->prepare("
         SELECT 
             COUNT(CASE WHEN tr.id IS NOT NULL THEN 1 END) as completed_tests,
