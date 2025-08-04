@@ -55,6 +55,24 @@ if (strpos($path, '/api/') === 0) {
 if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
 }
 
+// Handle root path - redirect to frontend
+if ($path === '' || $path === '/') {
+    // Get the current host
+    $host = $_SERVER['HTTP_HOST'];
+    
+    // Check if we're running on a Replit domain
+    if (strpos($host, '.replit.dev') !== false || strpos($host, '.replit.app') !== false) {
+        // Redirect to port 5000 on the same domain
+        $frontend_url = 'https://' . $host . ':5000';
+        header('Location: ' . $frontend_url);
+        exit();
+    } else {
+        // For local development, redirect to localhost:5000
+        header('Location: http://localhost:5000');
+        exit();
+    }
+}
+
 // Handle health check endpoint
 if ($path === '/health' || $path === 'health') {
     header('Access-Control-Allow-Origin: *');
