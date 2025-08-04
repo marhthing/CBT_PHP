@@ -36,6 +36,7 @@ date_default_timezone_set($_ENV['TIMEZONE'] ?? 'UTC');
 
 // Include necessary files
 require_once __DIR__ . '/config/cors.php';
+require_once __DIR__ . '/config/app.php';
 require_once __DIR__ . '/includes/response.php';
 
 // Get the request URI and method
@@ -135,6 +136,11 @@ foreach ($routes as $route => $file) {
     }
 }
 
+// Handle static assets first
+if ($request_method === 'GET' && serveStaticAsset($path)) {
+    exit();
+}
+
 // Handle the request
 if ($route_file && file_exists($route_file)) {
     try {
@@ -143,8 +149,13 @@ if ($route_file && file_exists($route_file)) {
         Response::serverError('An error occurred while processing your request');
     }
 } else {
-    // Route not found
-    Response::notFound('API endpoint not found');
+    // Check if this is a request for the frontend application
+    if ($request_method === 'GET' && (empty($path) || $path === '/' || !strpos($path, 'api'))) {
+        serveFrontendApp();
+    } else {
+        // Route not found
+        Response::notFound('API endpoint not found');
+    }
 }
 
 // Health check endpoint
@@ -295,6 +306,78 @@ function logApiAccess($endpoint, $method, $user_id = null, $status_code = 200) {
             'user_agent' => getUserAgent()
         ];
         
+    }
+}
+
+// Function to serve static assets
+function serveStaticAsset($path) {
+    // Remove leading slash if present
+    $path = ltrim($path, '/');
+    
+    // Check if this is a static asset request
+    if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map)$/', $path, $matches)) {
+        $filePath = __DIR__ . '/' . $path;
+        
+        if (file_exists($filePath)) {
+            $extension = $matches[1];
+            $mimeTypes = [
+                'css' => 'text/css',
+                'js' => 'application/javascript',
+                'png' => 'image/png',
+                'jpg' => 'image/jpeg',
+                'jpeg' => 'image/jpeg',
+                'gif' => 'image/gif',
+                'ico' => 'image/x-icon',
+                'svg' => 'image/svg+xml',
+                'woff' => 'font/woff',
+                'woff2' => 'font/woff2',
+                'ttf' => 'font/ttf',
+                'eot' => 'application/vnd.ms-fontobject',
+                'map' => 'application/json'
+            ];
+            
+            $mimeType = $mimeTypes[$extension] ?? 'application/octet-stream';
+            
+            header('Content-Type: ' . $mimeType);
+            header('Cache-Control: public, max-age=3600'); // Cache for 1 hour
+            
+            readfile($filePath);
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+// Function to serve the built frontend application
+function serveFrontendApp() {
+    $indexPath = __DIR__ . '/index.html';
+    
+    if (file_exists($indexPath)) {
+        // Read the HTML file
+        $html = file_get_contents($indexPath);
+        
+        // Inject configuration script
+        $config = [
+            'API_BASE_URL' => AppConfig::get('api_base_url'),
+            'FRONTEND_URL' => AppConfig::get('frontend_url'),
+            'APP_ENV' => AppConfig::get('app_env')
+        ];
+        
+        $configScript = '<script>window.APP_CONFIG = ' . json_encode($config) . ';</script>';
+        
+        // Insert the config script before the closing head tag
+        $html = str_replace('</head>', $configScript . '</head>', $html);
+        
+        // Set appropriate headers
+        header('Content-Type: text/html; charset=UTF-8');
+        header('Cache-Control: no-cache, no-store, must-revalidate');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+        
+        echo $html;
+    } else {
+        Response::notFound('Frontend application not found');
     }
 }
 

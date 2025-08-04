@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
-import { Search, BookOpen, Edit, Trash2, BarChart3, FileText, GraduationCap, X, Save, Upload, Download, Plus } from 'lucide-react'
+import { Search, BookOpen, Edit, Trash2, BarChart3, FileText, GraduationCap, X, Upload, Download, Plus } from 'lucide-react'
 import ConfirmationModal from '../ui/ConfirmationModal'
 
 interface Question {
