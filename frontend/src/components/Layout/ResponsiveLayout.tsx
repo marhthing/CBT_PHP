@@ -1,5 +1,5 @@
 
-import { ReactNode } from 'react'
+import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { 
@@ -9,7 +9,9 @@ import {
   Users, 
   Key, 
   BookOpen, 
-  LogOut
+  LogOut,
+  Menu,
+  X
 } from 'lucide-react'
 
 interface ResponsiveLayoutProps {
@@ -20,6 +22,19 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    
+    checkIfMobile()
+    window.addEventListener('resize', checkIfMobile)
+    
+    return () => window.removeEventListener('resize', checkIfMobile)
+  }, [])
 
   const handleLogout = async () => {
     await logout()

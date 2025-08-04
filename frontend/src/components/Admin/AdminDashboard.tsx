@@ -97,11 +97,7 @@ export default function AdminDashboard() {
     return () => clearInterval(interval)
   }, [fetchDashboardData])
 
-  const handleRetry = () => {
-    setLoading(true)
-    setError('')
-    fetchDashboardData()
-  }
+
 
   const statCards = [
     { 
