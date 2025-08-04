@@ -181,13 +181,6 @@ const TeacherDashboard: React.FC = () => {
                   <BookOpen size={20} className="text-blue-600" />
                   <span className="font-medium text-gray-900">Manage Questions</span>
                 </button>
-                <button
-                  onClick={() => navigate('/teacher/classes')}
-                  className="w-full flex items-center gap-3 p-3 text-left rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-purple-300 transition-colors"
-                >
-                  <GraduationCap size={20} className="text-purple-600" />
-                  <span className="font-medium text-gray-900">View Classes</span>
-                </button>
               </div>
             </div>
           </div>
