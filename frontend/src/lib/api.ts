@@ -1,7 +1,15 @@
 import axios from 'axios'
 
-// Use the Vite proxy configuration
-const API_URL = '/api'
+// Get API URL from window config (injected by PHP) or fallback to proxy
+const getApiUrl = () => {
+  if (typeof window !== 'undefined' && window.APP_CONFIG) {
+    return window.APP_CONFIG.API_BASE_URL
+  }
+  // Fallback to Vite proxy configuration for development
+  return '/api'
+}
+
+const API_URL = getApiUrl()
 
 export const api = axios.create({
   baseURL: API_URL,
