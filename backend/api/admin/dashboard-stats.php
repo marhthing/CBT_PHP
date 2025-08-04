@@ -87,7 +87,6 @@ try {
     Response::success('Dashboard statistics retrieved', $stats);
 
 } catch (Exception $e) {
-    error_log("Dashboard stats error: " . $e->getMessage());
     Response::serverError('Failed to retrieve dashboard statistics');
 }
 

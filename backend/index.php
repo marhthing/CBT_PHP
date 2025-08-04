@@ -53,7 +53,6 @@ if (strpos($path, '/api/') === 0) {
 
 // Log the request for debugging
 if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
-    error_log("API Request: $request_method $path");
 }
 
 // Handle health check endpoint
@@ -141,7 +140,6 @@ if ($route_file && file_exists($route_file)) {
     try {
         include $route_file;
     } catch (Throwable $e) {
-        error_log("Error in route $path: " . $e->getMessage());
         Response::serverError('An error occurred while processing your request');
     }
 } else {
@@ -297,7 +295,6 @@ function logApiAccess($endpoint, $method, $user_id = null, $status_code = 200) {
             'user_agent' => getUserAgent()
         ];
         
-        error_log('API Access: ' . json_encode($log_entry));
     }
 }
 

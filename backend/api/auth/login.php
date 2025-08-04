@@ -41,7 +41,6 @@ try {
     
     if (!$user) {
         // Log failed login attempt
-        error_log("Failed login attempt for identifier: $identifier, role: $role, IP: $ip");
         Response::unauthorized('Invalid credentials');
     }
     
@@ -58,7 +57,6 @@ try {
     ]);
     
 } catch (Exception $e) {
-    error_log("Login error: " . $e->getMessage());
     Response::serverError('Login failed');
 }
 

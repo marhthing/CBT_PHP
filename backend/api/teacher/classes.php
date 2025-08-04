@@ -48,7 +48,6 @@ try {
     ]);
     
 } catch (Exception $e) {
-    error_log("Error getting teacher classes: " . $e->getMessage());
     Response::serverError('Failed to get assigned classes');
 }
 

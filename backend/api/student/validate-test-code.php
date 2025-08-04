@@ -144,7 +144,6 @@ try {
     ]);
 
 } catch (Exception $e) {
-    error_log("Validate test code error: " . $e->getMessage());
     Response::serverError('Failed to validate test code');
 }
 

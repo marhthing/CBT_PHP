@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
-import { Search, BookOpen, Edit, Trash2, BarChart3, FileText, GraduationCap, X, Save, Upload, Download, Plus } from 'lucide-react'
+import { Search, BookOpen, Edit, Trash2, BarChart3, FileText, GraduationCap, X, Upload, Download, Plus } from 'lucide-react'
 import ConfirmationModal from '../ui/ConfirmationModal'
 
 interface Question {
@@ -118,7 +118,7 @@ export default function AllQuestions() {
       const response = await api.get('/admin/questions?stats=true')
       setStats(response.data.data || null)
     } catch (error: any) {
-      console.error('Failed to fetch question stats:', error)
+
     }
   }, [])
 
@@ -200,7 +200,7 @@ export default function AllQuestions() {
         setTimeout(() => setSuccessMessage(''), 3000)
       }
     } catch (error: any) {
-      console.error('Failed to update question:', error)
+
       setError('Failed to update question: ' + (error.response?.data?.message || error.message))
     } finally {
       setSavingEdit(false)
@@ -239,7 +239,7 @@ export default function AllQuestions() {
         setTimeout(() => setSuccessMessage(''), 3000)
       }
     } catch (error: any) {
-      console.error('Failed to upload questions:', error)
+
       setError('Failed to upload questions: ' + (error.response?.data?.message || error.message))
       if (error.response?.data?.errors) {
         setUploadProgress(error.response.data.errors)
@@ -429,7 +429,7 @@ export default function AllQuestions() {
         setTimeout(() => setSuccessMessage(''), 3000)
       }
     } catch (error: any) {
-      console.error('Failed to create questions:', error)
+
       setError('Failed to create questions: ' + (error.response?.data?.message || error.message))
     } finally {
       setCreatingQuestions(false)

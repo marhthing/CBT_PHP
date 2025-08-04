@@ -192,7 +192,6 @@ try {
     }
     
 } catch (Exception $e) {
-    error_log("Error submitting test: " . $e->getMessage());
     Response::serverError('Failed to submit test');
 }
 

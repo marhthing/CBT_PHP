@@ -87,10 +87,8 @@ class Auth {
             $auth_header = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
         }
         
-        error_log("Auth header found: " . ($auth_header ? substr($auth_header, 0, 20) . '...' : 'NONE'));
         
         if (!$auth_header || strpos($auth_header, 'Bearer ') !== 0) {
-            error_log("Invalid auth header format: " . $auth_header);
             return false;
         }
 
@@ -112,7 +110,6 @@ class Auth {
             
             return $stmt->fetch();
         } catch (Exception $e) {
-            error_log("Error getting current user: " . $e->getMessage());
             return false;
         }
     }
@@ -157,7 +154,6 @@ class Auth {
 
             return false;
         } catch (Exception $e) {
-            error_log("Authentication error: " . $e->getMessage());
             return false;
         }
     }
@@ -225,7 +221,6 @@ class Auth {
                 'user_id' => $this->db->lastInsertId()
             ];
         } catch (Exception $e) {
-            error_log("Error creating user: " . $e->getMessage());
             return ['success' => false, 'message' => 'Failed to create user'];
         }
     }

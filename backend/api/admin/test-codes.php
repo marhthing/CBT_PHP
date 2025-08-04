@@ -420,7 +420,6 @@ try {
     }
 
 } catch (Exception $e) {
-    error_log("Error in test-codes API: " . $e->getMessage());
     Response::serverError('An error occurred while processing your request');
 }
 

@@ -163,7 +163,6 @@ function handleGet($db, $user) {
         Response::success('Questions retrieved', ['questions' => $questions]);
         
     } catch (Exception $e) {
-        error_log("Error getting teacher questions: " . $e->getMessage());
         Response::serverError('Failed to get questions');
     }
 }
@@ -220,7 +219,6 @@ function handlePost($db, $user) {
         Response::created('Question created successfully', ['id' => $db->lastInsertId()]);
         
     } catch (Exception $e) {
-        error_log("Error creating question: " . $e->getMessage());
         Response::serverError('Failed to create question');
     }
 }
@@ -285,7 +283,6 @@ function handlePut($db, $user) {
         Response::updated('Question updated successfully');
         
     } catch (Exception $e) {
-        error_log("Error updating question: " . $e->getMessage());
         Response::serverError('Failed to update question');
     }
 }
@@ -314,7 +311,6 @@ function handleDelete($db, $user) {
         Response::deleted('Question deleted successfully');
         
     } catch (Exception $e) {
-        error_log("Error deleting question: " . $e->getMessage());
         Response::serverError('Failed to delete question');
     }
 }

@@ -79,7 +79,6 @@ try {
     Response::success("$lookup_type retrieved successfully", $data);
 
 } catch (Exception $e) {
-    error_log("Lookup error: " . $e->getMessage());
     Response::serverError('Failed to retrieve lookup data');
 }
 

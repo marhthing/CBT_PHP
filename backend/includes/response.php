@@ -173,14 +173,12 @@ class Response {
                 'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
             ];
             
-            error_log('API Request: ' . json_encode($log_data));
         }
     }
 }
 
 // Set up error handling for uncaught exceptions
 set_exception_handler(function($exception) {
-    error_log('Uncaught exception: ' . $exception->getMessage());
     
     if ($_ENV['APP_DEBUG'] === 'true') {
         Response::serverError('Internal server error: ' . $exception->getMessage());

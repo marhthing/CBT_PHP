@@ -72,7 +72,6 @@ function handleGet($db, $user) {
         Response::success('Teacher assignments retrieved', $formatted_assignments);
         
     } catch (Exception $e) {
-        error_log("Error getting teacher assignments: " . $e->getMessage());
         Response::serverError('Failed to get teacher assignments');
     }
 }
@@ -144,7 +143,6 @@ $valid_classes = $class_stmt->fetchAll(PDO::FETCH_COLUMN);
         Response::created('Teacher assignment created successfully', ['assignment_id' => $assignment_id]);
         
     } catch (Exception $e) {
-        error_log("Error creating teacher assignment: " . $e->getMessage());
         Response::serverError('Failed to create teacher assignment');
     }
 }
@@ -174,7 +172,6 @@ function handleDelete($db, $user) {
         Response::deleted('Teacher assignment removed successfully');
         
     } catch (Exception $e) {
-        error_log("Error deleting teacher assignment: " . $e->getMessage());
         Response::serverError('Failed to delete teacher assignment');
     }
 }

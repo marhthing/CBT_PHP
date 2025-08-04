@@ -42,13 +42,13 @@ export default function ProtectedRoute({
 
   // Redirect to login if no user
   if (!user) {
-    console.log('ProtectedRoute: No user found, redirecting to login')
+
     return <Navigate to="/login" replace />
   }
 
   // Check role if required
   if (requiredRole && user.role !== requiredRole) {
-    console.log(`ProtectedRoute: User role ${user.role} doesn't match required ${requiredRole}`)
+
 
     // Redirect to user's appropriate dashboard
     const redirectPath = user.role === 'student' 

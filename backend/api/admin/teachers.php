@@ -56,7 +56,6 @@ function handleGet($db, $user) {
         Response::success('Teachers retrieved', ['teachers' => $teachers]);
         
     } catch (Exception $e) {
-        error_log("Error getting teachers: " . $e->getMessage());
         Response::serverError('Failed to get teachers');
     }
 }
@@ -123,7 +122,6 @@ function handlePost($db, $user) {
         Response::created('Teacher created successfully', ['teacher_id' => $teacher_id]);
         
     } catch (Exception $e) {
-        error_log("Error creating teacher: " . $e->getMessage());
         Response::serverError('Failed to create teacher');
     }
 }
@@ -203,7 +201,6 @@ function handlePut($db, $user) {
         Response::updated('Teacher updated successfully');
         
     } catch (Exception $e) {
-        error_log("Error updating teacher: " . $e->getMessage());
         Response::serverError('Failed to update teacher');
     }
 }
@@ -256,7 +253,6 @@ function handleDelete($db, $user) {
         }
         
     } catch (Exception $e) {
-        error_log("Error deleting teacher: " . $e->getMessage());
         Response::serverError('Failed to delete teacher');
     }
 }

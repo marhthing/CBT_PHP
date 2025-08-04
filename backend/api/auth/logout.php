@@ -27,7 +27,6 @@ try {
     }
     
 } catch (Exception $e) {
-    error_log("Logout error: " . $e->getMessage());
     Response::serverError('Logout failed');
 }
 

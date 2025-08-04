@@ -53,7 +53,6 @@ try {
     
     if (!$user) {
         // Log failed login attempt
-        error_log("Failed auto-login attempt for identifier: $identifier, IP: $ip");
         Response::unauthorized('Invalid credentials');
     }
     
@@ -71,7 +70,6 @@ try {
     ]);
     
 } catch (Exception $e) {
-    error_log("Auto-login error: " . $e->getMessage());
     Response::serverError('Login failed');
 }
 

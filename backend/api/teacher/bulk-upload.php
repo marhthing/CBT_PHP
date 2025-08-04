@@ -149,7 +149,6 @@ try {
     }
     
 } catch (Exception $e) {
-    error_log("Error in bulk upload: " . $e->getMessage());
     Response::serverError('Bulk upload failed');
 }
 

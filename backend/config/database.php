@@ -37,10 +37,6 @@ class Database {
             $this->conn->exec("SET timezone = '$timezone'");
             
         } catch(PDOException $exception) {
-            error_log("Database connection error: " . $exception->getMessage());
-            error_log("DSN used: $dsn");
-            error_log("Username: $this->username");
-            error_log("Host: $this->host, Port: $this->port, DB: $this->db_name");
             throw new Exception("Database connection failed: " . $exception->getMessage());
         }
 
@@ -82,7 +78,6 @@ class Database {
             $result = $this->conn->query('SELECT 1')->fetchColumn();
             return $result === '1' || $result === 1;
         } catch (Exception $e) {
-            error_log("Database health check error: " . $e->getMessage());
             return false;
         }
     }

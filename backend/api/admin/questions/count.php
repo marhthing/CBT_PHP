@@ -45,6 +45,5 @@ try {
         Response::methodNotAllowed('Only GET method is allowed');
     }
 } catch (Exception $e) {
-    error_log("Error in questions count API: " . $e->getMessage());
     Response::error('Failed to get question count', 500);
 }

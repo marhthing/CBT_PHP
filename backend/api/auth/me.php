@@ -25,7 +25,6 @@ try {
     ]);
     
 } catch (Exception $e) {
-    error_log("Get user error: " . $e->getMessage());
     Response::serverError('Failed to get user data');
 }
 

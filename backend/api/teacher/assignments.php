@@ -43,7 +43,6 @@ try {
     Response::success('Teacher assignments retrieved', $assignments);
     
 } catch (Exception $e) {
-    error_log("Error fetching teacher assignments: " . $e->getMessage());
     Response::serverError('Failed to fetch teacher assignments');
 }
 

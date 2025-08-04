@@ -167,7 +167,6 @@ try {
     }
 
 } catch (Exception $e) {
-    error_log("Error creating bulk questions: " . $e->getMessage());
     Response::serverError('Failed to create questions: ' . $e->getMessage());
 }
 

@@ -52,7 +52,6 @@ try {
     ]);
     
 } catch (Exception $e) {
-    error_log("Error getting student tests: " . $e->getMessage());
     Response::serverError('Failed to get available tests');
 }
 

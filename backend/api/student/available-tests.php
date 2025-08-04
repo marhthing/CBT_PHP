@@ -54,7 +54,6 @@ try {
     Response::success('Available tests retrieved', $test_codes);
 
 } catch (Exception $e) {
-    error_log("Available tests error: " . $e->getMessage());
     Response::serverError('Failed to retrieve available tests');
 }
 
