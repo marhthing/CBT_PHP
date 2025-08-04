@@ -187,7 +187,6 @@ export default function AdminDashboard() {
         <ErrorNotification
           message={error}
           onClose={() => setError('')}
-          onRetry={handleRetry}
         />
       )}
 
@@ -199,9 +198,6 @@ export default function AdminDashboard() {
             <p className="text-gray-600 mt-1">Welcome back, {user?.username}</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="text-sm text-gray-500">
-              <span className="font-medium">API Response:</span> {apiResponseTime}
-            </div>
             <div className="text-sm text-gray-500">
               <span className="font-medium">Last Updated:</span> {new Date().toLocaleTimeString()}
             </div>
@@ -337,7 +333,15 @@ export default function AdminDashboard() {
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">API Response</p>
-              <p className="text-lg font-semibold text-blue-600">{apiResponseTime}</p>
+              <p className={`text-lg font-semibold ${
+                parseInt(apiResponseTime.replace('ms', '')) > 5000 
+                  ? 'text-red-600' 
+                  : parseInt(apiResponseTime.replace('ms', '')) > 2000 
+                    ? 'text-yellow-600' 
+                    : 'text-green-600'
+              }`}>
+                {apiResponseTime}
+              </p>
             </div>
             <div className="text-center p-4 bg-gray-50 rounded-lg">
               <p className="text-sm text-gray-600">Database</p>
