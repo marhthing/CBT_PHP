@@ -145,8 +145,8 @@ export default function MobileBottomBar({ children }: MobileBottomBarProps) {
       </div>
 
       {/* Mobile Bottom Navigation - Only visible on mobile */}
-      <nav id="mobile-bottom-nav" className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-2 py-1">
-        <div className="flex items-center justify-around">
+      <nav id="mobile-bottom-nav" className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+        <div className="flex items-center justify-between px-1">
           {navigationItems.slice(0, 4).map((item) => {
             const Icon = item.icon
             const isActive = location.pathname === item.path
@@ -155,14 +155,14 @@ export default function MobileBottomBar({ children }: MobileBottomBarProps) {
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center py-2 px-1 min-w-0 flex-1 ${
+                className={`flex flex-col items-center py-2 px-2 min-w-0 flex-1 ${
                   isActive 
                     ? 'text-blue-600' 
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 <Icon className={`h-5 w-5 ${isActive ? 'text-blue-600' : ''}`} />
-                <span className="text-xs mt-1 truncate">{item.name}</span>
+                <span className="text-xs mt-1 truncate max-w-full">{item.name}</span>
               </button>
             )
           })}
@@ -170,10 +170,10 @@ export default function MobileBottomBar({ children }: MobileBottomBarProps) {
           {/* Mobile Logout Button */}
           <button
             onClick={handleLogout}
-            className="flex flex-col items-center py-2 px-1 min-w-0 flex-1 text-red-500 hover:text-red-600"
+            className="flex flex-col items-center py-2 px-2 min-w-0 flex-1 text-red-500 hover:text-red-600"
           >
             <LogOut className="h-5 w-5" />
-            <span className="text-xs mt-1">Logout</span>
+            <span className="text-xs mt-1 truncate max-w-full">Logout</span>
           </button>
         </div>
       </nav>

@@ -60,7 +60,7 @@ export default function TakeTest() {
   // Hide bottom navigation during test phases
   useEffect(() => {
     const hideBottomNav = testPreview || testStarted
-    const bottomNav = document.querySelector('#mobile-bottom-nav')
+    const bottomNav = document.querySelector('#mobile-bottom-nav') as HTMLElement
     if (bottomNav) {
       if (hideBottomNav) {
         bottomNav.style.display = 'none'
@@ -71,7 +71,7 @@ export default function TakeTest() {
 
     // Cleanup on unmount
     return () => {
-      const bottomNav = document.querySelector('#mobile-bottom-nav')
+      const bottomNav = document.querySelector('#mobile-bottom-nav') as HTMLElement
       if (bottomNav) {
         bottomNav.style.display = 'flex'
       }
