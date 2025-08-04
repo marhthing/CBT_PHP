@@ -37,7 +37,7 @@ try {
             (SELECT COUNT(*) FROM teacher_assignments) as total_assignments,
             (SELECT COUNT(*) FROM test_results WHERE submitted_at >= NOW() - INTERVAL '7 days') as recent_tests,
             (SELECT COUNT(*) FROM test_results WHERE DATE(submitted_at) = CURRENT_DATE) as tests_today,
-            (SELECT COALESCE(ROUND(AVG(score::decimal / total_questions * 100), 1), 0) FROM test_results WHERE total_questions > 0) as average_score
+            (SELECT COALESCE(ROUND(AVG(score::decimal / total_questions) * 100, 1), 0) FROM test_results WHERE total_questions > 0) as average_score
     ");
     $stmt->execute();
     $main_stats = $stmt->fetch();
