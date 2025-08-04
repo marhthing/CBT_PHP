@@ -65,7 +65,7 @@ export default function TakeTest() {
       if (hideBottomNav) {
         bottomNav.style.display = 'none'
       } else {
-        bottomNav.style.display = 'flex'
+        bottomNav.style.display = 'block'
       }
     }
 
@@ -73,7 +73,7 @@ export default function TakeTest() {
     return () => {
       const bottomNav = document.querySelector('#mobile-bottom-nav') as HTMLElement
       if (bottomNav) {
-        bottomNav.style.display = 'flex'
+        bottomNav.style.display = 'block'
       }
     }
   }, [testPreview, testStarted])
