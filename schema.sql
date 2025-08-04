@@ -1,5 +1,5 @@
 -- PostgreSQL Database Schema for CBT Portal
--- Generated: August 3, 2025 at 5:06 PM
+-- Generated: August 4, 2025 at 8:28 AM
 -- Extracted from database: neondb
 -- Structure: All tables
 -- Data: users, class_levels, sessions, terms, subjects tables only
@@ -40,13 +40,18 @@ ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_
 ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_subject_id_fkey;
 ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_session_id_fkey;
 DROP INDEX IF EXISTS public.idx_users_username;
+DROP INDEX IF EXISTS public.idx_users_role_active;
 DROP INDEX IF EXISTS public.idx_users_role;
 DROP INDEX IF EXISTS public.idx_users_reg_number;
 DROP INDEX IF EXISTS public.idx_test_results_test_code;
+DROP INDEX IF EXISTS public.idx_test_results_submitted_at;
 DROP INDEX IF EXISTS public.idx_test_results_student;
+DROP INDEX IF EXISTS public.idx_test_results_date;
 DROP INDEX IF EXISTS public.idx_test_codes_subject_class;
+DROP INDEX IF EXISTS public.idx_test_codes_active;
 DROP INDEX IF EXISTS public.idx_teacher_assignments_teacher;
 DROP INDEX IF EXISTS public.idx_questions_teacher;
+DROP INDEX IF EXISTS public.idx_questions_subject_id;
 DROP INDEX IF EXISTS public.idx_questions_subject_class;
 ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_username_key;
 ALTER TABLE IF EXISTS ONLY public.users DROP CONSTRAINT IF EXISTS users_reg_number_key;
@@ -113,7 +118,7 @@ CREATE TABLE public.class_levels (
     level_type character varying(20) NOT NULL,
     is_active boolean DEFAULT true,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT class_levels_level_type_check CHECK (((level_type)::text = ANY ((ARRAY['junior'::character varying, 'senior'::character varying])::text[])))
+    CONSTRAINT class_levels_level_type_check CHECK (((level_type)::text = ANY (ARRAY[('junior'::character varying)::text, ('senior'::character varying)::text])))
 );
 
 
@@ -712,6 +717,13 @@ CREATE INDEX idx_questions_subject_class ON public.questions USING btree (subjec
 
 
 --
+-- Name: idx_questions_subject_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_questions_subject_id ON public.questions USING btree (subject_id);
+
+
+--
 -- Name: idx_questions_teacher; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -726,6 +738,13 @@ CREATE INDEX idx_teacher_assignments_teacher ON public.teacher_assignments USING
 
 
 --
+-- Name: idx_test_codes_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_test_codes_active ON public.test_codes USING btree (is_active, is_activated);
+
+
+--
 -- Name: idx_test_codes_subject_class; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -733,10 +752,24 @@ CREATE INDEX idx_test_codes_subject_class ON public.test_codes USING btree (subj
 
 
 --
+-- Name: idx_test_results_date; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_test_results_date ON public.test_results USING btree (date(submitted_at));
+
+
+--
 -- Name: idx_test_results_student; Type: INDEX; Schema: public; Owner: -
 --
 
 CREATE INDEX idx_test_results_student ON public.test_results USING btree (student_id);
+
+
+--
+-- Name: idx_test_results_submitted_at; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_test_results_submitted_at ON public.test_results USING btree (submitted_at);
 
 
 --
@@ -758,6 +791,13 @@ CREATE INDEX idx_users_reg_number ON public.users USING btree (reg_number);
 --
 
 CREATE INDEX idx_users_role ON public.users USING btree (role);
+
+
+--
+-- Name: idx_users_role_active; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_users_role_active ON public.users USING btree (role, is_active);
 
 
 --
@@ -935,9 +975,9 @@ SET row_security = off;
 --
 
 COPY public.users (id, username, email, reg_number, password, role, full_name, is_active, created_at, last_login, current_term, current_session) FROM stdin;
-2	teacher1	teacher1@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	teacher	John Doe	t	2025-08-03 11:46:51.454306	2025-08-03 16:36:37.894875	First	2024/2025
-1	admin	admin@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	admin	System Administrator	t	2025-08-03 11:46:51.454306	2025-08-03 16:38:39.337973	First	2024/2025
-3	2023001	student1@sfgs.edu.ng	2023001	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	student	Jane Smith	t	2025-08-03 11:46:51.454306	2025-08-03 16:41:12.677737	First	2024/2025
+2	teacher1	teacher1@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	teacher	John Doe	t	2025-08-03 11:46:51.454306	2025-08-04 08:09:41.951693	First	2024/2025
+3	2023001	student1@sfgs.edu.ng	2023001	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	student	Jane Smith	t	2025-08-03 11:46:51.454306	2025-08-04 08:11:05.184543	First	2024/2025
+1	admin	admin@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	admin	System Administrator	t	2025-08-03 11:46:51.454306	2025-08-04 08:19:31.980207	First	2024/2025
 \.
 
 
