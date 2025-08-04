@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../con.php';
+require_once __DIR__ . '/../../cors.php';
 
 // Debug endpoint to check headers
 header('Content-Type: application/json');
