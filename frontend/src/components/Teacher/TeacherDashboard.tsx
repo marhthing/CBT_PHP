@@ -3,7 +3,7 @@ import React, { useState, useEffect, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AuthContext } from '../../contexts/AuthContext'
 import { api } from '../../lib/api'
-import { BookOpen, Upload, GraduationCap, BarChart3, FileText, Users, Plus, Activity } from 'lucide-react'
+import { BookOpen, GraduationCap, BarChart3, FileText, Users, Plus, Activity } from 'lucide-react'
 
 interface Stats {
   total_questions: number
@@ -30,7 +30,8 @@ interface Assignment {
 }
 
 const TeacherDashboard: React.FC = () => {
-  const { user } = useContext(AuthContext)
+  const authContext = useContext(AuthContext)
+  const user = authContext?.user
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState<Stats>({
@@ -179,13 +180,6 @@ const TeacherDashboard: React.FC = () => {
                 >
                   <BookOpen size={20} className="text-blue-600" />
                   <span className="font-medium text-gray-900">Manage Questions</span>
-                </button>
-                <button
-                  onClick={() => navigate('/teacher/bulk-upload')}
-                  className="w-full flex items-center gap-3 p-3 text-left rounded-lg border border-gray-200 hover:bg-gray-50 hover:border-green-300 transition-colors"
-                >
-                  <Upload size={20} className="text-green-600" />
-                  <span className="font-medium text-gray-900">Bulk Upload</span>
                 </button>
                 <button
                   onClick={() => navigate('/teacher/classes')}
