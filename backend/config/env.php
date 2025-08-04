@@ -13,8 +13,8 @@ class EnvManager {
         
         // Set default environment variables if not already set
         $defaults = [
-            'API_BASE_URL' => 'http://localhost:8000',
-            'FRONTEND_URL' => 'http://localhost:8000', 
+            'API_BASE_URL' => 'http://0.0.0.0:8000',
+            'FRONTEND_URL' => 'http://0.0.0.0:8000', 
             'BACKEND_PORT' => '8000',
             'CORS_ORIGIN' => '*',
             'CORS_METHODS' => 'GET,POST,PUT,DELETE,OPTIONS,PATCH',
