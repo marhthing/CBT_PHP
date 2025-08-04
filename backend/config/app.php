@@ -5,7 +5,7 @@ class AppConfig {
     public static function get($key, $default = null) {
         // Use EnvManager for consistent environment variable handling
         $config = [
-            'api_base_url' => EnvManager::get('API_BASE_URL'),
+            'api_base_url' => EnvManager::get('API_BASE_URL') . '/api',
             'frontend_url' => EnvManager::get('FRONTEND_URL'),
             'backend_port' => EnvManager::get('BACKEND_PORT'),
             'cors_origin' => EnvManager::get('CORS_ORIGIN'),
