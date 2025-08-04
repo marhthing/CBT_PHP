@@ -3,10 +3,18 @@
 // Application Configuration
 class AppConfig {
     public static function get($key, $default = null) {
+        // Detect if we're running on HTTPS (Replit production environment)
+        $is_https = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' || 
+                   isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https' ||
+                   isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443;
+        
+        $protocol = $is_https ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8000';
+        
         // Use EnvManager for consistent environment variable handling
         $config = [
-            'api_base_url' => EnvManager::get('API_BASE_URL') . '/api',
-            'frontend_url' => EnvManager::get('FRONTEND_URL'),
+            'api_base_url' => $protocol . '://' . $host . '/api',
+            'frontend_url' => $protocol . '://' . $host,
             'backend_port' => EnvManager::get('BACKEND_PORT'),
             'cors_origin' => EnvManager::get('CORS_ORIGIN'),
             'cors_methods' => EnvManager::get('CORS_METHODS'),

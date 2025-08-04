@@ -1,11 +1,11 @@
 import axios from 'axios'
 
-// Get API URL from window config (injected by PHP) or fallback to proxy
+// Get API URL from window config (injected by PHP) or fallback to relative path
 const getApiUrl = () => {
   if (typeof window !== 'undefined' && window.APP_CONFIG) {
     return window.APP_CONFIG.API_BASE_URL
   }
-  // Fallback to Vite proxy configuration for development
+  // Fallback to relative API path (same protocol and host as current page)
   return '/api'
 }
 
