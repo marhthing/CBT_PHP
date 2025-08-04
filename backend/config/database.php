@@ -52,17 +52,24 @@ class Database {
             if ($this->db_type === 'mysql') {
                 $dsn = "mysql:host=" . $this->host . ";port=" . $this->port . ";dbname=" . $this->db_name . ";charset=utf8mb4";
             } else {
-                $dsn = "pgsql:host=" . $this->host . ";port=" . $this->port . ";dbname=" . $this->db_name . ";sslmode=require";
+                // PostgreSQL with flexible SSL mode for different hosting platforms
+                $sslmode = $_ENV['DB_SSLMODE'] ?? 'prefer'; // prefer, require, disable
+                $dsn = "pgsql:host=" . $this->host . ";port=" . $this->port . ";dbname=" . $this->db_name . ";sslmode=" . $sslmode;
             }
             
             $this->conn = new PDO($dsn, $this->username, $this->password, $this->options);
             
             // Set timezone based on database type
             $timezone = $_ENV['TIMEZONE'] ?? 'UTC';
-            if ($this->db_type === 'mysql') {
-                $this->conn->exec("SET time_zone = '$timezone'");
-            } else {
-                $this->conn->exec("SET timezone = '$timezone'");
+            try {
+                if ($this->db_type === 'mysql') {
+                    $this->conn->exec("SET time_zone = '$timezone'");
+                } else {
+                    $this->conn->exec("SET timezone = '$timezone'");
+                }
+            } catch (PDOException $tz_exception) {
+                // Timezone setting failed - continue without it (some hosting platforms restrict this)
+                error_log("Warning: Could not set timezone: " . $tz_exception->getMessage());
             }
             
         } catch(PDOException $exception) {
