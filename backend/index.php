@@ -55,20 +55,48 @@ if (strpos($path, '/api/') === 0) {
 if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
 }
 
-// Handle root path - redirect to frontend
+// Handle root path - serve static files from dist folder
 if ($path === '' || $path === '/') {
-    // Get the current host
-    $host = $_SERVER['HTTP_HOST'];
-    
-    // Check if we're running on a Replit domain
-    if (strpos($host, '.replit.dev') !== false || strpos($host, '.replit.app') !== false) {
-        // Redirect to port 5000 on the same domain
-        $frontend_url = 'https://' . $host . ':5000';
-        header('Location: ' . $frontend_url);
+    $dist_index = dirname(__DIR__) . '/dist/index.html';
+    if (file_exists($dist_index)) {
+        header('Content-Type: text/html; charset=UTF-8');
+        readfile($dist_index);
         exit();
     } else {
-        // For local development, redirect to localhost:5000
-        header('Location: http://localhost:5000');
+        Response::serverError('Frontend build files not found');
+        exit();
+    }
+}
+
+// Handle static asset requests (CSS, JS, images, etc.)
+if (preg_match('/\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$/i', $path)) {
+    $asset_path = dirname(__DIR__) . '/dist' . $path;
+    if (file_exists($asset_path)) {
+        // Set appropriate content type
+        $mime_types = [
+            'css' => 'text/css',
+            'js' => 'application/javascript',
+            'png' => 'image/png',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'gif' => 'image/gif',
+            'ico' => 'image/x-icon',
+            'svg' => 'image/svg+xml',
+            'woff' => 'font/woff',
+            'woff2' => 'font/woff2',
+            'ttf' => 'font/ttf',
+            'eot' => 'application/vnd.ms-fontobject'
+        ];
+        
+        $extension = strtolower(pathinfo($asset_path, PATHINFO_EXTENSION));
+        $content_type = $mime_types[$extension] ?? 'application/octet-stream';
+        
+        header('Content-Type: ' . $content_type);
+        header('Cache-Control: public, max-age=31536000'); // Cache for 1 year
+        readfile($asset_path);
+        exit();
+    } else {
+        Response::notFound('Asset not found');
         exit();
     }
 }
@@ -161,8 +189,22 @@ if ($route_file && file_exists($route_file)) {
         Response::serverError('An error occurred while processing your request');
     }
 } else {
-    // Route not found
-    Response::notFound('API endpoint not found');
+    // Check if this is an API request or a frontend route
+    if (strpos($path, '/api') === 0 || strpos($path, 'api') === 0) {
+        // Route not found for API request
+        Response::notFound('API endpoint not found');
+    } else {
+        // For non-API routes, serve the React app (client-side routing)
+        $dist_index = dirname(__DIR__) . '/dist/index.html';
+        if (file_exists($dist_index)) {
+            header('Content-Type: text/html; charset=UTF-8');
+            readfile($dist_index);
+            exit();
+        } else {
+            Response::serverError('Frontend build files not found');
+            exit();
+        }
+    }
 }
 
 // Health check endpoint
