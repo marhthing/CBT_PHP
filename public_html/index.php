@@ -95,10 +95,24 @@ if (strpos($path, 'api/') === 0) {
         try {
             include $route_file;
         } catch (Throwable $e) {
-            Response::serverError('An error occurred while processing your request');
+            // Enhanced error reporting for debugging
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Server error: ' . $e->getMessage(),
+                'file' => basename($e->getFile()),
+                'line' => $e->getLine(),
+                'route' => $api_path
+            ]);
         }
     } else {
-        Response::notFound('API endpoint not found');
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'API endpoint not found',
+            'requested_path' => $api_path,
+            'available_routes' => array_keys($routes)
+        ]);
     }
     exit();
 }
