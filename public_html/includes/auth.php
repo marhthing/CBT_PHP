@@ -8,8 +8,7 @@ class Auth {
     private $jwt_expires_in;
 
     public function __construct() {
-        $database = new Database();
-        $this->db = $database->getConnection();
+        $this->db = getDatabaseConnection();
         $this->jwt_secret = $_ENV['JWT_SECRET'] ?? 'your-default-secret-key';
         $this->jwt_expires_in = $_ENV['JWT_EXPIRES_IN'] ?? 86400; // 24 hours
     }

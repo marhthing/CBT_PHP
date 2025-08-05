@@ -205,9 +205,9 @@ INSERT INTO subjects (name, code, description) VALUES
 ('Physical Education', 'PE', 'Physical fitness and sports');
 
 INSERT INTO users (username, email, reg_number, password, role, full_name) VALUES
-('admin', 'admin@sfgs.edu.ng', NULL, '$2y$10$rKUVKq8b5AkBZ7fZr9DYOeBQqFKcZnVZE9j7vEGlpHaE3z4W0g1YS', 'admin', 'System Administrator'),
-('teacher1', 'teacher1@sfgs.edu.ng', NULL, '$2y$10$rKUVKq8b5AkBZ7fZr9DYOeBQqFKcZnVZE9j7vEGlpHaE3z4W0g1YS', 'teacher', 'John Teacher'),
-(NULL, NULL, 'SFGS/2024/001', '$2y$10$rKUVKq8b5AkBZ7fZr9DYOeBQqFKcZnVZE9j7vEGlpHaE3z4W0g1YS', 'student', 'Jane Student');
+('admin', 'admin@sfgs.edu.ng', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 'System Administrator'),
+('teacher1', 'teacher1@sfgs.edu.ng', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'teacher', 'John Teacher'),
+(NULL, NULL, 'SFGS/2024/001', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'student', 'Jane Student');
 
 -- Create indexes for better performance
 CREATE INDEX idx_users_username ON users(username);

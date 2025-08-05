@@ -60,3 +60,27 @@ Visit your InfinityFree domain - you should see the login page!
 - **Admin**: admin@sfgs.edu.ng / password123
 - **Teacher**: teacher1@sfgs.edu.ng / password123  
 - **Student**: SFGS/2024/001 / password123
+
+## Fixing Login Issues on InfinityFree
+
+If you get "Login failed" after deployment, you need to update the user passwords in your database:
+
+1. **Access phpMyAdmin** in your InfinityFree control panel
+2. **Run this SQL query** to fix the passwords:
+
+```sql
+UPDATE users SET password = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi' WHERE id IN (1, 2, 3);
+```
+
+This sets all test user passwords to `password123` with proper hashing.
+
+## Troubleshooting
+
+**Problem**: "Login failed" error
+**Solution**: Run the password update SQL query above
+
+**Problem**: "Database connection failed"  
+**Solution**: Check your database credentials in `config/database.php`
+
+**Problem**: 500 server error
+**Solution**: Check that all files uploaded correctly and .htaccess is present
