@@ -17,6 +17,14 @@ Successfully migrated from Replit Agent to standard Replit environment on August
 - Fixed main URL routing: Added automatic redirect from backend root path to frontend (port 5000)
 - Users now access the React frontend by default when visiting the main Replit app URL
 
+## Production Deployment Setup (August 5, 2025)
+- **Static File Serving**: Configured PHP backend to serve built React files from dist folder
+- **Single Port Deployment**: Frontend development server disconnected, everything runs on port 8000
+- **PostgreSQL Database**: Successfully imported complete schema with 3 users and 15 subjects
+- **Content Security Policy**: Fixed CSP directives to allow Google Fonts and external stylesheets
+- **Client-Side Routing**: Enabled React Router support for SPA navigation
+- **Asset Management**: Proper MIME type handling and caching for static assets
+
 ## Multi-Platform Hosting Compatibility (August 4, 2025)
 - **Universal Compatibility**: Enhanced system to work on ALL major hosting platforms
 - **Automatic Platform Detection**: Added environment.php to detect and optimize for specific hosts
