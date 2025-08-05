@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import Layout from './components/Layout/MobileBottomBar'
 import SimpleLogin from './components/Auth/SimpleLogin'
+import SignupPage from './components/Auth/SignupPage'
 import ProtectedRoute from './components/Auth/ProtectedRoute'
 import StudentDashboard from './components/Student/StudentDashboard'
 import TakeTest from './components/Student/TakeTest'
@@ -45,10 +46,14 @@ function App() {
 
   return (
     <Routes>
-      {/* Login route - no layout */}
+      {/* Auth routes - no layout */}
       <Route 
         path="/login" 
         element={!user ? <SimpleLogin /> : <Navigate to="/" replace />} 
+      />
+      <Route 
+        path="/signup" 
+        element={!user ? <SignupPage /> : <Navigate to="/" replace />} 
       />
       
       {/* All other routes require authentication and use layout */}

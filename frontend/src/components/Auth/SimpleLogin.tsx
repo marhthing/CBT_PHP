@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 
 export default function SimpleLogin() {
@@ -94,6 +95,19 @@ export default function SimpleLogin() {
               </button>
             </div>
           </form>
+
+          {/* Sign up link */}
+          <div className="mt-6 text-center">
+            <span className="text-sky-600 text-sm">
+              Don't have an account?{' '}
+              <Link
+                to="/signup"
+                className="text-blue-600 hover:text-blue-800 font-medium underline"
+              >
+                Create one here
+              </Link>
+            </span>
+          </div>
         </div>
       </div>
     </div>

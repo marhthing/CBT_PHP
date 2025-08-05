@@ -39,6 +39,7 @@ if (strpos($path, 'api/') === 0) {
     $routes = [
         // Authentication routes
         'auth/login' => 'api/auth/login.php',
+        'auth/signup' => 'api/auth/signup.php',
         'auth/auto-login' => 'api/auth/auto-login.php',
         'auth/logout' => 'api/auth/logout.php',
         'auth/me' => 'api/auth/me.php',
