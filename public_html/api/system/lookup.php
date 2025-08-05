@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../cors.php';
+// CORS headers are handled in index.php
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
@@ -12,8 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 
 try {
     // Lookup data is public - no authentication required
-    $database = new Database();
-    $conn = $database->getConnection();
+    $conn = getDatabaseConnection();
 
     $lookup_type = $_GET['type'] ?? '';
 

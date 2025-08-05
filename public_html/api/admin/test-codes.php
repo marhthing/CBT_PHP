@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../cors.php';
+
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
 
@@ -61,7 +61,7 @@ try {
 
     // Get database connection
     require_once __DIR__ . '/../../config/database.php';
-    $database = new Database();
+    
     $db = $database->getConnection();
 
     switch ($request_method) {

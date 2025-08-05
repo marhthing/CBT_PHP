@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../cors.php';
+
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
@@ -8,7 +8,7 @@ require_once __DIR__ . '/../../includes/response.php';
 $auth = new Auth();
 $user = $auth->requireRole('teacher');
 
-$database = new Database();
+
 $db = $database->getConnection();
 
 function validateTeacherAssignment($db, $user_id, $subject_id, $class_level, $term_id, $session_id) {

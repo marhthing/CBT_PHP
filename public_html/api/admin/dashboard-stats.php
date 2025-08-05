@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../../cors.php';
+
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
 
@@ -18,7 +18,7 @@ if (!$user || $user['role'] !== 'admin') {
 }
 
 try {
-    $database = new Database();
+    
     $db = $database->getConnection();
 
     // Get dashboard statistics with optimized combined query
