@@ -1,24 +1,20 @@
+
 <?php
-// Clean health check endpoint
 require_once __DIR__ . '/../config/database.php';
 
-// Set headers first
 header('Content-Type: application/json; charset=UTF-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-// Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
 
 try {
-    // Test database connection
     $conn = getDatabaseConnection();
-
-    // Get basic stats
+    
     $stmt = $conn->query("SELECT COUNT(*) as user_count FROM users");
     $user_count = $stmt->fetch()['user_count'] ?? 0;
 
@@ -47,6 +43,4 @@ try {
     
     echo json_encode($response);
 }
-
-exit();
 ?>
