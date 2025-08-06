@@ -1,4 +1,6 @@
 <?php
+// Clean start - no output before this point
+error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING);
 
 // Main entry point for InfinityFree hosting
 // This file serves both the React frontend and API endpoints
