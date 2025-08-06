@@ -1,34 +1,44 @@
 <?php
-// Health check endpoint for InfinityFree
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/response.php';
 
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit(0);
+}
+
 try {
     // Test database connection
-    $db_result = testDatabaseConnection();
-    
-    $health_data = [
-        'status' => 'ok',
-        'timestamp' => date('c'),
-        'version' => '1.0.0',
-        'platform' => 'infinityfree',
-        'database' => $db_result['success'] ? 'connected' : 'disconnected',
-        'php_version' => PHP_VERSION
-    ];
-    
-    if (!$db_result['success']) {
-        $health_data['status'] = 'degraded';
-        $health_data['issues'] = ['database_connection_failed'];
-    }
-    
-    $status_code = $health_data['status'] === 'ok' ? 200 : 503;
-    Response::json($health_data, $status_code);
-    
+    $conn = getDatabaseConnection();
+
+    // Get basic stats
+    $stmt = $conn->query("SELECT COUNT(*) as user_count FROM users");
+    $user_count = $stmt->fetch()['user_count'] ?? 0;
+
+    $stmt = $conn->query("SELECT COUNT(*) as subject_count FROM subjects");
+    $subject_count = $stmt->fetch()['subject_count'] ?? 0;
+
+    echo json_encode([
+        'success' => true,
+        'message' => 'API is healthy',
+        'data' => [
+            'database_connected' => true,
+            'users_count' => (int)$user_count,
+            'subjects_count' => (int)$subject_count,
+            'timestamp' => date('c')
+        ]
+    ]);
+
 } catch (Exception $e) {
-    Response::json([
-        'status' => 'error',
-        'message' => 'Health check failed',
+    echo json_encode([
+        'success' => false,
+        'message' => 'Health check failed: ' . $e->getMessage(),
         'timestamp' => date('c')
-    ], 503);
+    ]);
 }
 ?>

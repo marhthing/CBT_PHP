@@ -16,10 +16,10 @@ if (file_exists(__DIR__ . '/../.env')) {
 // Database Configuration for InfinityFree
 // EDIT THESE VALUES WITH YOUR INFINITYFREE DATABASE DETAILS:
 $db_config = [
-    'host' => $_ENV['DB_HOST'] ?? 'sql105.infinityfree.com',          // Your InfinityFree MySQL server
-    'database' => $_ENV['DB_NAME'] ?? 'if0_XXXXXXX_cbt_portal',       // Your database name (replace XXXXXXX)
-    'username' => $_ENV['DB_USER'] ?? 'if0_XXXXXXX',                  // Your database username (replace XXXXXXX)
-    'password' => $_ENV['DB_PASS'] ?? 'your_password_here',           // Your database password
+    'host' => $_ENV['DB_HOST'] ?? 'sql208.infinityfree.com',          // Your InfinityFree MySQL server
+    'database' => $_ENV['DB_NAME'] ?? 'if0_37796751_cbt_portal',       // Your database name (replace with yours)
+    'username' => $_ENV['DB_USER'] ?? 'if0_37796751',                  // Your database username (replace with yours)
+    'password' => $_ENV['DB_PASS'] ?? '',                             // Your database password
     'port' => $_ENV['DB_PORT'] ?? 3306,
     'charset' => 'utf8mb4'
 ];
