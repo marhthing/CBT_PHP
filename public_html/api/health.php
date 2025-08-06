@@ -1,5 +1,8 @@
 
 <?php
+// Prevent any output before JSON
+ob_start();
+
 require_once __DIR__ . '/../config/database.php';
 
 // Set headers first
@@ -14,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-// Ensure no output before JSON
+// Clean any previous output
 ob_clean();
 
 try {
@@ -39,6 +42,8 @@ try {
         ]
     ];
 
+    // Ensure clean output
+    ob_clean();
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
@@ -48,6 +53,8 @@ try {
         'timestamp' => date('c')
     ];
     
+    // Ensure clean output
+    ob_clean();
     echo json_encode($response, JSON_UNESCAPED_UNICODE);
 }
 
