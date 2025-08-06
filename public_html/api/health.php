@@ -1,4 +1,3 @@
-
 <?php
 // Clean health check endpoint
 require_once __DIR__ . '/../config/database.php';
