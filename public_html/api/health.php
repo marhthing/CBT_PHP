@@ -1,16 +1,21 @@
+
 <?php
 require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/response.php';
 
-header('Content-Type: application/json');
+// Set headers first
+header('Content-Type: application/json; charset=UTF-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
 // Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit(0);
+    http_response_code(200);
+    exit();
 }
+
+// Ensure no output before JSON
+ob_clean();
 
 try {
     // Test database connection
@@ -23,7 +28,7 @@ try {
     $stmt = $conn->query("SELECT COUNT(*) as subject_count FROM subjects");
     $subject_count = $stmt->fetch()['subject_count'] ?? 0;
 
-    echo json_encode([
+    $response = [
         'success' => true,
         'message' => 'API is healthy',
         'data' => [
@@ -32,13 +37,19 @@ try {
             'subjects_count' => (int)$subject_count,
             'timestamp' => date('c')
         ]
-    ]);
+    ];
+
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
-    echo json_encode([
+    $response = [
         'success' => false,
         'message' => 'Health check failed: ' . $e->getMessage(),
         'timestamp' => date('c')
-    ]);
+    ];
+    
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
 }
+
+exit();
 ?>

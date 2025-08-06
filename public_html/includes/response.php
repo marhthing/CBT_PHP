@@ -163,8 +163,16 @@ class Response {
 
     // Log API requests (for debugging)
     public static function logRequest($endpoint, $method, $user_id = null, $status_code = 200) {
+        $debug_mode = false;
+        
+        // Check various ways debug might be set
         if ((isset($_ENV['APP_DEBUG']) && $_ENV['APP_DEBUG'] === 'true') || 
-            (defined('APP_DEBUG') && APP_DEBUG === true)) {
+            (defined('APP_DEBUG') && APP_DEBUG === true) ||
+            (isset($_SERVER['APP_DEBUG']) && $_SERVER['APP_DEBUG'] === 'true')) {
+            $debug_mode = true;
+        }
+        
+        if ($debug_mode) {
             $log_data = [
                 'timestamp' => date('c'),
                 'endpoint' => $endpoint,
@@ -184,8 +192,11 @@ class Response {
 
 // Set up error handling for uncaught exceptions
 set_exception_handler(function($exception) {
+    $debug_mode = (isset($_ENV['APP_DEBUG']) && $_ENV['APP_DEBUG'] === 'true') ||
+                  (defined('APP_DEBUG') && APP_DEBUG === true) ||
+                  (isset($_SERVER['APP_DEBUG']) && $_SERVER['APP_DEBUG'] === 'true');
 
-    if ($_ENV['APP_DEBUG'] === 'true') {
+    if ($debug_mode) {
         Response::serverError('Internal server error: ' . $exception->getMessage());
     } else {
         Response::serverError('An unexpected error occurred');
