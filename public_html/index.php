@@ -10,6 +10,8 @@ require_once __DIR__ . '/config/environment.php';
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+header('Access-Control-Allow-Credentials: false');
+header('Access-Control-Max-Age: 86400');
 
 // Handle preflight OPTIONS requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
@@ -72,7 +74,10 @@ if (strpos($path, 'api/') === 0) {
         'system/lookup' => 'api/system/lookup.php',
         
         // Health check
-        'health' => 'api/health.php'
+        'health' => 'api/health.php',
+        
+        // Test API
+        'test' => 'test_api.php'
     ];
     
     // Find matching route

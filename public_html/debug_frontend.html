@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CBT Portal - API Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .success { border-color: #4CAF50; background: #e8f5e9; }
+        .error { border-color: #f44336; background: #ffebee; }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976D2; }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+        }
+        h1 { color: #333; text-align: center; }
+        h3 { color: #555; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 CBT Portal API Debug Tool</h1>
+        <p><strong>Testing frontend ↔ backend communication on InfinityFree</strong></p>
+
+        <div class="test-section" id="test1">
+            <h3>Test 1: API Connection</h3>
+            <button onclick="testAPI()">Test API Health</button>
+            <div class="result" id="result1"></div>
+        </div>
+
+        <div class="test-section" id="test2">
+            <h3>Test 2: Database Connection</h3>
+            <button onclick="testDatabase()">Test Database</button>
+            <div class="result" id="result2"></div>
+        </div>
+
+        <div class="test-section" id="test3">
+            <h3>Test 3: Signup API</h3>
+            <button onclick="testSignup()">Test User Registration</button>
+            <div class="result" id="result3"></div>
+        </div>
+
+        <div class="test-section" id="test4">
+            <h3>Test 4: Login API</h3>
+            <button onclick="testLogin()">Test User Login</button>
+            <div class="result" id="result4"></div>
+        </div>
+
+        <div class="test-section" id="test5">
+            <h3>Test 5: CORS Headers</h3>
+            <button onclick="testCORS()">Test CORS</button>
+            <div class="result" id="result5"></div>
+        </div>
+    </div>
+
+    <script>
+        function updateResult(testId, success, data) {
+            const section = document.getElementById(testId);
+            const result = document.getElementById('result' + testId.slice(-1));
+            
+            section.className = 'test-section ' + (success ? 'success' : 'error');
+            result.textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function testAPI() {
+            try {
+                const response = await fetch('/api/test', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                updateResult('test1', data.success, data);
+            } catch (error) {
+                updateResult('test1', false, { error: error.message });
+            }
+        }
+
+        async function testDatabase() {
+            try {
+                const response = await fetch('/api/system/lookup', {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                updateResult('test2', data.success, {
+                    success: data.success,
+                    subjects_count: data.data?.subjects?.length || 0,
+                    message: data.message
+                });
+            } catch (error) {
+                updateResult('test2', false, { error: error.message });
+            }
+        }
+
+        async function testSignup() {
+            try {
+                const testUser = {
+                    username: 'testuser' + Date.now(),
+                    email: 'test' + Date.now() + '@sfgs.edu.ng',
+                    password: 'password123',
+                    role: 'teacher',
+                    full_name: 'Test User'
+                };
+
+                const response = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testUser)
+                });
+                const data = await response.json();
+                updateResult('test3', data.success, data);
+            } catch (error) {
+                updateResult('test3', false, { error: error.message });
+            }
+        }
+
+        async function testLogin() {
+            try {
+                const loginData = {
+                    identifier: 'admin@sfgs.edu.ng',
+                    password: 'password123',
+                    role: 'admin'
+                };
+
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(loginData)
+                });
+                const data = await response.json();
+                updateResult('test4', data.success, data);
+            } catch (error) {
+                updateResult('test4', false, { error: error.message });
+            }
+        }
+
+        async function testCORS() {
+            try {
+                const response = await fetch('/api/test', {
+                    method: 'OPTIONS'
+                });
+                
+                const corsHeaders = {
+                    'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
+                    'access-control-allow-methods': response.headers.get('access-control-allow-methods'),
+                    'access-control-allow-headers': response.headers.get('access-control-allow-headers'),
+                    'status': response.status
+                };
+                
+                updateResult('test5', response.ok, corsHeaders);
+            } catch (error) {
+                updateResult('test5', false, { error: error.message });
+            }
+        }
+
+        // Auto-run tests on page load
+        window.onload = function() {
+            setTimeout(testAPI, 500);
+            setTimeout(testDatabase, 1000);
+            setTimeout(testCORS, 1500);
+        };
+    </script>
+</body>
+</html>
