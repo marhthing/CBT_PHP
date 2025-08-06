@@ -1,8 +1,6 @@
 
 <?php
-// Prevent any output before JSON
-ob_start();
-
+// Clean health check endpoint
 require_once __DIR__ . '/../config/database.php';
 
 // Set headers first
@@ -16,9 +14,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
 }
-
-// Clean any previous output
-ob_clean();
 
 try {
     // Test database connection
@@ -42,9 +37,7 @@ try {
         ]
     ];
 
-    // Ensure clean output
-    ob_clean();
-    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+    echo json_encode($response);
 
 } catch (Exception $e) {
     $response = [
@@ -53,9 +46,7 @@ try {
         'timestamp' => date('c')
     ];
     
-    // Ensure clean output
-    ob_clean();
-    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+    echo json_encode($response);
 }
 
 exit();
