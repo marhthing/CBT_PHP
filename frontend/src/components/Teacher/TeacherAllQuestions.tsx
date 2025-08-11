@@ -533,7 +533,7 @@ export default function TeacherAllQuestions() {
     // Get current questions
     const indexOfLastQuestion = currentPage * questionsPerPage;
     const indexOfFirstQuestion = indexOfLastQuestion - questionsPerPage;
-    const currentQuestions = Array.isArray(questions) ? questions.slice(indexOfFirstQuestion, indexOfLastQuestion) : [];
+    const currentQuestions = questions.slice(indexOfFirstQuestion, indexOfLastQuestion);
 
   // Change page
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);

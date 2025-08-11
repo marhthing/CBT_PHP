@@ -275,7 +275,7 @@ export default function AdminDashboard() {
                 <Activity size={20} />
                 Recent Test Codes
               </h2>
-              {Array.isArray(recentActivities) && recentActivities.length > 0 ? (
+              {recentActivities.length > 0 ? (
                 <div className="space-y-3">
                   {recentActivities.slice(0, 4).map((activity) => (
                     <div

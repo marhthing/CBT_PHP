@@ -207,7 +207,7 @@ export default function TestResults() {
         </div>
 
         {/* Quick Actions & Available Tests */}
-        {Array.isArray(availableTests) && availableTests.length > 0 && (
+        {availableTests.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Quick Action */}
             <div className="lg:col-span-1">
@@ -234,7 +234,7 @@ export default function TestResults() {
                   Available Tests
                 </h2>
                 <div className="space-y-3">
-                  {Array.isArray(availableTests) ? availableTests.slice(0, 3).map((test) => (
+                  {availableTests.slice(0, 3).map((test) => (
                     <div
                       key={test.id}
                       className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50"
@@ -268,7 +268,7 @@ export default function TestResults() {
                         </button>
                       </div>
                     </div>
-                  )) : null}
+                  ))}
                 </div>
               </div>
             </div>
