@@ -668,8 +668,8 @@ export default function TestCodeManager() {
                   color: '#374151',
                   marginBottom: '8px'
                 }}>
-                  Sample codes: {batch.codes.slice(0, 3).map(c => c.code).join(', ')}
-                  {batch.codes.length > 3 && ` ... (+${batch.codes.length - 3} more)`}
+                  Sample codes: {Array.isArray(batch.codes) ? batch.codes.slice(0, 3).map(c => c.code).join(', ') : 'No codes'}
+                  {Array.isArray(batch.codes) && batch.codes.length > 3 && ` ... (+${batch.codes.length - 3} more)`}
                 </div>
                 <div style={{
                   fontSize: '11px',

@@ -192,7 +192,7 @@ const TeacherDashboard: React.FC = () => {
                 <Activity size={20} />
                 Recent Questions
               </h2>
-              {stats.recent_questions.length > 0 ? (
+              {Array.isArray(stats.recent_questions) && stats.recent_questions.length > 0 ? (
                 <div className="space-y-3">
                   {stats.recent_questions.slice(0, 4).map((question) => (
                     <div
@@ -230,7 +230,7 @@ const TeacherDashboard: React.FC = () => {
         </div>
 
         {/* Recent Assignments */}
-        {assignments.length > 0 && (
+        {Array.isArray(assignments) && assignments.length > 0 && (
           <div className="bg-white rounded-lg p-4 lg:p-6 shadow-sm border border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -246,7 +246,7 @@ const TeacherDashboard: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {assignments.slice(0, 6).map((assignment) => (
+              {Array.isArray(assignments) ? assignments.slice(0, 6).map((assignment) => (
                 <div
                   key={assignment.id}
                   className="p-4 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition-colors"
@@ -266,7 +266,7 @@ const TeacherDashboard: React.FC = () => {
                     Created: {new Date(assignment.created_at).toLocaleDateString()}
                   </div>
                 </div>
-              ))}
+              )) : null}
             </div>
           </div>
         )}
