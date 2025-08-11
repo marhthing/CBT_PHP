@@ -141,11 +141,11 @@ try {
                              tc.pass_score, tc.activated_at, tc.batch_id, tc.test_type,
                              s.name, t.name, sess.name, u.full_name
                     ORDER BY tc.created_at DESC
-                    LIMIT ? OFFSET ?
+                    LIMIT ?, ?
                 ");
                 
-                $params[] = (int)$limit;
                 $params[] = (int)$offset;
+                $params[] = (int)$limit;
                 $stmt->execute($params);
                 $test_codes = $stmt->fetchAll();
                 

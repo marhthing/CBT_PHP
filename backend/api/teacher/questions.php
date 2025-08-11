@@ -86,7 +86,7 @@ function handleGet($db, $user) {
                 SELECT 
                     COUNT(*) as total_questions,
                     COUNT(DISTINCT subject_id) as subjects_count,
-                    COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as this_week
+                    COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 END) as this_week
                 FROM questions 
                 WHERE teacher_id = ?
             ");
@@ -114,7 +114,7 @@ function handleGet($db, $user) {
         $params = [$user['id']];
         
         if (isset($_GET['search']) && !empty($_GET['search'])) {
-            $where_conditions[] = 'question_text ILIKE ?';
+            $where_conditions[] = 'question_text LIKE ?';
             $params[] = '%' . $_GET['search'] . '%';
         }
         

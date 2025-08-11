@@ -8,6 +8,7 @@ class Database {
     private $port;
     private $conn;
     private $db_type;
+    private $options;
 
     public function __construct() {
         // Determine database type: check for MySQL config first, then fallback to PostgreSQL
@@ -138,6 +139,41 @@ class Database {
             return $query . " LIMIT $offset, $limit";
         } else {
             return $query . " LIMIT $limit OFFSET $offset";
+        }
+    }
+    
+    // Get case-insensitive LIKE operator for different databases
+    public function getCaseInsensitiveLike() {
+        if ($this->db_type === 'mysql') {
+            return 'LIKE';  // MySQL is case-insensitive by default
+        } else {
+            return 'ILIKE'; // PostgreSQL case-insensitive
+        }
+    }
+    
+    // Get type casting syntax for different databases
+    public function castAsDecimal($column) {
+        if ($this->db_type === 'mysql') {
+            return "CAST($column AS DECIMAL)";
+        } else {
+            return "$column::decimal";
+        }
+    }
+    
+    // Get date/interval functions for different databases
+    public function dateSubDays($days) {
+        if ($this->db_type === 'mysql') {
+            return "DATE_SUB(NOW(), INTERVAL $days DAY)";
+        } else {
+            return "NOW() - INTERVAL '$days days'";
+        }
+    }
+    
+    public function getCurrentDate() {
+        if ($this->db_type === 'mysql') {
+            return 'CURDATE()';
+        } else {
+            return 'CURRENT_DATE';
         }
     }
 }

@@ -129,7 +129,7 @@ function handleGet($db, $user) {
         $params = [];
         
         if (isset($_GET['search']) && !empty($_GET['search'])) {
-            $where_conditions[] = 'q.question_text ILIKE ?';
+            $where_conditions[] = 'q.question_text LIKE ?';
             $params[] = '%' . $_GET['search'] . '%';
         }
         
@@ -173,11 +173,11 @@ function handleGet($db, $user) {
             JOIN users u ON q.teacher_id = u.id
             WHERE {$where_clause}
             ORDER BY q.created_at DESC
-            LIMIT ? OFFSET ?
+            LIMIT ?, ?
         ");
         
-        $params[] = $limit;
         $params[] = $offset;
+        $params[] = $limit;
         
         $stmt->execute($params);
         $questions = $stmt->fetchAll();

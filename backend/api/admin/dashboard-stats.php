@@ -35,13 +35,13 @@ try {
             (SELECT COUNT(*) FROM users WHERE role = 'student' AND is_active = true) as total_students,
             (SELECT COUNT(*) FROM users WHERE role = 'admin' AND is_active = true) as total_admins,
             (SELECT COUNT(*) FROM teacher_assignments) as total_assignments,
-            (SELECT COUNT(*) FROM test_results WHERE submitted_at >= NOW() - INTERVAL '7 days') as recent_tests,
-            (SELECT COUNT(*) FROM test_results WHERE DATE(submitted_at) = CURRENT_DATE) as tests_today,
+            (SELECT COUNT(*) FROM test_results WHERE submitted_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) as recent_tests,
+            (SELECT COUNT(*) FROM test_results WHERE DATE(submitted_at) = CURDATE()) as tests_today,
             (SELECT 
                 COALESCE(
                     ROUND(
                         AVG(
-                            (tr.score::decimal / tc.score_per_question) / tr.total_questions * 100
+                            (CAST(tr.score AS DECIMAL) / tc.score_per_question) / tr.total_questions * 100
                         ), 1
                     ), 
                     0
