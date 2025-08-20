@@ -149,7 +149,8 @@ function handleGet($db, $user) {
         }
         
         $limit = min(100, max(1, intval($_GET['limit'] ?? 50)));
-        $offset = max(0, intval($_GET['offset'] ?? 0));
+        $page = max(1, intval($_GET['page'] ?? 1));
+        $offset = ($page - 1) * $limit;
         
         $where_clause = implode(' AND ', $where_conditions);
         
@@ -182,6 +183,19 @@ function handleGet($db, $user) {
         $stmt->execute($params);
         $questions = $stmt->fetchAll();
         
+        // Get total count for pagination (remove limit params from count query)
+        $count_params = array_slice($params, 0, -2); // Remove limit and offset
+        $count_stmt = $db->prepare("
+            SELECT COUNT(*) as total
+            FROM questions q
+            JOIN subjects s ON q.subject_id = s.id
+            JOIN users u ON q.teacher_id = u.id
+            WHERE {$where_clause}
+        ");
+        $count_stmt->execute($count_params);
+        $total_result = $count_stmt->fetch();
+        $total = (int)$total_result['total'];
+        
         // Format options for each question based on type
         foreach ($questions as &$question) {
             if ($question['question_type'] === 'true_false') {
@@ -200,7 +214,12 @@ function handleGet($db, $user) {
         }
         
         Response::logRequest('admin/questions', 'GET', $user['id']);
-        Response::success('Questions retrieved', ['questions' => $questions]);
+        Response::success('Questions retrieved', [
+            'questions' => $questions,
+            'total' => $total,
+            'page' => $page,
+            'limit' => $limit
+        ]);
         
     } catch (Exception $e) {
         Response::serverError('Failed to get questions');
