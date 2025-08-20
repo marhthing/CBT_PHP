@@ -10,17 +10,19 @@ Your `public_html/` folder is ready for InfinityFree! It contains:
 
 ```
 public_html/
-├── index.html          # Main frontend page
-├── app.css            # All CSS styles (combined)
-├── app.js             # All JavaScript (combined)
-├── .env               # Environment configuration
-└── api/               # Backend API folder
-    ├── .htaccess      # Apache configuration
-    ├── auth/          # Authentication endpoints
-    ├── admin/         # Admin endpoints
-    ├── teacher/       # Teacher endpoints
-    ├── student/       # Student endpoints
-    └── config/        # Database and JWT configuration
+├── index.html              # Main frontend page
+├── assets/                 # Frontend assets folder
+│   ├── index-BiHdsgrH.css # All CSS styles (48KB minified)
+│   └── index-BoMkJ-zP.js  # All JavaScript (447KB minified)
+├── .env                   # Environment configuration
+├── .htaccess              # Root Apache configuration
+└── api/                   # Backend API folder
+    ├── .htaccess          # API Apache configuration
+    ├── auth/              # Authentication endpoints
+    ├── admin/             # Admin endpoints
+    ├── teacher/           # Teacher endpoints
+    ├── student/           # Student endpoints
+    └── config/            # Database and JWT configuration
 ```
 
 ### Step 2: Database Setup
@@ -220,10 +222,10 @@ All API calls go to `/api/` relative path:
 
 ### InfinityFree-Specific Optimizations
 
-1. **Single File Structure:**
-   - Combined CSS in `app.css` (48KB minified)
-   - Combined JavaScript in `app.js` (447KB minified)
-   - No complex folder structures
+1. **Traditional Assets Structure:**
+   - Combined CSS in `assets/index-BiHdsgrH.css` (48KB minified)
+   - Combined JavaScript in `assets/index-BoMkJ-zP.js` (447KB minified)
+   - Standard folder structure compatible with all hosting providers
 
 2. **Caching Headers:**
    - CSS/JS files cached for 1 year

@@ -14,29 +14,56 @@ class Auth {
         $this->jwt_expires_in = $_ENV['JWT_EXPIRES_IN'] ?? 86400; // 24 hours
     }
 
-    // Generate JWT token using InfinityFree JWT manager
+    // Generate JWT token
     public function generateToken($user_id, $username, $role) {
-        // Include JWT manager if not already loaded
-        if (!class_exists('JWTManager')) {
-            require_once __DIR__ . '/../config/jwt.php';
-        }
-        
-        return JWTManager::generateToken([
+        $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
+        $payload = json_encode([
             'user_id' => $user_id,
             'username' => $username,
-            'role' => $role
+            'role' => $role,
+            'iat' => time(),
+            'exp' => time() + $this->jwt_expires_in
         ]);
+
+        $header_encoded = $this->base64url_encode($header);
+        $payload_encoded = $this->base64url_encode($payload);
+        
+        $signature = hash_hmac('sha256', $header_encoded . "." . $payload_encoded, $this->jwt_secret, true);
+        $signature_encoded = $this->base64url_encode($signature);
+
+        return $header_encoded . "." . $payload_encoded . "." . $signature_encoded;
     }
 
-    // Verify JWT token using InfinityFree JWT manager
+    // Verify JWT token
     public function verifyToken($token) {
-        // Include JWT manager if not already loaded
-        if (!class_exists('JWTManager')) {
-            require_once __DIR__ . '/../config/jwt.php';
+        if (!$token) {
+            return false;
         }
+
+        $parts = explode('.', $token);
+        if (count($parts) !== 3) {
+            return false;
+        }
+
+        $header = $this->base64url_decode($parts[0]);
+        $payload = $this->base64url_decode($parts[1]);
+        $signature = $this->base64url_decode($parts[2]);
+
+        // Verify signature
+        $expected_signature = hash_hmac('sha256', $parts[0] . "." . $parts[1], $this->jwt_secret, true);
         
-        $validation = JWTManager::validateToken($token);
-        return $validation['valid'] ? $validation['payload'] : false;
+        if (!hash_equals($signature, $expected_signature)) {
+            return false;
+        }
+
+        $payload_data = json_decode($payload, true);
+        
+        // Check if token is expired
+        if ($payload_data['exp'] < time()) {
+            return false;
+        }
+
+        return $payload_data;
     }
 
     // Get current user from token

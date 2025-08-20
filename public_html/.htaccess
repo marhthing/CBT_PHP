@@ -1,0 +1,27 @@
+# InfinityFree Root Configuration
+RewriteEngine On
+
+# Cache Control for Assets
+<FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 1 year"
+    Header append Cache-Control "public"
+</FilesMatch>
+
+# Security Headers
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set X-XSS-Protection "1; mode=block"
+
+# Hide .env files
+<Files ".env*">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Disable directory browsing
+Options -Indexes
+
+# PHP Configuration
+php_value max_execution_time 300
+php_value memory_limit 128M

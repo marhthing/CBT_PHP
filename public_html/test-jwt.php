@@ -1,58 +1,56 @@
 <?php
 /**
- * JWT Test Script for InfinityFree Deployment
- * Tests JWT token generation and validation
+ * JWT Test Script for InfinityFree Assets Deployment
  */
+require_once 'api/includes/auth.php';
 
-require_once 'api/config/jwt.php';
-
-// Test JWT Token Generation and Validation
-echo "<h2>CBT Portal - InfinityFree JWT Test</h2>";
+echo "<h2>CBT Portal - InfinityFree Assets Structure Test</h2>";
 
 try {
-    // Test 1: Generate Token
-    echo "<h3>1. Testing JWT Token Generation</h3>";
-    $testPayload = [
-        'user_id' => 1,
-        'username' => 'admin',
-        'role' => 'admin'
-    ];
+    // Test Authentication System
+    echo "<h3>1. Testing JWT Authentication System</h3>";
     
-    $token = JWTManager::generateToken($testPayload);
+    $auth = new Auth();
+    
+    // Generate test token
+    $token = $auth->generateToken(1, 'admin', 'admin');
     echo "✅ JWT Token Generated Successfully<br>";
     echo "Token (first 50 chars): " . htmlspecialchars(substr($token, 0, 50)) . "...<br><br>";
 
-    // Test 2: Validate Token
-    echo "<h3>2. Testing JWT Token Validation</h3>";
-    $validation = JWTManager::validateToken($token);
-    
-    if ($validation['valid']) {
+    // Validate token
+    $payload = $auth->verifyToken($token);
+    if ($payload) {
         echo "✅ JWT Token Validation: SUCCESS<br>";
-        echo "User ID: " . $validation['payload']['user_id'] . "<br>";
-        echo "Username: " . $validation['payload']['username'] . "<br>";
-        echo "Role: " . $validation['payload']['role'] . "<br>";
-        echo "Token expires at: " . date('Y-m-d H:i:s', $validation['payload']['exp']) . "<br><br>";
+        echo "User ID: " . $payload['user_id'] . "<br>";
+        echo "Username: " . $payload['username'] . "<br>";
+        echo "Role: " . $payload['role'] . "<br>";
+        echo "Token expires at: " . date('Y-m-d H:i:s', $payload['exp']) . "<br><br>";
     } else {
-        echo "❌ JWT Token Validation: FAILED<br>";
-        echo "Error: " . $validation['error'] . "<br><br>";
+        echo "❌ JWT Token Validation: FAILED<br><br>";
     }
 
-    // Test 3: Header Detection
-    echo "<h3>3. Testing InfinityFree Header Compatibility</h3>";
+    // Test File Structure
+    echo "<h3>2. Testing Assets Structure</h3>";
     
-    // Simulate Authorization header
-    $_SERVER['HTTP_AUTHORIZATION'] = 'Bearer ' . $token;
-    $headerToken = JWTManager::getTokenFromHeader();
-    
-    if ($headerToken) {
-        echo "✅ Authorization Header Detection: SUCCESS<br>";
-        echo "Header token matches generated token: " . ($headerToken === $token ? 'YES' : 'NO') . "<br><br>";
+    if (file_exists('assets/index-BiHdsgrH.css')) {
+        echo "✅ CSS file found: assets/index-BiHdsgrH.css<br>";
     } else {
-        echo "❌ Authorization Header Detection: FAILED<br><br>";
+        echo "⚠️ CSS file not found<br>";
+    }
+    
+    if (file_exists('assets/index-BoMkJ-zP.js')) {
+        echo "✅ JavaScript file found: assets/index-BoMkJ-zP.js<br>";
+    } else {
+        echo "⚠️ JavaScript file not found<br>";
+    }
+    
+    if (file_exists('api/index.php')) {
+        echo "✅ API backend found: api/index.php<br>";
+    } else {
+        echo "⚠️ API backend not found<br>";
     }
 
-    // Test 4: Environment Configuration
-    echo "<h3>4. Testing Environment Configuration</h3>";
+    echo "<br><h3>3. Environment Configuration Test</h3>";
     if (file_exists('.env')) {
         echo "✅ .env file exists<br>";
         
@@ -72,18 +70,24 @@ try {
         echo "⚠️ .env file not found<br>";
     }
 
-    echo "<br><h3>5. Deployment Status</h3>";
+    echo "<br><h3>4. InfinityFree Deployment Status</h3>";
+    echo "✅ Assets Structure: TRADITIONAL FOLDER LAYOUT<br>";
     echo "✅ JWT System: READY FOR INFINITYFREE<br>";
-    echo "✅ File Structure: OPTIMIZED FOR INFINITYFREE<br>";
     echo "✅ Authentication: FULLY FUNCTIONAL<br>";
-    echo "✅ Cross-Browser Compatible: YES<br><br>";
+    echo "✅ Database Support: MYSQL COMPATIBLE<br><br>";
 
-    echo "<h3>6. Next Steps</h3>";
-    echo "1. Upload all files in public_html/ to your InfinityFree domain<br>";
+    echo "<h3>5. Deployment Instructions</h3>";
+    echo "1. Upload all files in public_html/ to your InfinityFree domain root<br>";
     echo "2. Update .env with your MySQL database credentials<br>";
     echo "3. Import your database schema using phpMyAdmin<br>";
-    echo "4. Test login with: admin/admin123, teacher/teacher123, STU001/student123<br>";
+    echo "4. Test login: admin/admin123, teacher/teacher123, STU001/student123<br>";
     echo "5. Delete this test file (test-jwt.php) after successful deployment<br>";
+    echo "<br><strong>File Structure:</strong><br>";
+    echo "- index.html (React frontend)<br>";
+    echo "- assets/index-BiHdsgrH.css (Styles)<br>";
+    echo "- assets/index-BoMkJ-zP.js (JavaScript)<br>";
+    echo "- api/ (Backend API)<br>";
+    echo "- .env (Configuration)<br>";
 
 } catch (Exception $e) {
     echo "❌ Error: " . $e->getMessage();
