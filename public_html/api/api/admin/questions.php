@@ -175,11 +175,8 @@ function handleGet($db, $user) {
             JOIN users u ON q.teacher_id = u.id
             WHERE {$where_clause}
             ORDER BY q.created_at DESC
-            LIMIT ?, ?
+            LIMIT {$offset}, {$limit}
         ");
-        
-        $params[] = $offset;
-        $params[] = $limit;
         
         $stmt->execute($params);
         $questions = $stmt->fetchAll();
