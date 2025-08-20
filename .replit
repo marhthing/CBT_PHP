@@ -15,29 +15,19 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Frontend"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Backend"
+args = "InfinityFree Test"
 
 [[workflows.workflow]]
-name = "Frontend"
+name = "InfinityFree Test"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd frontend && npm install && npm run dev"
+args = "cd public_html && php -S 0.0.0.0:5000 -t ."
 waitForPort = 5000
 
-[[workflows.workflow]]
-name = "Backend"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "cd backend && php -S 0.0.0.0:8000 index.php"
-waitForPort = 8000
+[workflows.workflow.metadata]
+outputType = "webview"
 
 [[ports]]
 localPort = 5000
