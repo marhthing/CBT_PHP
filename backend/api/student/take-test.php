@@ -57,11 +57,14 @@ try {
     }
     
     // Get random questions for the test with correct answers for shuffling
+    $database = new Database();
+    $random_order = $database->getRandomOrder();
+    
     $questions_stmt = $db->prepare("
         SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
         FROM questions 
         WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
-        ORDER BY RANDOM()
+        ORDER BY $random_order
         LIMIT ?
     ");
     

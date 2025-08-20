@@ -176,6 +176,41 @@ class Database {
             return 'CURRENT_DATE';
         }
     }
+    
+    // Get random ordering for different databases
+    public function getRandomOrder() {
+        if ($this->db_type === 'mysql') {
+            return 'RAND()';
+        } else {
+            return 'RANDOM()';
+        }
+    }
+    
+    // Get database-specific boolean true/false values  
+    public function getBooleanTrue() {
+        if ($this->db_type === 'mysql') {
+            return '1';
+        } else {
+            return 'true';
+        }
+    }
+    
+    public function getBooleanFalse() {
+        if ($this->db_type === 'mysql') {
+            return '0';
+        } else {
+            return 'false';
+        }
+    }
+    
+    // Get database-specific string concatenation
+    public function concat($fields) {
+        if ($this->db_type === 'mysql') {
+            return 'CONCAT(' . implode(', ', $fields) . ')';
+        } else {
+            return implode(' || ', $fields);
+        }
+    }
 }
 
 // Test database connection function

@@ -8,9 +8,9 @@ try {
     
     // Users to update with proper password hashes
     $users = [
-        ['id' => 1, 'password' => 'password123'], // admin
-        ['id' => 2, 'password' => 'password123'], // teacher1  
-        ['id' => 3, 'password' => 'password123']  // student (2023001)
+        ['id' => 1, 'password' => 'admin123'], // admin
+        ['id' => 2, 'password' => 'teacher123'], // teacher1  
+        ['id' => 3, 'password' => 'student123']  // student (2023001)
     ];
     
     foreach ($users as $user) {
