@@ -1,11 +1,20 @@
-# InfinityFree API Configuration
+# InfinityFree API Configuration with JWT Support
 RewriteEngine On
 
 # CORS Headers for InfinityFree
 Header always set Access-Control-Allow-Origin "*"
 Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
+Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Authorization, X-Requested-With"
 Header always set Access-Control-Allow-Credentials "true"
+
+# JWT Token Header Support for InfinityFree
+# Pass Authorization header to PHP (critical for shared hosting)
+RewriteCond %{HTTP:Authorization} (.*)
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%1]
+
+# Alternative header support for InfinityFree proxies
+RewriteCond %{HTTP:X-Authorization} (.*)
+RewriteRule .* - [E=HTTP_X_AUTHORIZATION:%1]
 
 # Handle preflight OPTIONS requests
 RewriteCond %{REQUEST_METHOD} OPTIONS

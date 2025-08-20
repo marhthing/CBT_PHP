@@ -66,33 +66,73 @@ class Auth {
         return $payload_data;
     }
 
-    // Get current user from token
-    public function getCurrentUser() {
-        // Try multiple ways to get the authorization header
-        $auth_header = '';
+    // Get JWT token from request - InfinityFree compatible
+    private function getTokenFromRequest() {
+        $token = null;
         
-        // Method 1: getallheaders()
+        // Method 1: Try Authorization header (most common)
         if (function_exists('getallheaders')) {
             $headers = getallheaders();
-            $auth_header = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+            if (isset($headers['Authorization'])) {
+                $auth = $headers['Authorization'];
+                if (strpos($auth, 'Bearer ') === 0) {
+                    $token = substr($auth, 7);
+                }
+            } elseif (isset($headers['authorization'])) {
+                $auth = $headers['authorization'];
+                if (strpos($auth, 'Bearer ') === 0) {
+                    $token = substr($auth, 7);
+                }
+            }
         }
         
-        // Method 2: $_SERVER variables (more reliable with proxies)
-        if (!$auth_header) {
-            $auth_header = $_SERVER['HTTP_AUTHORIZATION'] ?? '';
+        // Method 2: Try $_SERVER variables (InfinityFree compatibility)
+        if (!$token && isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $auth = $_SERVER['HTTP_AUTHORIZATION'];
+            if (strpos($auth, 'Bearer ') === 0) {
+                $token = substr($auth, 7);
+            }
         }
         
-        // Method 3: Apache specific
-        if (!$auth_header && isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
-            $auth_header = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+        // Method 3: Try REDIRECT_HTTP_AUTHORIZATION (Apache rewrite)
+        if (!$token && isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+            $auth = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+            if (strpos($auth, 'Bearer ') === 0) {
+                $token = substr($auth, 7);
+            }
         }
         
+        // Method 4: Try custom header (InfinityFree fallback)
+        if (!$token && isset($_SERVER['HTTP_X_AUTHORIZATION'])) {
+            $auth = $_SERVER['HTTP_X_AUTHORIZATION'];
+            if (strpos($auth, 'Bearer ') === 0) {
+                $token = substr($auth, 7);
+            }
+        }
         
-        if (!$auth_header || strpos($auth_header, 'Bearer ') !== 0) {
+        // Method 5: Try POST/GET parameter (last resort for shared hosting)
+        if (!$token) {
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (isset($input['token'])) {
+                $token = $input['token'];
+            } elseif (isset($_POST['token'])) {
+                $token = $_POST['token'];
+            } elseif (isset($_GET['token'])) {
+                $token = $_GET['token'];
+            }
+        }
+        
+        return $token;
+    }
+
+    // Get current user from token with InfinityFree compatibility
+    public function getCurrentUser() {
+        $token = $this->getTokenFromRequest();
+        
+        if (!$token) {
             return false;
         }
 
-        $token = substr($auth_header, 7);
         $payload = $this->verifyToken($token);
         
         if (!$payload) {
