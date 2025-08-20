@@ -223,100 +223,290 @@ function handleGet($db, $user) {
         ]);
         
     } catch (Exception $e) {
-        Response::serverError('Failed to get questions');
+        Response::serverError('Failed to get questions: ' . $e->getMessage());
     }
 }
 
 function handlePost($db, $user) {
     try {
-        $input = json_decode(file_get_contents('php://input'), true);
+        // Check if this is a bulk upload request
+        $content_type = $_SERVER['CONTENT_TYPE'] ?? '';
         
-        if (!$input) {
-            Response::validationError('Invalid JSON input');
-        }
-        
-        // Determine question type (default to multiple_choice if not specified)
-        $question_type = $input['question_type'] ?? 'multiple_choice';
-        
-        if (!in_array($question_type, ['multiple_choice', 'true_false'])) {
-            Response::validationError('Question type must be multiple_choice or true_false');
-        }
-        
-        // Validate required fields based on question type
-        if ($question_type === 'true_false') {
-            Response::validateRequired($input, [
-                'question_text', 'option_a', 'option_b',
-                'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
-            ]);
-            
-            // For true/false, correct answer must be A or B
-            if (!in_array($input['correct_answer'], ['A', 'B'])) {
-                Response::validationError('For True/False questions, correct answer must be A or B');
+        if (strpos($content_type, 'multipart/form-data') !== false) {
+            // Handle file upload for SQL import
+            if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+                Response::validationError('No file uploaded or upload error');
             }
-        } else {
-            Response::validateRequired($input, [
-                'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
-                'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
-            ]);
             
-            // For multiple choice, correct answer must be A, B, C, or D
-            if (!in_array($input['correct_answer'], ['A', 'B', 'C', 'D'])) {
-                Response::validationError('For Multiple Choice questions, correct answer must be A, B, C, or D');
+            $file = $_FILES['file'];
+            $allowed_types = ['sql', 'txt'];
+            $file_extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            
+            if (!in_array($file_extension, $allowed_types)) {
+                Response::validationError('Only SQL and TXT files are allowed');
             }
-        }
-        
-        // Validate class level
-        $check_stmt = $db->prepare("SELECT name FROM class_levels WHERE name = ? AND is_active = true");
-        $check_stmt->execute([$input['class_level']]);
-        if (!$check_stmt->fetch()) {
-            Response::validationError('Invalid class level');
-        }
-        
-        // Validate foreign keys exist
-        $checks = [
-            ['subjects', 'id', $input['subject_id'], 'Subject'],
-            ['terms', 'id', $input['term_id'], 'Term'],
-            ['sessions', 'id', $input['session_id'], 'Session']
-        ];
-        
-        foreach ($checks as [$table, $column, $value, $name]) {
-            $check_stmt = $db->prepare("SELECT id FROM {$table} WHERE {$column} = ? AND is_active = true");
-            $check_stmt->execute([$value]);
+            
+            // Validate required bulk upload fields
+            if (!isset($_POST['subject_id']) || !isset($_POST['class_level']) || 
+                !isset($_POST['term_id']) || !isset($_POST['session_id'])) {
+                Response::validationError('Subject, class level, term, and session are required for bulk upload');
+            }
+            
+            $subject_id = $_POST['subject_id'];
+            $class_level = $_POST['class_level'];
+            $term_id = $_POST['term_id'];
+            $session_id = $_POST['session_id'];
+            
+            // Validate foreign keys exist
+            $checks = [
+                ['subjects', 'id', $subject_id, 'Subject'],
+                ['terms', 'id', $term_id, 'Term'],
+                ['sessions', 'id', $session_id, 'Session']
+            ];
+            
+            foreach ($checks as [$table, $column, $value, $name]) {
+                $check_stmt = $db->prepare("SELECT id FROM {$table} WHERE {$column} = ? AND is_active = true");
+                $check_stmt->execute([$value]);
+                if (!$check_stmt->fetch()) {
+                    Response::validationError("Invalid {$name} selected");
+                }
+            }
+            
+            // Validate class level
+            $check_stmt = $db->prepare("SELECT name FROM class_levels WHERE name = ? AND is_active = true");
+            $check_stmt->execute([$class_level]);
             if (!$check_stmt->fetch()) {
-                Response::validationError("Invalid {$name} selected");
+                Response::validationError('Invalid class level');
             }
+            
+            $file_content = file_get_contents($file['tmp_name']);
+            
+            if (empty($file_content)) {
+                Response::validationError('File is empty');
+            }
+            
+            // Process the SQL file
+            $success_count = 0;
+            $error_count = 0;
+            $errors = [];
+            
+            // Split by INSERT statements
+            $statements = preg_split('/INSERT\s+INTO/i', $file_content);
+            
+            foreach ($statements as $index => $statement) {
+                if ($index === 0 && trim($statement) === '') continue; // Skip empty first part
+                
+                $statement = 'INSERT INTO' . $statement;
+                $statement = trim($statement);
+                
+                if (empty($statement)) continue;
+                
+                try {
+                    // Parse INSERT statement to extract values
+                    if (preg_match('/INSERT\s+INTO\s+questions\s*\([^)]+\)\s*VALUES\s*\(([^)]+)\)/i', $statement, $matches)) {
+                        $values_string = $matches[1];
+                        
+                        // Parse values - this is a simple parser, might need improvement for complex cases
+                        $values = [];
+                        $current_value = '';
+                        $in_quotes = false;
+                        $quote_char = '';
+                        
+                        for ($i = 0; $i < strlen($values_string); $i++) {
+                            $char = $values_string[$i];
+                            
+                            if (!$in_quotes && ($char === '"' || $char === "'")) {
+                                $in_quotes = true;
+                                $quote_char = $char;
+                                $current_value .= $char;
+                            } elseif ($in_quotes && $char === $quote_char) {
+                                $in_quotes = false;
+                                $quote_char = '';
+                                $current_value .= $char;
+                            } elseif (!$in_quotes && $char === ',') {
+                                $values[] = trim($current_value);
+                                $current_value = '';
+                            } else {
+                                $current_value .= $char;
+                            }
+                        }
+                        
+                        if (!empty($current_value)) {
+                            $values[] = trim($current_value);
+                        }
+                        
+                        // Clean up values by removing quotes
+                        $clean_values = [];
+                        foreach ($values as $value) {
+                            $value = trim($value);
+                            if (($value[0] === '"' || $value[0] === "'") && 
+                                ($value[strlen($value)-1] === '"' || $value[strlen($value)-1] === "'")) {
+                                $value = substr($value, 1, -1);
+                            }
+                            $clean_values[] = $value;
+                        }
+                        
+                        // Ensure we have enough values (at least question_text, options, correct_answer)
+                        if (count($clean_values) >= 6) {
+                            $question_text = $clean_values[0];
+                            $option_a = $clean_values[1];
+                            $option_b = $clean_values[2];
+                            $option_c = $clean_values[3];
+                            $option_d = $clean_values[4];
+                            $correct_answer = $clean_values[5];
+                            
+                            // Determine question type based on options
+                            $question_type = 'multiple_choice';
+                            if (empty($option_c) && empty($option_d)) {
+                                $question_type = 'true_false';
+                            }
+                            
+                            // Validate correct answer
+                            if ($question_type === 'true_false') {
+                                if (!in_array($correct_answer, ['A', 'B'])) {
+                                    throw new Exception("Invalid correct answer for true/false question");
+                                }
+                            } else {
+                                if (!in_array($correct_answer, ['A', 'B', 'C', 'D'])) {
+                                    throw new Exception("Invalid correct answer for multiple choice question");
+                                }
+                            }
+                            
+                            // Insert question
+                            $insert_stmt = $db->prepare("
+                                INSERT INTO questions (
+                                    question_text, option_a, option_b, option_c, option_d,
+                                    correct_answer, question_type, subject_id, class_level, 
+                                    term_id, session_id, teacher_id
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            ");
+                            
+                            $insert_stmt->execute([
+                                $question_text,
+                                $option_a,
+                                $option_b,
+                                $question_type === 'true_false' ? null : $option_c,
+                                $question_type === 'true_false' ? null : $option_d,
+                                $correct_answer,
+                                $question_type,
+                                $subject_id,
+                                $class_level,
+                                $term_id,
+                                $session_id,
+                                $user['id'] // Admin as teacher_id
+                            ]);
+                            
+                            $success_count++;
+                        } else {
+                            throw new Exception("Insufficient values in INSERT statement");
+                        }
+                    } else {
+                        throw new Exception("Could not parse INSERT statement");
+                    }
+                    
+                } catch (Exception $e) {
+                    $error_count++;
+                    $errors[] = "Statement " . ($index + 1) . ": " . $e->getMessage();
+                }
+            }
+            
+            Response::logRequest('admin/questions/bulk', 'POST', $user['id']);
+            Response::success('Bulk upload completed', [
+                'success_count' => $success_count,
+                'error_count' => $error_count,
+                'errors' => $errors
+            ]);
+        } else {
+            // Handle single question creation
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            if (!$input) {
+                Response::validationError('Invalid JSON input');
+            }
+            
+            // Determine question type (default to multiple_choice if not specified)
+            $question_type = $input['question_type'] ?? 'multiple_choice';
+            
+            if (!in_array($question_type, ['multiple_choice', 'true_false'])) {
+                Response::validationError('Question type must be multiple_choice or true_false');
+            }
+            
+            // Validate required fields based on question type
+            if ($question_type === 'true_false') {
+                Response::validateRequired($input, [
+                    'question_text', 'option_a', 'option_b',
+                    'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
+                ]);
+                
+                // For true/false, correct answer must be A or B
+                if (!in_array($input['correct_answer'], ['A', 'B'])) {
+                    Response::validationError('For True/False questions, correct answer must be A or B');
+                }
+            } else {
+                Response::validateRequired($input, [
+                    'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
+                    'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
+                ]);
+                
+                // For multiple choice, correct answer must be A, B, C, or D
+                if (!in_array($input['correct_answer'], ['A', 'B', 'C', 'D'])) {
+                    Response::validationError('For Multiple Choice questions, correct answer must be A, B, C, or D');
+                }
+            }
+            
+            // Validate class level
+            $check_stmt = $db->prepare("SELECT name FROM class_levels WHERE name = ? AND is_active = true");
+            $check_stmt->execute([$input['class_level']]);
+            if (!$check_stmt->fetch()) {
+                Response::validationError('Invalid class level');
+            }
+            
+            // Validate foreign keys exist
+            $checks = [
+                ['subjects', 'id', $input['subject_id'], 'Subject'],
+                ['terms', 'id', $input['term_id'], 'Term'],
+                ['sessions', 'id', $input['session_id'], 'Session']
+            ];
+            
+            foreach ($checks as [$table, $column, $value, $name]) {
+                $check_stmt = $db->prepare("SELECT id FROM {$table} WHERE {$column} = ? AND is_active = true");
+                $check_stmt->execute([$value]);
+                if (!$check_stmt->fetch()) {
+                    Response::validationError("Invalid {$name} selected");
+                }
+            }
+            
+            // Create question (using admin as teacher_id since admin is creating it)
+            $stmt = $db->prepare("
+                INSERT INTO questions (
+                    question_text, option_a, option_b, option_c, option_d,
+                    correct_answer, question_type, subject_id, class_level, term_id, session_id, teacher_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+            
+            $stmt->execute([
+                $input['question_text'],
+                $input['option_a'],
+                $input['option_b'],
+                $question_type === 'true_false' ? null : $input['option_c'],
+                $question_type === 'true_false' ? null : $input['option_d'],
+                $input['correct_answer'],
+                $question_type,
+                $input['subject_id'],
+                $input['class_level'],
+                $input['term_id'],
+                $input['session_id'],
+                $user['id'] // Admin as teacher_id
+            ]);
+            
+            $question_id = $db->lastInsertId();
+            
+            Response::logRequest('admin/questions', 'POST', $user['id']);
+            Response::created('Question created successfully', ['question_id' => $question_id]);
         }
-        
-        // Create question (using admin as teacher_id since admin is creating it)
-        $stmt = $db->prepare("
-            INSERT INTO questions (
-                question_text, option_a, option_b, option_c, option_d,
-                correct_answer, question_type, subject_id, class_level, term_id, session_id, teacher_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ");
-        
-        $stmt->execute([
-            $input['question_text'],
-            $input['option_a'],
-            $input['option_b'],
-            $question_type === 'true_false' ? null : $input['option_c'],
-            $question_type === 'true_false' ? null : $input['option_d'],
-            $input['correct_answer'],
-            $question_type,
-            $input['subject_id'],
-            $input['class_level'],
-            $input['term_id'],
-            $input['session_id'],
-            $user['id'] // Admin as teacher_id
-        ]);
-        
-        $question_id = $db->lastInsertId();
-        
-        Response::logRequest('admin/questions', 'POST', $user['id']);
-        Response::created('Question created successfully', ['question_id' => $question_id]);
         
     } catch (Exception $e) {
-        Response::serverError('Failed to create question');
+        Response::serverError('Failed to create question: ' . $e->getMessage());
     }
 }
 
@@ -364,7 +554,7 @@ function handleDelete($db, $user) {
         Response::deleted('Question deleted successfully');
         
     } catch (Exception $e) {
-        Response::serverError('Failed to delete question');
+        Response::serverError('Failed to delete question: ' . $e->getMessage());
     }
 }
 
@@ -455,7 +645,7 @@ function handlePut($db, $user) {
         Response::success('Question updated successfully');
         
     } catch (Exception $e) {
-        Response::serverError('Failed to update question');
+        Response::serverError('Failed to update question: ' . $e->getMessage());
     }
 }
 
