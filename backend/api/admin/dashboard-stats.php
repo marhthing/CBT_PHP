@@ -24,6 +24,11 @@ try {
     // Get dashboard statistics with optimized combined query
     $stats = [];
 
+    // Use database-compatible date functions  
+    $db_type = $database->getDatabaseType();
+    $interval_7_days = $db_type === 'mysql' ? 'DATE_SUB(NOW(), INTERVAL 7 DAY)' : 'NOW() - INTERVAL \'7 days\'';
+    $current_date = $db_type === 'mysql' ? 'CURDATE()' : 'CURRENT_DATE';
+    
     // Combine multiple counts into a single query for better performance
     $stmt = $db->prepare("
         SELECT 
@@ -35,13 +40,13 @@ try {
             (SELECT COUNT(*) FROM users WHERE role = 'student' AND is_active = true) as total_students,
             (SELECT COUNT(*) FROM users WHERE role = 'admin' AND is_active = true) as total_admins,
             (SELECT COUNT(*) FROM teacher_assignments) as total_assignments,
-            (SELECT COUNT(*) FROM test_results WHERE submitted_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)) as recent_tests,
-            (SELECT COUNT(*) FROM test_results WHERE DATE(submitted_at) = CURDATE()) as tests_today,
+            (SELECT COUNT(*) FROM test_results WHERE submitted_at >= $interval_7_days) as recent_tests,
+            (SELECT COUNT(*) FROM test_results WHERE DATE(submitted_at) = $current_date) as tests_today,
             (SELECT 
                 COALESCE(
                     ROUND(
                         AVG(
-                            (CAST(tr.score AS DECIMAL) / tc.score_per_question) / tr.total_questions * 100
+                            (" . $database->castAsDecimal('tr.score') . " / " . $database->castAsDecimal('tc.score_per_question') . ") / " . $database->castAsDecimal('tr.total_questions') . " * 100
                         ), 1
                     ), 
                     0

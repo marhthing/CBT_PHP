@@ -1,0 +1,29 @@
+client:745 WebSocket connection to 'wss://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev/?token=7uLxsGgDX_hx' failed: 
+
+client:772 [vite] failed to connect to websocket (Error: WebSocket closed without opened.). 
+client:424 Uncaught (in promise) Error: WebSocket closed without opened.
+    at WebSocket.<anonymous> (client:424:30)
+AdminDashboard.tsx:68 
+ GET https://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev:5000/api/admin/dashboard-stats 500 (Internal Server Error)
+AdminDashboard.tsx:69 
+ GET https://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev:5000/api/admin/test-codes?limit=8 500 (Internal Server Error)
+AdminDashboard.tsx:68 
+ GET https://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev:5000/api/admin/dashboard-stats 500 (Internal Server Error)
+AdminDashboard.tsx:69 
+ GET https://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev:5000/api/admin/test-codes?limit=8 500 (Internal Server Error)
+AdminDashboard.tsx:68 
+ GET https://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev:5000/api/admin/dashboard-stats 500 (Internal Server Error)
+AdminDashboard.tsx:69 
+ GET https://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev:5000/api/admin/test-codes?limit=8 500 (Internal Server Error)
+AdminDashboard.tsx:68 
+ GET https://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev:5000/api/admin/dashboard-stats 500 (Internal Server Error)
+AdminDashboard.tsx:69 
+ GET https://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev:5000/api/admin/test-codes?limit=8 500 (Internal Server Error)
+AdminDashboard.tsx:68 
+ GET https://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev:5000/api/admin/dashboard-stats 500 (Internal Server Error)
+AdminDashboard.tsx:69 
+ GET https://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev:5000/api/admin/test-codes?limit=8 500 (Internal Server Error)
+AdminDashboard.tsx:68 
+ GET https://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev:5000/api/admin/dashboard-stats 500 (Internal Server Error)
+AdminDashboard.tsx:69 
+ GET https://48e6bf35-276a-4bb6-b7fa-88361ddedaf0-00-2rvbsimtmzgx5.kirk.replit.dev:5000/api/admin/test-codes?limit=8 500 (Internal Server Error)
