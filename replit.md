@@ -26,6 +26,14 @@ Successfully migrated from Replit Agent to standard Replit environment on August
 - **Performance Optimizations**: Database-specific optimizations for both MySQL and PostgreSQL
 - **Migration Support**: Easy switching between database types with automatic query adaptation
 
+## Environment Variable Configuration (August 20, 2025)
+- **Flexible API Configuration**: Frontend uses environment variables for backend communication
+- **Same-Server Deployment**: Use `/api` for deployments where frontend and backend share the same domain
+- **Cross-Platform Deployment**: Use full URLs (e.g., `https://api.domain.com/api`) for separate hosting platforms
+- **Production Build Support**: Environment variables properly embedded in production builds
+- **Development vs Production**: Separate environment files for different deployment scenarios
+- **Comprehensive Documentation**: Complete deployment guide for various hosting platforms
+
 # System Architecture
 
 ## Frontend Architecture
