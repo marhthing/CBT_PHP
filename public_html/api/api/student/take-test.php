@@ -11,6 +11,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
+    // Start session early
+    session_start();
+    
     $auth = new Auth();
     $user = $auth->requireRole('student');
 
@@ -168,7 +171,6 @@ try {
     }
 
     // Store answer mappings in session for later validation during submission
-    session_start();
     $_SESSION['answer_mappings_' . $test['id'] . '_' . $user['id']] = $answer_mappings;
 
     Response::logRequest('student/take-test', 'GET', $user['id']);
@@ -183,7 +185,8 @@ try {
     ]);
 
 } catch (Exception $e) {
-    Response::serverError('Failed to load test');
+    error_log("Take test error: " . $e->getMessage());
+    Response::serverError('Failed to load test: ' . $e->getMessage());
 }
 
 ?>
