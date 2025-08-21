@@ -25,14 +25,18 @@ try {
     }
     
     // Get test information and validate
+    $database = new Database();
+    $is_active_condition = $database->getBooleanTrue();
+    $is_activated_condition = $database->getBooleanTrue();
+    
     $stmt = $db->prepare("
         SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level, tc.duration_minutes, tc.total_questions as question_count, tc.is_active, tc.expires_at, tc.subject_id, tc.term_id, tc.session_id, tc.status, tc.used_by
         FROM test_codes tc
         LEFT JOIN subjects s ON tc.subject_id = s.id
-        WHERE tc.code = ? AND tc.is_active = true AND tc.is_activated = true AND tc.status = 'using'
+        WHERE tc.code = ? AND tc.is_active = ? AND tc.is_activated = ? AND tc.status = 'using'
     ");
     
-    $stmt->execute([$test_code]);
+    $stmt->execute([$test_code, $is_active_condition, $is_activated_condition]);
     $test = $stmt->fetch();
     
     if (!$test) {

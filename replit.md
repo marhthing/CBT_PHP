@@ -42,6 +42,8 @@ Successfully migrated from Replit Agent to standard Replit environment on August
 - **Complete Testing**: All CRUD operations for admin assignments and test codes now function properly
 - **Test Code Creation Fix**: Fixed bulk endpoint path detection to properly handle `/admin/test-codes/bulk` requests
 - **Robust Path Parsing**: Enhanced path parsing logic with fallback detection for bulk operations
+- **Teacher Question Management**: Added method override handling for edit (PUT) and delete operations
+- **Student Test Compatibility**: Fixed database boolean field handling for cross-platform compatibility
 
 ## InfinityFree Deployment Ready (August 20, 2025)
 - **Custom Build System**: InfinityFree-optimized build process with flat file structure (no assets folder)

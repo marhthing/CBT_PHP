@@ -27,7 +27,19 @@ switch ($_SERVER['REQUEST_METHOD']) {
         handleGet($db, $user);
         break;
     case 'POST':
-        handlePost($db, $user);
+        // Check for method override first (for InfinityFree compatibility)
+        $input = json_decode(file_get_contents('php://input'), true);
+        if ($input && isset($input['_method'])) {
+            if ($input['_method'] === 'PUT') {
+                handlePut($db, $user);
+            } elseif ($input['_method'] === 'DELETE') {
+                handleDelete($db, $user);
+            } else {
+                handlePost($db, $user);
+            }
+        } else {
+            handlePost($db, $user);
+        }
         break;
     case 'PUT':
         handlePut($db, $user);
