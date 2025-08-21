@@ -155,7 +155,7 @@ function handleGet($db, $user) {
         
         $where_clause = implode(' AND ', $where_conditions);
         
-        $stmt = $db->prepare("
+        $base_query = "
             SELECT 
                 q.id,
                 q.question_text,
@@ -175,14 +175,16 @@ function handleGet($db, $user) {
             JOIN users u ON q.teacher_id = u.id
             WHERE {$where_clause}
             ORDER BY q.created_at DESC
-            LIMIT {$offset}, {$limit}
-        ");
+        ";
+        
+        // Use database-specific LIMIT syntax
+        $full_query = $database->limitQuery($base_query, $limit, $offset);
+        $stmt = $db->prepare($full_query);
         
         $stmt->execute($params);
         $questions = $stmt->fetchAll();
         
-        // Get total count for pagination (remove limit params from count query)
-        $count_params = array_slice($params, 0, -2); // Remove limit and offset
+        // Get total count for pagination (use the same params since no limit/offset in $params)
         $count_stmt = $db->prepare("
             SELECT COUNT(*) as total
             FROM questions q
@@ -190,7 +192,7 @@ function handleGet($db, $user) {
             JOIN users u ON q.teacher_id = u.id
             WHERE {$where_clause}
         ");
-        $count_stmt->execute($count_params);
+        $count_stmt->execute($params);
         $total_result = $count_stmt->fetch();
         $total = (int)$total_result['total'];
         
