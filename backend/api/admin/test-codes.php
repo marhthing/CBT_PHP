@@ -208,7 +208,7 @@ try {
                 break;
             }
             
-            if ($action === 'bulk') {
+            if ($action === 'bulk' || $is_bulk) {
                 // Bulk creation
                 if (!$input) {
                     Response::badRequest('Invalid JSON data');
