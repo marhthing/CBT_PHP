@@ -79,7 +79,7 @@ try {
 
     $params = [
         (int)$test['subject_id'], 
-        (int)$test['class_level'], 
+        $test['class_level'], 
         (int)$test['term_id'], 
         (int)$test['session_id'], 
         (int)$test['question_count']
