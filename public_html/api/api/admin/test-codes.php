@@ -236,7 +236,8 @@ try {
                         // Individual code deletion - not allowed per requirements
                         Response::badRequest('Individual code deletion is not allowed. Delete the entire batch instead.');
                     } else {
-                        Response::badRequest('Invalid delete request');
+                        // Debug information for DELETE request
+                        Response::badRequest('Invalid delete request - Path: ' . $path_info . ' - Segments: ' . json_encode($delete_path_segments));
                     }
                     break;
                 } elseif ($input['_method'] === 'PATCH') {
@@ -318,7 +319,8 @@ try {
                             Response::notFound('Test code batch not found');
                         }
                     } else {
-                        Response::badRequest('Invalid PATCH request');
+                        // Debug information for PATCH request
+                        Response::badRequest('Invalid PATCH request - Path: ' . $path_info . ' - Segments: ' . json_encode($patch_path_segments));
                     }
                     break;
                 }
