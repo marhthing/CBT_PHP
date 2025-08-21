@@ -22,30 +22,33 @@ function validateTeacherAssignment($db, $user_id, $subject_id, $class_level, $te
     return $result['count'] > 0;
 }
 
+// Get the request body once to avoid reading twice
+$request_body = file_get_contents('php://input');
+$input_data = json_decode($request_body, true);
+
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
         handleGet($db, $user);
         break;
     case 'POST':
         // Check for method override first (for InfinityFree compatibility)
-        $input = json_decode(file_get_contents('php://input'), true);
-        if ($input && isset($input['_method'])) {
-            if ($input['_method'] === 'PUT') {
-                handlePut($db, $user);
-            } elseif ($input['_method'] === 'DELETE') {
-                handleDelete($db, $user);
+        if ($input_data && isset($input_data['_method'])) {
+            if ($input_data['_method'] === 'PUT') {
+                handlePut($db, $user, $input_data);
+            } elseif ($input_data['_method'] === 'DELETE') {
+                handleDelete($db, $user, $input_data);
             } else {
-                handlePost($db, $user);
+                handlePost($db, $user, $input_data);
             }
         } else {
-            handlePost($db, $user);
+            handlePost($db, $user, $input_data);
         }
         break;
     case 'PUT':
-        handlePut($db, $user);
+        handlePut($db, $user, $input_data);
         break;
     case 'DELETE':
-        handleDelete($db, $user);
+        handleDelete($db, $user, $input_data);
         break;
     default:
         Response::methodNotAllowed();
@@ -179,9 +182,11 @@ function handleGet($db, $user) {
     }
 }
 
-function handlePost($db, $user) {
+function handlePost($db, $user, $input = null) {
     try {
-        $input = json_decode(file_get_contents('php://input'), true);
+        if ($input === null) {
+            $input = json_decode(file_get_contents('php://input'), true);
+        }
         
         if (!$input) {
             Response::validationError('Invalid JSON input');
@@ -235,7 +240,7 @@ function handlePost($db, $user) {
     }
 }
 
-function handlePut($db, $user) {
+function handlePut($db, $user, $input = null) {
     try {
         $question_id = $_GET['id'] ?? null;
         
@@ -251,7 +256,9 @@ function handlePut($db, $user) {
             Response::forbidden('Question not found or access denied');
         }
         
-        $input = json_decode(file_get_contents('php://input'), true);
+        if ($input === null) {
+            $input = json_decode(file_get_contents('php://input'), true);
+        }
         
         if (!$input) {
             Response::validationError('Invalid JSON input');
@@ -299,7 +306,7 @@ function handlePut($db, $user) {
     }
 }
 
-function handleDelete($db, $user) {
+function handleDelete($db, $user, $input = null) {
     try {
         $question_id = $_GET['id'] ?? null;
         

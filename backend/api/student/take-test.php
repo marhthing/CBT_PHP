@@ -61,7 +61,6 @@ try {
     }
     
     // Get random questions for the test with correct answers for shuffling
-    $database = new Database();
     $random_order = $database->getRandomOrder();
     
     $questions_stmt = $db->prepare("
