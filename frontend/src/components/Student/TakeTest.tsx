@@ -57,7 +57,7 @@ export default function TakeTest() {
   const [error, setError] = useState('')
   const [testStarted, setTestStarted] = useState(false)
 
-  // Browser back button protection
+  // Browser back button and fullscreen protection
   useEffect(() => {
     const isInTestPhase = testPreview || testStarted
 
@@ -85,9 +85,24 @@ export default function TakeTest() {
         }
       }
 
+      // Prevent fullscreen exit during test
+      const handleFullscreenChange = () => {
+        const isDesktop = window.innerWidth >= 768
+        if (isDesktop && !document.fullscreenElement && (testPreview || testStarted)) {
+          // Student tried to exit fullscreen during test, re-enter it
+          if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {
+              // Fullscreen request failed, show warning
+              alert('Please stay in fullscreen mode during the test for security purposes.')
+            })
+          }
+        }
+      }
+
       // Add listeners
       window.addEventListener('beforeunload', handleBeforeUnload)
       window.addEventListener('popstate', handlePopState)
+      document.addEventListener('fullscreenchange', handleFullscreenChange)
 
       // Push initial state to intercept back navigation
       window.history.pushState(null, '', window.location.pathname + window.location.search)
@@ -95,29 +110,92 @@ export default function TakeTest() {
       return () => {
         window.removeEventListener('beforeunload', handleBeforeUnload)
         window.removeEventListener('popstate', handlePopState)
+        document.removeEventListener('fullscreenchange', handleFullscreenChange)
       }
     }
   }, [testPreview, testStarted, navigate])
 
-  // Hide bottom navigation only during test phases, don't interfere with CSS otherwise
+  // Hide navigation and enable fullscreen during test phases
   useEffect(() => {
-    const shouldHideBottomNav = testPreview || testStarted
-    const bottomNav = document.querySelector('#mobile-bottom-nav') as HTMLElement
+    const isInTestPhase = testPreview || testStarted
+    const isDesktop = window.innerWidth >= 768 // md breakpoint
     
+    // Hide bottom navigation on mobile
+    const bottomNav = document.querySelector('#mobile-bottom-nav') as HTMLElement
     if (bottomNav) {
-      if (shouldHideBottomNav) {
+      if (isInTestPhase) {
         bottomNav.style.display = 'none'
       } else {
-        // Remove inline style to let CSS take control
         bottomNav.style.display = ''
       }
     }
 
-    // Cleanup on unmount - remove inline styles to restore CSS control
+    // Hide sidebar and enable fullscreen on desktop
+    if (isDesktop) {
+      const sidebar = document.querySelector('aside') as HTMLElement
+      const mainContent = document.querySelector('main') as HTMLElement
+      
+      if (isInTestPhase) {
+        // Hide sidebar
+        if (sidebar) {
+          sidebar.style.display = 'none'
+        }
+        // Remove left margin from main content to go full width
+        if (mainContent) {
+          mainContent.style.marginLeft = '0'
+          mainContent.style.width = '100%'
+        }
+        
+        // Enter fullscreen mode
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen().catch(() => {
+            // Fullscreen request failed, continue anyway
+          })
+        }
+      } else {
+        // Restore sidebar
+        if (sidebar) {
+          sidebar.style.display = ''
+        }
+        // Restore main content margin
+        if (mainContent) {
+          mainContent.style.marginLeft = ''
+          mainContent.style.width = ''
+        }
+        
+        // Exit fullscreen mode
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {
+            // Exit fullscreen failed, continue anyway
+          })
+        }
+      }
+    }
+
+    // Cleanup on unmount
     return () => {
       const bottomNav = document.querySelector('#mobile-bottom-nav') as HTMLElement
       if (bottomNav) {
         bottomNav.style.display = ''
+      }
+      
+      if (isDesktop) {
+        const sidebar = document.querySelector('aside') as HTMLElement
+        const mainContent = document.querySelector('main') as HTMLElement
+        
+        if (sidebar) {
+          sidebar.style.display = ''
+        }
+        if (mainContent) {
+          mainContent.style.marginLeft = ''
+          mainContent.style.width = ''
+        }
+        
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {
+            // Exit fullscreen failed, continue anyway
+          })
+        }
       }
     }
   }, [testPreview, testStarted])
