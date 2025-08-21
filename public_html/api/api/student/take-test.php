@@ -25,7 +25,6 @@ try {
     }
     
     // Get test information and validate
-    $database = new Database();
     $is_active_condition = $database->getBooleanTrue();
     $is_activated_condition = $database->getBooleanTrue();
     
@@ -75,7 +74,7 @@ try {
     $raw_questions = $questions_stmt->fetchAll();
     
     if (count($raw_questions) < $test['question_count']) {
-        Response::error('Insufficient questions available for this test');
+        Response::error('Insufficient questions available for this test. Found ' . count($raw_questions) . ' questions, but test requires ' . $test['question_count'] . ' questions.');
     }
     
     // Shuffle options for each question and create answer mapping
