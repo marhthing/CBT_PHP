@@ -179,11 +179,13 @@ try {
                 if ($input['_method'] === 'DELETE') {
                     // Handle DELETE operations via POST method override
                     
-                    // Parse path for batch operations: /admin/test-codes/batch/{batch_id}
+                    // Parse path for batch operations: /api/admin/test-codes/batch/{batch_id}
                     $delete_path_segments = explode('/', trim($path_info, '/'));
                     
-                    // Remove admin/test-codes prefix if present
-                    if (count($delete_path_segments) >= 2 && $delete_path_segments[0] === 'admin' && $delete_path_segments[1] === 'test-codes') {
+                    // Remove api/admin/test-codes prefix if present
+                    if (count($delete_path_segments) >= 3 && $delete_path_segments[0] === 'api' && $delete_path_segments[1] === 'admin' && $delete_path_segments[2] === 'test-codes') {
+                        $delete_path_segments = array_slice($delete_path_segments, 3);
+                    } elseif (count($delete_path_segments) >= 2 && $delete_path_segments[0] === 'admin' && $delete_path_segments[1] === 'test-codes') {
                         $delete_path_segments = array_slice($delete_path_segments, 2);
                     }
                     
@@ -236,16 +238,17 @@ try {
                         // Individual code deletion - not allowed per requirements
                         Response::badRequest('Individual code deletion is not allowed. Delete the entire batch instead.');
                     } else {
-                        // Debug information for DELETE request
-                        Response::badRequest('Invalid delete request - Path: ' . $path_info . ' - Segments: ' . json_encode($delete_path_segments));
+                        Response::badRequest('Invalid delete request');
                     }
                     break;
                 } elseif ($input['_method'] === 'PATCH') {
                     // Handle PATCH operations via POST method override (for batch activation)
                     $patch_path_segments = explode('/', trim($path_info, '/'));
                     
-                    // Remove admin/test-codes prefix if present
-                    if (count($patch_path_segments) >= 2 && $patch_path_segments[0] === 'admin' && $patch_path_segments[1] === 'test-codes') {
+                    // Remove api/admin/test-codes prefix if present
+                    if (count($patch_path_segments) >= 3 && $patch_path_segments[0] === 'api' && $patch_path_segments[1] === 'admin' && $patch_path_segments[2] === 'test-codes') {
+                        $patch_path_segments = array_slice($patch_path_segments, 3);
+                    } elseif (count($patch_path_segments) >= 2 && $patch_path_segments[0] === 'admin' && $patch_path_segments[1] === 'test-codes') {
                         $patch_path_segments = array_slice($patch_path_segments, 2);
                     }
                     
@@ -319,8 +322,7 @@ try {
                             Response::notFound('Test code batch not found');
                         }
                     } else {
-                        // Debug information for PATCH request
-                        Response::badRequest('Invalid PATCH request - Path: ' . $path_info . ' - Segments: ' . json_encode($patch_path_segments));
+                        Response::badRequest('Invalid PATCH request');
                     }
                     break;
                 }
