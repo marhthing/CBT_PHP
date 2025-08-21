@@ -53,7 +53,7 @@ try {
         WHERE test_code_id = ? AND student_id = ?
     ");
 
-    $check_stmt->execute([$test['id'], $user['id']]);
+    $check_stmt->execute([(int)$test['id'], (int)$user['id']]);
 
     if ($check_stmt->fetch()) {
         Response::error('You have already completed this test', 409);

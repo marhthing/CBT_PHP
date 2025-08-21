@@ -95,11 +95,11 @@ try {
     ");
     
     $duplicate_check_stmt->execute([
-        (int)$user['id'], 
-        (int)$test['id'],
-        (int)$test['class_level'], 
-        (int)$test['id'],
-        (int)$test['id']
+        $user['id'], 
+        $test['id'],
+        $test['class_level'], 
+        $test['id'],
+        $test['id']
     ]);
     
     if ($duplicate_check_stmt->fetch()) {
@@ -113,7 +113,7 @@ try {
         WHERE q.subject_id = (SELECT subject_id FROM test_codes WHERE id = ?)
         AND q.class_level = ?
     ");
-    $stmt->execute([(int)$test['id'], (int)$test['class_level']]);
+    $stmt->execute([$test['id'], $test['class_level']]);
     $available_questions = $stmt->fetch()['question_count'];
 
     if ($available_questions < $test['question_count']) {
