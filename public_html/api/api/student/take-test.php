@@ -71,11 +71,11 @@ try {
     ");
 
     $questions_stmt->execute([
-        (int)$test['subject_id'], 
+        $test['subject_id'], 
         $test['class_level'], 
-        (int)$test['term_id'], 
-        (int)$test['session_id'], 
-        (int)$test['question_count']
+        $test['term_id'], 
+        $test['session_id'], 
+        $test['question_count']
     ]);
     $raw_questions = $questions_stmt->fetchAll();
 
