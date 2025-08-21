@@ -35,10 +35,8 @@ try {
         WHERE tc.code = ? AND tc.is_active = 1 AND tc.is_activated = 1 AND tc.status = 'using'
     ");
 
-    error_log("Executing test lookup query with test_code: " . $test_code);
     $stmt->execute([$test_code]);
     $test = $stmt->fetch();
-    error_log("Test lookup result: " . ($test ? json_encode($test) : 'null'));
 
     if (!$test) {
         Response::notFound('Test code not found, expired, or not in "using" status');
@@ -55,7 +53,6 @@ try {
         WHERE test_code_id = ? AND student_id = ?
     ");
 
-    error_log("Executing test results check with test_id: " . $test['id'] . ", user_id: " . $user['id']);
     $check_stmt->execute([(int)$test['id'], (int)$user['id']]);
 
     if ($check_stmt->fetch()) {
@@ -63,38 +60,21 @@ try {
     }
 
     // Get random questions for the test with correct answers for shuffling
-    $random_order = $database->getRandomOrder();
-    error_log("Random order function returned: " . $random_order);
-
-    $sql_query = "
+    // Temporarily remove random ordering to isolate the issue
+    $questions_stmt = $db->prepare("
         SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
         FROM questions 
         WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
-        ORDER BY $random_order
         LIMIT ?
-    ";
-    error_log("Full SQL query: " . $sql_query);
+    ");
 
-    $questions_stmt = $db->prepare($sql_query);
-
-    $params = [
+    $questions_stmt->execute([
         (int)$test['subject_id'], 
         $test['class_level'], 
         (int)$test['term_id'], 
         (int)$test['session_id'], 
         (int)$test['question_count']
-    ];
-    error_log("Query parameters: " . json_encode($params));
-
-    try {
-        $questions_stmt->execute($params);
-        error_log("Questions query executed successfully");
-    } catch (Exception $e) {
-        error_log("Questions query failed: " . $e->getMessage());
-        error_log("SQL Query that failed: " . $sql_query);
-        error_log("Parameters that failed: " . json_encode($params));
-        throw $e;
-    }
+    ]);
     $raw_questions = $questions_stmt->fetchAll();
 
     if (count($raw_questions) < (int)$test['question_count']) {
@@ -206,14 +186,6 @@ try {
     ]);
 
 } catch (Exception $e) {
-    error_log("Take test error: " . $e->getMessage());
-    error_log("Take test error trace: " . $e->getTraceAsString());
-    if (isset($test)) {
-        error_log("Test data: " . json_encode($test));
-    }
-    if (isset($user)) {
-        error_log("User data: " . json_encode($user));
-    }
     Response::serverError('Failed to load test: ' . $e->getMessage());
 }
 
