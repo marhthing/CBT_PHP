@@ -35,8 +35,10 @@ try {
         WHERE tc.code = ? AND tc.is_active = 1 AND tc.is_activated = 1 AND tc.status = 'using'
     ");
 
+    error_log("Executing test lookup query with test_code: " . $test_code);
     $stmt->execute([$test_code]);
     $test = $stmt->fetch();
+    error_log("Test lookup result: " . ($test ? json_encode($test) : 'null'));
 
     if (!$test) {
         Response::notFound('Test code not found, expired, or not in "using" status');
@@ -53,6 +55,7 @@ try {
         WHERE test_code_id = ? AND student_id = ?
     ");
 
+    error_log("Executing test results check with test_id: " . $test['id'] . ", user_id: " . $user['id']);
     $check_stmt->execute([(int)$test['id'], (int)$user['id']]);
 
     if ($check_stmt->fetch()) {
@@ -70,6 +73,7 @@ try {
         LIMIT ?
     ");
 
+    error_log("Executing questions query with params: subject_id=" . $test['subject_id'] . ", class_level=" . $test['class_level'] . ", term_id=" . $test['term_id'] . ", session_id=" . $test['session_id'] . ", question_count=" . $test['question_count']);
     $questions_stmt->execute([
         (int)$test['subject_id'], 
         (int)$test['class_level'], 
@@ -189,6 +193,13 @@ try {
 
 } catch (Exception $e) {
     error_log("Take test error: " . $e->getMessage());
+    error_log("Take test error trace: " . $e->getTraceAsString());
+    if (isset($test)) {
+        error_log("Test data: " . json_encode($test));
+    }
+    if (isset($user)) {
+        error_log("User data: " . json_encode($user));
+    }
     Response::serverError('Failed to load test: ' . $e->getMessage());
 }
 
