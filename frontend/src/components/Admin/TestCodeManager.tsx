@@ -124,19 +124,31 @@ export default function TestCodeManager() {
     }
 
     try {
-      const response = await api.get('/teacher/questions', {
+      const response = await api.get('/admin/questions/count', {
         params: {
           subject_id: createForm.subject_id,
           class_level: createForm.class_level,
           term_id: createForm.term_id,
-          session_id: createForm.session_id,
-          count_only: true
+          session_id: createForm.session_id
         }
       })
-      const newCount = response.data.total || 0
+      const newCount = response.data.data?.count || 0
       if (newCount !== availableQuestions) setAvailableQuestions(newCount)
     } catch (error) {
-      if (availableQuestions !== 0) setAvailableQuestions(0)
+      // Try fallback with regular questions endpoint
+      try {
+        const fallbackResponse = await api.get('/admin/questions', {
+          params: {
+            subject: createForm.subject_id,
+            class: createForm.class_level,
+            limit: 1 // Just get count
+          }
+        })
+        const newCount = fallbackResponse.data.data?.total || 0
+        if (newCount !== availableQuestions) setAvailableQuestions(newCount)
+      } catch (fallbackError) {
+        if (availableQuestions !== 0) setAvailableQuestions(0)
+      }
     }
   }, [createForm.subject_id, createForm.class_level, createForm.term_id, createForm.session_id, availableQuestions])
 
