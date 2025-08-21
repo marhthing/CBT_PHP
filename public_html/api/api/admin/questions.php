@@ -24,7 +24,22 @@ $user = $auth->requireRole('admin');
 $database = new Database();
 $db = $database->getConnection();
 
-switch ($_SERVER['REQUEST_METHOD']) {
+// Handle method override for InfinityFree compatibility
+$request_method = $_SERVER['REQUEST_METHOD'];
+
+// Check for method override in POST requests (InfinityFree workaround)
+if ($request_method === 'POST') {
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (isset($input['_method'])) {
+        $request_method = strtoupper($input['_method']);
+    }
+    // Also check headers for method override
+    if (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
+        $request_method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
+    }
+}
+
+switch ($request_method) {
     case 'GET':
         handleGet($db, $user);
         break;
@@ -524,13 +539,24 @@ function handlePost($db, $user) {
 
 function handleDelete($db, $user) {
     try {
-        // Parse question ID from URL path
+        // For InfinityFree compatibility, allow ID in request body
+        $question_id = null;
+        
+        // Try to get ID from URL path first
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $path_parts = explode('/', trim($path, '/'));
-        $question_id = end($path_parts);
+        $last_part = end($path_parts);
         
-        if (!is_numeric($question_id)) {
-            $question_id = $_GET['id'] ?? null;
+        if (is_numeric($last_part)) {
+            $question_id = $last_part;
+        } elseif (isset($_GET['id'])) {
+            $question_id = $_GET['id'];
+        } else {
+            // InfinityFree compatibility - get ID from request body
+            $input = json_decode(file_get_contents('php://input'), true);
+            if (isset($input['id'])) {
+                $question_id = $input['id'];
+            }
         }
         
         if (!$question_id) {
@@ -572,20 +598,28 @@ function handleDelete($db, $user) {
 
 function handlePut($db, $user) {
     try {
-        // Parse question ID from URL path
+        $input = json_decode(file_get_contents('php://input'), true);
+        
+        // For InfinityFree compatibility, allow ID in request body
+        $question_id = null;
+        
+        // Try to get ID from URL path first
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
         $path_parts = explode('/', trim($path, '/'));
-        $question_id = end($path_parts);
+        $last_part = end($path_parts);
         
-        if (!is_numeric($question_id)) {
-            $question_id = $_GET['id'] ?? null;
+        if (is_numeric($last_part)) {
+            $question_id = $last_part;
+        } elseif (isset($_GET['id'])) {
+            $question_id = $_GET['id'];
+        } elseif (isset($input['id'])) {
+            // InfinityFree compatibility - get ID from request body
+            $question_id = $input['id'];
         }
         
         if (!$question_id) {
             Response::validationError('Question ID is required');
         }
-        
-        $input = json_decode(file_get_contents('php://input'), true);
         
         if (!$input) {
             Response::validationError('Invalid JSON input');
