@@ -23,29 +23,12 @@ Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, O
 Header always set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Authorization, Bearer"
 Header always set Access-Control-Max-Age "3600"
 
-# Force CORS headers before any processing
-Header always set Access-Control-Allow-Origin "*"
-Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-Header always set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Authorization, Bearer"
-Header always set Access-Control-Max-Age "3600"
-
 # Handle preflight OPTIONS requests immediately
 RewriteCond %{REQUEST_METHOD} OPTIONS
 RewriteRule .* - [R=200,L]
 
-# InfinityFree method override - intercept PUT/DELETE and convert to POST
-RewriteCond %{REQUEST_METHOD} ^(PUT|DELETE)$
-RewriteRule ^api/admin/questions/([0-9]+)/?$ /api/api/admin/questions.php?id=$1&_method=%1 [QSA,L,E=REQUEST_METHOD:POST]
-
-RewriteCond %{REQUEST_METHOD} ^(PUT|DELETE)$
-RewriteRule ^api/admin/test-codes/([0-9]+)/?$ /api/api/admin/test-codes.php?id=$1&_method=%1 [QSA,L,E=REQUEST_METHOD:POST]
-
-# Standard API routing for InfinityFree
-RewriteRule ^api/admin/questions/bulk/?$ /api/api/admin/questions/bulk.php [QSA,L]
-RewriteRule ^api/admin/questions/([0-9]+)/?$ /api/api/admin/questions.php?id=$1 [QSA,L]
+# Standard API routing for InfinityFree (simplified)
 RewriteRule ^api/admin/questions/?$ /api/api/admin/questions.php [QSA,L]
-RewriteRule ^api/admin/test-codes/bulk/?$ /api/api/admin/test-codes.php [QSA,L]
-RewriteRule ^api/admin/test-codes/([0-9]+)/?$ /api/api/admin/test-codes.php?id=$1 [QSA,L]
 RewriteRule ^api/admin/test-codes/?$ /api/api/admin/test-codes.php [QSA,L]
 RewriteRule ^api/admin/teachers/?$ /api/api/admin/teachers.php [QSA,L]
 
@@ -65,12 +48,6 @@ Header always set X-XSS-Protection "1; mode=block"
 
 # Disable directory browsing
 Options -Indexes
-
-# API Routing for InfinityFree (Handle before SPA routing)
-RewriteCond %{REQUEST_URI} ^/api/
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^api/(.*)$ /api/$1 [QSA,L]
 
 # React Router SPA Configuration
 # Handle client-side routing - redirect all requests to index.html unless they're files/directories
