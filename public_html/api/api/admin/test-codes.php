@@ -178,6 +178,20 @@ try {
             if ($input && isset($input['_method'])) {
                 if ($input['_method'] === 'DELETE') {
                     // Handle DELETE operations via POST method override
+                    
+                    // Parse path for batch operations: /admin/test-codes/batch/{batch_id}
+                    $delete_path_segments = explode('/', trim($path_info, '/'));
+                    
+                    // Remove admin/test-codes prefix if present
+                    if (count($delete_path_segments) >= 2 && $delete_path_segments[0] === 'admin' && $delete_path_segments[1] === 'test-codes') {
+                        $delete_path_segments = array_slice($delete_path_segments, 2);
+                    }
+                    
+                    // Filter out empty parts
+                    $delete_path_segments = array_values(array_filter($delete_path_segments, function($part) {
+                        return $part !== '';
+                    }));
+                    
                     if ($action === 'bulk' && isset($_GET['empty_table'])) {
                         // Empty the entire test_codes table - database compatible way
                         if ($database->getDatabaseType() === 'mysql') {
@@ -188,9 +202,9 @@ try {
                         $stmt->execute();
                         
                         Response::success('All test codes have been deleted successfully');
-                    } elseif ($is_batch && isset($path_parts[1])) {
+                    } elseif (count($delete_path_segments) >= 2 && $delete_path_segments[0] === 'batch') {
                         // Delete entire batch: /admin/test-codes/batch/{batch_id}
-                        $batch_id = $path_parts[1];
+                        $batch_id = $delete_path_segments[1];
                         
                         // Check if any codes in the batch have been used
                         $check_stmt = $db->prepare("
@@ -227,16 +241,21 @@ try {
                     break;
                 } elseif ($input['_method'] === 'PATCH') {
                     // Handle PATCH operations via POST method override (for batch activation)
-                    $path_segments = explode('/', trim($path_info, '/'));
+                    $patch_path_segments = explode('/', trim($path_info, '/'));
                     
                     // Remove admin/test-codes prefix if present
-                    if (count($path_segments) >= 2 && $path_segments[0] === 'admin' && $path_segments[1] === 'test-codes') {
-                        $path_segments = array_slice($path_segments, 2);
+                    if (count($patch_path_segments) >= 2 && $patch_path_segments[0] === 'admin' && $patch_path_segments[1] === 'test-codes') {
+                        $patch_path_segments = array_slice($patch_path_segments, 2);
                     }
                     
-                    if (count($path_segments) >= 3 && $path_segments[0] === 'batch' && $path_segments[2] === 'toggle-activation') {
+                    // Filter out empty parts
+                    $patch_path_segments = array_values(array_filter($patch_path_segments, function($part) {
+                        return $part !== '';
+                    }));
+                    
+                    if (count($patch_path_segments) >= 3 && $patch_path_segments[0] === 'batch' && $patch_path_segments[2] === 'toggle-activation') {
                         // Batch activation
-                        $batch_id = $path_segments[1];
+                        $batch_id = $patch_path_segments[1];
                         
                         if (!isset($input['is_activated'])) {
                             Response::badRequest('is_activated field is required');
