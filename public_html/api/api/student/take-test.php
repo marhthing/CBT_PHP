@@ -75,11 +75,11 @@ try {
         $test['class_level'], 
         $test['term_id'], 
         $test['session_id'], 
-        $test['question_count']
+        (int)$test['question_count']
     ]);
     $raw_questions = $questions_stmt->fetchAll();
 
-    if (count($raw_questions) < $test['question_count']) {
+    if (count($raw_questions) < (int)$test['question_count']) {
         Response::error('Insufficient questions available for this test. Found ' . count($raw_questions) . ' questions, but test requires ' . $test['question_count'] . ' questions.');
     }
 
