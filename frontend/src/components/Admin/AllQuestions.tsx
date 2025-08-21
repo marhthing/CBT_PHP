@@ -161,7 +161,11 @@ export default function AllQuestions() {
 
     setDeleting(true)
     try {
-      const response = await api.delete(`/admin/questions/${questionToDelete}`)
+      // Use POST with method override for InfinityFree compatibility
+      const response = await api.post(`/admin/questions/${questionToDelete}`, {
+        _method: 'DELETE',
+        id: questionToDelete
+      })
       if (response.data.success) {
         await fetchQuestions()
         await fetchQuestionStats()
@@ -182,7 +186,10 @@ export default function AllQuestions() {
 
     setSavingEdit(true)
     try {
-      const response = await api.put(`/admin/questions/${originalQuestion.id}`, {
+      // Use POST with method override for InfinityFree compatibility
+      const response = await api.post(`/admin/questions/${originalQuestion.id}`, {
+        _method: 'PUT',
+        id: originalQuestion.id,
         question_text: updatedQuestion.question_text,
         question_type: updatedQuestion.question_type,
         option_a: updatedQuestion.option_a,
