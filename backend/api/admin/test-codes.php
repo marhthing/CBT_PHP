@@ -155,10 +155,61 @@ try {
             break;
 
         case 'POST':
+            // Check for method override first (for InfinityFree compatibility)
+            $input = json_decode(file_get_contents('php://input'), true);
+            if ($input && isset($input['_method']) && $input['_method'] === 'DELETE') {
+                // Handle DELETE operations via POST method override
+                if ($action === 'bulk' && isset($_GET['empty_table'])) {
+                    // Empty the entire test_codes table - database compatible way
+                    if ($database->getDatabaseType() === 'mysql') {
+                        $stmt = $db->prepare("TRUNCATE TABLE test_codes");
+                    } else {
+                        $stmt = $db->prepare("TRUNCATE TABLE test_codes RESTART IDENTITY CASCADE");
+                    }
+                    $stmt->execute();
+                    
+                    Response::success('All test codes have been deleted successfully');
+                } elseif ($is_batch && isset($path_parts[1])) {
+                    // Delete entire batch: /admin/test-codes/batch/{batch_id}
+                    $batch_id = $path_parts[1];
+                    
+                    // Check if any codes in the batch have been used
+                    $check_stmt = $db->prepare("
+                        SELECT COUNT(*) as used_count 
+                        FROM test_codes tc 
+                        LEFT JOIN test_results tr ON tc.id = tr.test_code_id 
+                        WHERE tc.batch_id = ? AND tr.id IS NOT NULL
+                    ");
+                    $check_stmt->execute([$batch_id]);
+                    $used_check = $check_stmt->fetch();
+                    
+                    if ($used_check['used_count'] > 0) {
+                        Response::badRequest('Cannot delete batch with used codes');
+                    }
+                    
+                    // Delete all codes in the batch
+                    $stmt = $db->prepare("DELETE FROM test_codes WHERE batch_id = ?");
+                    $stmt->execute([$batch_id]);
+                    
+                    if ($stmt->rowCount() > 0) {
+                        Response::success('Test code batch deleted successfully', [
+                            'batch_id' => $batch_id,
+                            'deleted_codes' => $stmt->rowCount()
+                        ]);
+                    } else {
+                        Response::notFound('Test code batch not found');
+                    }
+                } elseif ($test_code_id) {
+                    // Individual code deletion - not allowed per requirements
+                    Response::badRequest('Individual code deletion is not allowed. Delete the entire batch instead.');
+                } else {
+                    Response::badRequest('Invalid delete request');
+                }
+                break;
+            }
+            
             if ($action === 'bulk') {
                 // Bulk creation
-                $input = json_decode(file_get_contents('php://input'), true);
-                
                 if (!$input) {
                     Response::badRequest('Invalid JSON data');
                 }

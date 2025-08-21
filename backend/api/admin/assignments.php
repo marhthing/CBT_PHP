@@ -84,6 +84,12 @@ function handlePost($db, $user) {
             Response::validationError('Invalid JSON input');
         }
         
+        // Check if this is a method override (for InfinityFree compatibility)
+        if (isset($input['_method']) && $input['_method'] === 'DELETE') {
+            handleDelete($db, $user, $input);
+            return;
+        }
+        
         // Validate required fields
         Response::validateRequired($input, ['teacher_id', 'subject_id', 'class_level', 'term_id', 'session_id']);
         
@@ -147,9 +153,21 @@ $valid_classes = $class_stmt->fetchAll(PDO::FETCH_COLUMN);
     }
 }
 
-function handleDelete($db, $user) {
+function handleDelete($db, $user, $input = null) {
     try {
-        $assignment_id = $_GET['id'] ?? null;
+        // Parse assignment ID from URL path
+        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+        $path_parts = explode('/', trim($path, '/'));
+        $assignment_id = end($path_parts);
+        
+        if (!is_numeric($assignment_id)) {
+            $assignment_id = $_GET['id'] ?? null;
+        }
+        
+        // If still no ID and we have input data (from POST method override), try there
+        if (!$assignment_id && $input && isset($input['id'])) {
+            $assignment_id = $input['id'];
+        }
         
         if (!$assignment_id) {
             Response::validationError('Assignment ID is required');
