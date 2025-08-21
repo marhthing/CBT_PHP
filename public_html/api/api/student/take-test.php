@@ -64,23 +64,37 @@ try {
 
     // Get random questions for the test with correct answers for shuffling
     $random_order = $database->getRandomOrder();
+    error_log("Random order function returned: " . $random_order);
 
-    $questions_stmt = $db->prepare("
+    $sql_query = "
         SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
         FROM questions 
         WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
         ORDER BY $random_order
         LIMIT ?
-    ");
+    ";
+    error_log("Full SQL query: " . $sql_query);
 
-    error_log("Executing questions query with params: subject_id=" . $test['subject_id'] . ", class_level=" . $test['class_level'] . ", term_id=" . $test['term_id'] . ", session_id=" . $test['session_id'] . ", question_count=" . $test['question_count']);
-    $questions_stmt->execute([
+    $questions_stmt = $db->prepare($sql_query);
+
+    $params = [
         (int)$test['subject_id'], 
         (int)$test['class_level'], 
         (int)$test['term_id'], 
         (int)$test['session_id'], 
         (int)$test['question_count']
-    ]);
+    ];
+    error_log("Query parameters: " . json_encode($params));
+
+    try {
+        $questions_stmt->execute($params);
+        error_log("Questions query executed successfully");
+    } catch (Exception $e) {
+        error_log("Questions query failed: " . $e->getMessage());
+        error_log("SQL Query that failed: " . $sql_query);
+        error_log("Parameters that failed: " . json_encode($params));
+        throw $e;
+    }
     $raw_questions = $questions_stmt->fetchAll();
 
     if (count($raw_questions) < (int)$test['question_count']) {
