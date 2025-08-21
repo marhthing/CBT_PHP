@@ -73,8 +73,22 @@ try {
     $term_id = (int)$test['term_id'];
     $session_id = (int)$test['session_id'];
     $limit = (int)$test['question_count'];
+    
+    // Debug the actual values being passed
+    error_log("Query parameters - subject_id: " . $subject_id . " (type: " . gettype($subject_id) . ")");
+    error_log("Query parameters - class_level: " . $class_level . " (type: " . gettype($class_level) . ")");
+    error_log("Query parameters - term_id: " . $term_id . " (type: " . gettype($term_id) . ")");
+    error_log("Query parameters - session_id: " . $session_id . " (type: " . gettype($session_id) . ")");
+    error_log("Query parameters - limit: " . $limit . " (type: " . gettype($limit) . ")");
 
-    $questions_stmt->execute([$subject_id, $class_level, $term_id, $session_id, $limit]);
+    try {
+        $questions_stmt->execute([$subject_id, $class_level, $term_id, $session_id, $limit]);
+        error_log("Questions query executed successfully");
+    } catch (Exception $e) {
+        error_log("Questions query failed with error: " . $e->getMessage());
+        error_log("Full test data: " . json_encode($test));
+        throw $e;
+    }
     $raw_questions = $questions_stmt->fetchAll();
 
     if (count($raw_questions) < $limit) {
