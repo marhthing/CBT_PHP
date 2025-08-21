@@ -59,27 +59,15 @@ try {
         Response::error('You have already completed this test', 409);
     }
 
-    // Get random questions for the test with correct answers for shuffling
-    // Temporarily remove random ordering to isolate the issue
-    $questions_stmt = $db->prepare("
-        SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
-        FROM questions 
-        WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
-        LIMIT ?
-    ");
-
-    $questions_stmt->execute([
-        (int)$test['subject_id'], 
-        $test['class_level'], 
-        (int)$test['term_id'], 
-        (int)$test['session_id'], 
-        (int)$test['question_count']
+    // Temporarily return success to test if the issue is in the questions query
+    Response::success('Test validation passed', [
+        'id' => $test['id'],
+        'title' => $test['title'],
+        'subject' => $test['subject'],
+        'class_level' => $test['class_level'],
+        'duration_minutes' => $test['duration_minutes'],
+        'questions' => [] // Empty for now
     ]);
-    $raw_questions = $questions_stmt->fetchAll();
-
-    if (count($raw_questions) < (int)$test['question_count']) {
-        Response::error('Insufficient questions available for this test. Found ' . count($raw_questions) . ' questions, but test requires ' . $test['question_count'] . ' questions.');
-    }
 
     // Shuffle options for each question and create answer mapping
     $questions = [];
