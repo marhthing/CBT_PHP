@@ -59,15 +59,27 @@ try {
         Response::error('You have already completed this test', 409);
     }
 
-    // Temporarily return success to test if the issue is in the questions query
-    Response::success('Test validation passed', [
-        'id' => $test['id'],
-        'title' => $test['title'],
-        'subject' => $test['subject'],
-        'class_level' => $test['class_level'],
-        'duration_minutes' => $test['duration_minutes'],
-        'questions' => [] // Empty for now
-    ]);
+    // Get random questions for the test
+    $questions_stmt = $db->prepare("
+        SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
+        FROM questions 
+        WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
+        LIMIT ?
+    ");
+
+    // Cast all parameters explicitly and ensure proper types
+    $subject_id = (int)$test['subject_id'];
+    $class_level = (string)$test['class_level'];  // Explicitly cast to string
+    $term_id = (int)$test['term_id'];
+    $session_id = (int)$test['session_id'];
+    $limit = (int)$test['question_count'];
+
+    $questions_stmt->execute([$subject_id, $class_level, $term_id, $session_id, $limit]);
+    $raw_questions = $questions_stmt->fetchAll();
+
+    if (count($raw_questions) < $limit) {
+        Response::error('Insufficient questions available for this test. Found ' . count($raw_questions) . ' questions, but test requires ' . $limit . ' questions.');
+    }
 
     // Shuffle options for each question and create answer mapping
     $questions = [];
