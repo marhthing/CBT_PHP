@@ -99,23 +99,26 @@ export default function TakeTest() {
     }
   }, [testPreview, testStarted, navigate])
 
-  // Hide bottom navigation during test phases
+  // Hide bottom navigation during test phases (mobile only)
   useEffect(() => {
     const hideBottomNav = testPreview || testStarted
     const bottomNav = document.querySelector('#mobile-bottom-nav') as HTMLElement
-    if (bottomNav) {
+    const isMobile = window.innerWidth < 768 // md breakpoint
+    
+    if (bottomNav && isMobile) {
       if (hideBottomNav) {
         bottomNav.style.display = 'none'
       } else {
-        bottomNav.style.display = 'block'
+        bottomNav.style.display = 'flex' // Use flex to match original layout
       }
     }
 
-    // Cleanup on unmount
+    // Cleanup on unmount - only restore if mobile
     return () => {
       const bottomNav = document.querySelector('#mobile-bottom-nav') as HTMLElement
-      if (bottomNav) {
-        bottomNav.style.display = 'block'
+      const isMobile = window.innerWidth < 768
+      if (bottomNav && isMobile) {
+        bottomNav.style.display = 'flex'
       }
     }
   }, [testPreview, testStarted])
