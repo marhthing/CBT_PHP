@@ -29,13 +29,19 @@ $request_method = $_SERVER['REQUEST_METHOD'];
 
 // Check for method override in POST requests (InfinityFree workaround)
 if ($request_method === 'POST') {
-    $input = json_decode(file_get_contents('php://input'), true);
-    if (isset($input['_method'])) {
-        $request_method = strtoupper($input['_method']);
-    }
-    // Also check headers for method override
-    if (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
-        $request_method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
+    // Check query parameter first (from .htaccess rewrite)
+    if (isset($_GET['_method'])) {
+        $request_method = strtoupper($_GET['_method']);
+    } else {
+        // Check JSON body for method override
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (isset($input['_method'])) {
+            $request_method = strtoupper($input['_method']);
+        }
+        // Also check headers for method override
+        if (isset($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE'])) {
+            $request_method = strtoupper($_SERVER['HTTP_X_HTTP_METHOD_OVERRIDE']);
+        }
     }
 }
 
