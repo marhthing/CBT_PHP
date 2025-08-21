@@ -23,9 +23,19 @@ Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, O
 Header always set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Authorization, Bearer"
 Header always set Access-Control-Max-Age "3600"
 
-# Handle preflight OPTIONS requests
+# Handle preflight OPTIONS requests for InfinityFree
 RewriteCond %{REQUEST_METHOD} OPTIONS
-RewriteRule ^(.*)$ $1 [R=200,L]
+RewriteRule ^(.*)$ - [R=200,L]
+
+# Direct API routing for InfinityFree (bypass restrictions)
+RewriteCond %{REQUEST_URI} ^/api/admin/questions/bulk$
+RewriteRule ^(.*)$ /api/api/admin/questions/bulk.php [QSA,L]
+
+RewriteCond %{REQUEST_URI} ^/api/admin/questions/(\d+)$
+RewriteRule ^(.*)$ /api/index.php [QSA,L]
+
+RewriteCond %{REQUEST_URI} ^/api/admin/test-codes/bulk$
+RewriteRule ^(.*)$ /api/index.php [QSA,L]
 
 # Security Headers
 Header always set X-Content-Type-Options "nosniff"
