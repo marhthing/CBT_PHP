@@ -177,7 +177,8 @@ function handleGet($db, $user) {
             ORDER BY q.created_at DESC
         ";
         
-        // Use database-specific LIMIT syntax
+        // Use database-specific LIMIT syntax  
+        $database = new Database();
         $full_query = $database->limitQuery($base_query, $limit, $offset);
         $stmt = $db->prepare($full_query);
         
