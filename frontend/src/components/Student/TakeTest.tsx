@@ -99,26 +99,25 @@ export default function TakeTest() {
     }
   }, [testPreview, testStarted, navigate])
 
-  // Hide bottom navigation during test phases (mobile only)
+  // Hide bottom navigation only during test phases, don't interfere with CSS otherwise
   useEffect(() => {
-    const hideBottomNav = testPreview || testStarted
+    const shouldHideBottomNav = testPreview || testStarted
     const bottomNav = document.querySelector('#mobile-bottom-nav') as HTMLElement
-    const isMobile = window.innerWidth < 768 // md breakpoint
     
-    if (bottomNav && isMobile) {
-      if (hideBottomNav) {
+    if (bottomNav) {
+      if (shouldHideBottomNav) {
         bottomNav.style.display = 'none'
       } else {
-        bottomNav.style.display = 'flex' // Use flex to match original layout
+        // Remove inline style to let CSS take control
+        bottomNav.style.display = ''
       }
     }
 
-    // Cleanup on unmount - only restore if mobile
+    // Cleanup on unmount - remove inline styles to restore CSS control
     return () => {
       const bottomNav = document.querySelector('#mobile-bottom-nav') as HTMLElement
-      const isMobile = window.innerWidth < 768
-      if (bottomNav && isMobile) {
-        bottomNav.style.display = 'flex'
+      if (bottomNav) {
+        bottomNav.style.display = ''
       }
     }
   }, [testPreview, testStarted])
