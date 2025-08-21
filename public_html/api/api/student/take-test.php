@@ -72,13 +72,7 @@ try {
     
     $questions_stmt = $db->prepare($full_query);
 
-    // Cast parameters (no LIMIT parameter needed now)
-    $subject_id = (int)$test['subject_id'];
-    $class_level = (string)$test['class_level'];
-    $term_id = (int)$test['term_id'];
-    $session_id = (int)$test['session_id'];
-
-    $questions_stmt->execute([$subject_id, $class_level, $term_id, $session_id]);
+    $questions_stmt->execute([(int)$test['subject_id'], $test['class_level'], (int)$test['term_id'], (int)$test['session_id']]);
     $raw_questions = $questions_stmt->fetchAll();
 
     if (count($raw_questions) < $limit) {

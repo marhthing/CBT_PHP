@@ -64,7 +64,7 @@ export default function MobileBottomBar({ children }: MobileBottomBarProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile Layout */}
-      <div className="sm:hidden">
+      <div className="md:hidden">
         {/* Mobile Header */}
         <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-3">
           <div className="flex items-center justify-between">
@@ -87,7 +87,7 @@ export default function MobileBottomBar({ children }: MobileBottomBarProps) {
       </div>
 
       {/* Desktop Layout */}
-      <div className="hidden sm:flex">
+      <div className="hidden md:flex">
         {/* Desktop Sidebar */}
         <aside className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 flex flex-col z-10">
           {/* Desktop Header in Sidebar */}
@@ -145,7 +145,7 @@ export default function MobileBottomBar({ children }: MobileBottomBarProps) {
       </div>
 
       {/* Mobile Bottom Navigation - Only visible on mobile */}
-      <nav id="mobile-bottom-nav" className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
+      <nav id="mobile-bottom-nav" className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200">
         <div className="flex items-center justify-evenly">
           {navigationItems.map((item) => {
             const Icon = item.icon

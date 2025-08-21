@@ -57,6 +57,48 @@ export default function TakeTest() {
   const [error, setError] = useState('')
   const [testStarted, setTestStarted] = useState(false)
 
+  // Browser back button protection
+  useEffect(() => {
+    const isInTestPhase = testPreview || testStarted
+
+    if (isInTestPhase) {
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        e.preventDefault()
+        e.returnValue = 'Are you sure you want to leave? Your test progress will be lost.'
+        return 'Are you sure you want to leave? Your test progress will be lost.'
+      }
+
+      const handlePopState = (e: PopStateEvent) => {
+        e.preventDefault()
+        const confirmLeave = confirm('Are you sure you want to leave the test? Your progress will be lost and you may not be able to retake this test.')
+        
+        if (!confirmLeave) {
+          // Push current state back to prevent navigation
+          window.history.pushState(null, '', window.location.pathname + window.location.search)
+        } else {
+          // Allow navigation but reset test state
+          setTestPreview(null)
+          setTestData(null)
+          setTestStarted(false)
+          setAnswers({})
+          navigate('/student/test', { replace: true })
+        }
+      }
+
+      // Add listeners
+      window.addEventListener('beforeunload', handleBeforeUnload)
+      window.addEventListener('popstate', handlePopState)
+
+      // Push initial state to intercept back navigation
+      window.history.pushState(null, '', window.location.pathname + window.location.search)
+
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload)
+        window.removeEventListener('popstate', handlePopState)
+      }
+    }
+  }, [testPreview, testStarted, navigate])
+
   // Hide bottom navigation during test phases
   useEffect(() => {
     const hideBottomNav = testPreview || testStarted
@@ -204,20 +246,9 @@ export default function TakeTest() {
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white shadow-sm border-b border-gray-200 p-4 sm:p-6">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => {
-                setTestPreview(null)
-                setInputTestCode('')
-              }}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft size={20} />
-            </button>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Test Preview</h1>
-              <p className="text-gray-600 mt-1">Review test details before starting</p>
-            </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Test Preview</h1>
+            <p className="text-gray-600 mt-1">Review test details before starting</p>
           </div>
         </div>
 
