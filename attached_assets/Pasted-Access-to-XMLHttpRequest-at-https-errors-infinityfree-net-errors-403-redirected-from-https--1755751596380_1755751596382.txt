@@ -1,0 +1,52 @@
+Access to XMLHttpRequest at 'https://errors.infinityfree.net/errors/403/' (redirected from 'https://testing-cbt.infinityfreeapp.com/api/admin/questions/5') from origin 'https://testing-cbt.infinityfreeapp.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
+index-BoMkJ-zP.js:62  DELETE https://errors.infinityfree.net/errors/403/ net::ERR_FAILED
+(anonymous) @ index-BoMkJ-zP.js:62
+xhr @ index-BoMkJ-zP.js:62
+Gm @ index-BoMkJ-zP.js:64
+Promise.then
+_request @ index-BoMkJ-zP.js:65
+request @ index-BoMkJ-zP.js:64
+Ha.<computed> @ index-BoMkJ-zP.js:65
+(anonymous) @ index-BoMkJ-zP.js:60
+(anonymous) @ index-BoMkJ-zP.js:251
+Mh @ index-BoMkJ-zP.js:48
+(anonymous) @ index-BoMkJ-zP.js:48
+Hc @ index-BoMkJ-zP.js:48
+ju @ index-BoMkJ-zP.js:48
+zu @ index-BoMkJ-zP.js:49
+Wg @ index-BoMkJ-zP.js:49Understand this error
+/admin/questions:1 Access to XMLHttpRequest at 'https://errors.infinityfree.net/errors/403/' (redirected from 'https://testing-cbt.infinityfreeapp.com/api/admin/questions/5') from origin 'https://testing-cbt.infinityfreeapp.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
+index-BoMkJ-zP.js:62  PUT https://errors.infinityfree.net/errors/403/ net::ERR_FAILED
+(anonymous) @ index-BoMkJ-zP.js:62
+xhr @ index-BoMkJ-zP.js:62
+Gm @ index-BoMkJ-zP.js:64
+Promise.then
+_request @ index-BoMkJ-zP.js:65
+request @ index-BoMkJ-zP.js:64
+(anonymous) @ index-BoMkJ-zP.js:65
+(anonymous) @ index-BoMkJ-zP.js:60
+(anonymous) @ index-BoMkJ-zP.js:251
+onClick @ index-BoMkJ-zP.js:252
+Mh @ index-BoMkJ-zP.js:48
+(anonymous) @ index-BoMkJ-zP.js:48
+Hc @ index-BoMkJ-zP.js:48
+ju @ index-BoMkJ-zP.js:48
+zu @ index-BoMkJ-zP.js:49
+Wg @ index-BoMkJ-zP.js:49Understand this error
+/admin/questions:1 Access to XMLHttpRequest at 'https://errors.infinityfree.net/errors/403/' (redirected from 'https://testing-cbt.infinityfreeapp.com/api/admin/questions/7') from origin 'https://testing-cbt.infinityfreeapp.com' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.Understand this error
+index-BoMkJ-zP.js:62  DELETE https://errors.infinityfree.net/errors/403/ net::ERR_FAILED
+(anonymous) @ index-BoMkJ-zP.js:62
+xhr @ index-BoMkJ-zP.js:62
+Gm @ index-BoMkJ-zP.js:64
+Promise.then
+_request @ index-BoMkJ-zP.js:65
+request @ index-BoMkJ-zP.js:64
+Ha.<computed> @ index-BoMkJ-zP.js:65
+(anonymous) @ index-BoMkJ-zP.js:60
+(anonymous) @ index-BoMkJ-zP.js:251
+Mh @ index-BoMkJ-zP.js:48
+(anonymous) @ index-BoMkJ-zP.js:48
+Hc @ index-BoMkJ-zP.js:48
+ju @ index-BoMkJ-zP.js:48
+zu @ index-BoMkJ-zP.js:49
+Wg @ index-BoMkJ-zP.js:49Understand this error

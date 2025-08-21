@@ -23,28 +23,29 @@ Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, O
 Header always set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Authorization, Bearer"
 Header always set Access-Control-Max-Age "3600"
 
-# Handle preflight OPTIONS requests for InfinityFree
+# Force CORS headers before any processing
+Header always set Access-Control-Allow-Origin "*"
+Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+Header always set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Authorization, Bearer"
+Header always set Access-Control-Max-Age "3600"
+
+# Handle preflight OPTIONS requests immediately
 RewriteCond %{REQUEST_METHOD} OPTIONS
-RewriteRule ^(.*)$ - [R=200,L]
+RewriteRule .* - [R=200,L]
 
-# Direct API routing for InfinityFree (bypass restrictions)
-RewriteCond %{REQUEST_URI} ^/api/admin/questions/bulk$
-RewriteRule ^(.*)$ /api/api/admin/questions/bulk.php [QSA,L]
+# InfinityFree API routing - more aggressive approach
+RewriteRule ^api/admin/questions/bulk/?$ /api/api/admin/questions/bulk.php [QSA,L]
+RewriteRule ^api/admin/questions/edit/?$ /api/api/admin/questions/edit.php [QSA,L]
+RewriteRule ^api/admin/questions/delete/?$ /api/api/admin/questions/delete.php [QSA,L]
+RewriteRule ^api/admin/questions/([0-9]+)/?$ /api/api/admin/questions.php?id=$1 [QSA,L]
+RewriteRule ^api/admin/questions/?$ /api/api/admin/questions.php [QSA,L]
+RewriteRule ^api/admin/test-codes/bulk/?$ /api/api/admin/test-codes.php [QSA,L]
+RewriteRule ^api/admin/test-codes/([0-9]+)/?$ /api/api/admin/test-codes.php?id=$1 [QSA,L]
+RewriteRule ^api/admin/test-codes/?$ /api/api/admin/test-codes.php [QSA,L]
+RewriteRule ^api/admin/teachers/?$ /api/api/admin/teachers.php [QSA,L]
 
-RewriteCond %{REQUEST_URI} ^/api/admin/questions/(\d+)$
-RewriteRule ^api/admin/questions/(\d+)$ /api/api/admin/questions.php [QSA,L]
-
-RewriteCond %{REQUEST_URI} ^/api/admin/questions$
-RewriteRule ^api/admin/questions$ /api/api/admin/questions.php [QSA,L]
-
-RewriteCond %{REQUEST_URI} ^/api/admin/test-codes/bulk$
-RewriteRule ^(.*)$ /api/index.php [QSA,L]
-
-RewriteCond %{REQUEST_URI} ^/api/admin/test-codes/(\d+)$
-RewriteRule ^(.*)$ /api/api/admin/test-codes.php [QSA,L]
-
-RewriteCond %{REQUEST_URI} ^/api/admin/test-codes$
-RewriteRule ^(.*)$ /api/api/admin/test-codes.php [QSA,L]
+# Fallback to main router for other API requests
+RewriteRule ^api/(.*)$ /api/index.php [QSA,L]
 
 # Security Headers
 Header always set X-Content-Type-Options "nosniff"
