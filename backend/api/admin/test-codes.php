@@ -157,55 +157,134 @@ try {
         case 'POST':
             // Check for method override first (for InfinityFree compatibility)
             $input = json_decode(file_get_contents('php://input'), true);
-            if ($input && isset($input['_method']) && $input['_method'] === 'DELETE') {
-                // Handle DELETE operations via POST method override
-                if ($action === 'bulk' && isset($_GET['empty_table'])) {
-                    // Empty the entire test_codes table - database compatible way
-                    if ($database->getDatabaseType() === 'mysql') {
-                        $stmt = $db->prepare("TRUNCATE TABLE test_codes");
+            if ($input && isset($input['_method'])) {
+                if ($input['_method'] === 'DELETE') {
+                    // Handle DELETE operations via POST method override
+                    if ($action === 'bulk' && isset($_GET['empty_table'])) {
+                        // Empty the entire test_codes table - database compatible way
+                        if ($database->getDatabaseType() === 'mysql') {
+                            $stmt = $db->prepare("TRUNCATE TABLE test_codes");
+                        } else {
+                            $stmt = $db->prepare("TRUNCATE TABLE test_codes RESTART IDENTITY CASCADE");
+                        }
+                        $stmt->execute();
+                        
+                        Response::success('All test codes have been deleted successfully');
+                    } elseif ($is_batch && isset($path_parts[1])) {
+                        // Delete entire batch: /admin/test-codes/batch/{batch_id}
+                        $batch_id = $path_parts[1];
+                        
+                        // Check if any codes in the batch have been used
+                        $check_stmt = $db->prepare("
+                            SELECT COUNT(*) as used_count 
+                            FROM test_codes tc 
+                            LEFT JOIN test_results tr ON tc.id = tr.test_code_id 
+                            WHERE tc.batch_id = ? AND tr.id IS NOT NULL
+                        ");
+                        $check_stmt->execute([$batch_id]);
+                        $used_check = $check_stmt->fetch();
+                        
+                        if ($used_check['used_count'] > 0) {
+                            Response::badRequest('Cannot delete batch with used codes');
+                        }
+                        
+                        // Delete all codes in the batch
+                        $stmt = $db->prepare("DELETE FROM test_codes WHERE batch_id = ?");
+                        $stmt->execute([$batch_id]);
+                        
+                        if ($stmt->rowCount() > 0) {
+                            Response::success('Test code batch deleted successfully', [
+                                'batch_id' => $batch_id,
+                                'deleted_codes' => $stmt->rowCount()
+                            ]);
+                        } else {
+                            Response::notFound('Test code batch not found');
+                        }
+                    } elseif ($test_code_id) {
+                        // Individual code deletion - not allowed per requirements
+                        Response::badRequest('Individual code deletion is not allowed. Delete the entire batch instead.');
                     } else {
-                        $stmt = $db->prepare("TRUNCATE TABLE test_codes RESTART IDENTITY CASCADE");
+                        Response::badRequest('Invalid delete request');
                     }
-                    $stmt->execute();
+                    break;
+                } elseif ($input['_method'] === 'PATCH') {
+                    // Handle PATCH operations via POST method override (for batch activation)
+                    $path_segments = explode('/', trim($path_info, '/'));
                     
-                    Response::success('All test codes have been deleted successfully');
-                } elseif ($is_batch && isset($path_parts[1])) {
-                    // Delete entire batch: /admin/test-codes/batch/{batch_id}
-                    $batch_id = $path_parts[1];
-                    
-                    // Check if any codes in the batch have been used
-                    $check_stmt = $db->prepare("
-                        SELECT COUNT(*) as used_count 
-                        FROM test_codes tc 
-                        LEFT JOIN test_results tr ON tc.id = tr.test_code_id 
-                        WHERE tc.batch_id = ? AND tr.id IS NOT NULL
-                    ");
-                    $check_stmt->execute([$batch_id]);
-                    $used_check = $check_stmt->fetch();
-                    
-                    if ($used_check['used_count'] > 0) {
-                        Response::badRequest('Cannot delete batch with used codes');
+                    // Remove admin/test-codes prefix if present
+                    if (count($path_segments) >= 2 && $path_segments[0] === 'admin' && $path_segments[1] === 'test-codes') {
+                        $path_segments = array_slice($path_segments, 2);
                     }
                     
-                    // Delete all codes in the batch
-                    $stmt = $db->prepare("DELETE FROM test_codes WHERE batch_id = ?");
-                    $stmt->execute([$batch_id]);
-                    
-                    if ($stmt->rowCount() > 0) {
-                        Response::success('Test code batch deleted successfully', [
-                            'batch_id' => $batch_id,
-                            'deleted_codes' => $stmt->rowCount()
-                        ]);
+                    if (count($path_segments) >= 3 && $path_segments[0] === 'batch' && $path_segments[2] === 'toggle-activation') {
+                        // Batch activation
+                        $batch_id = $path_segments[1];
+                        
+                        if (!isset($input['is_activated'])) {
+                            Response::badRequest('is_activated field is required');
+                        }
+                        
+                        // Ensure boolean conversion - handle various input types
+                        if ($input['is_activated'] === '' || $input['is_activated'] === null) {
+                            Response::badRequest('is_activated cannot be empty');
+                        }
+                        
+                        // Handle proper boolean conversion
+                        $is_activated = false; // default
+                        if (is_bool($input['is_activated'])) {
+                            $is_activated = $input['is_activated'];
+                        } elseif (is_string($input['is_activated'])) {
+                            if (strtolower($input['is_activated']) === 'true' || $input['is_activated'] === '1') {
+                                $is_activated = true;
+                            } elseif (strtolower($input['is_activated']) === 'false' || $input['is_activated'] === '0') {
+                                $is_activated = false;
+                            } else {
+                                Response::badRequest('is_activated must be a valid boolean value (true/false)');
+                            }
+                        } else {
+                            $is_activated = (bool)$input['is_activated'];
+                        }
+                        
+                        // Check if any codes in this batch have been used
+                        $check_stmt = $db->prepare("
+                            SELECT COUNT(*) as used_count 
+                            FROM test_codes tc
+                            LEFT JOIN test_results tr ON tc.id = tr.test_code_id
+                            WHERE tc.batch_id = ? AND tr.id IS NOT NULL
+                        ");
+                        $check_stmt->execute([$batch_id]);
+                        $used_check = $check_stmt->fetch();
+                        
+                        if ($used_check['used_count'] > 0 && $is_activated) {
+                            Response::badRequest('Cannot activate batch with used codes. Once a code is used, the batch cannot be reactivated.');
+                        }
+                        
+                        // Update all codes in the batch
+                        $stmt = $db->prepare("
+                            UPDATE test_codes 
+                            SET is_activated = ?, activated_at = ? 
+                            WHERE batch_id = ?
+                        ");
+                        $activated_at = $is_activated ? date('Y-m-d H:i:s') : null;
+                        
+                        // Use database-specific boolean values
+                        $is_activated_db = $is_activated ? $database->getBooleanTrue() : $database->getBooleanFalse();
+                        $stmt->execute([$is_activated_db, $activated_at, $batch_id]);
+                        
+                        if ($stmt->rowCount() > 0) {
+                            Response::success('Test code batch activation updated', [
+                                'batch_id' => $batch_id,
+                                'is_activated' => $is_activated,
+                                'updated_codes' => $stmt->rowCount()
+                            ]);
+                        } else {
+                            Response::notFound('Test code batch not found');
+                        }
                     } else {
-                        Response::notFound('Test code batch not found');
+                        Response::badRequest('Invalid PATCH request');
                     }
-                } elseif ($test_code_id) {
-                    // Individual code deletion - not allowed per requirements
-                    Response::badRequest('Individual code deletion is not allowed. Delete the entire batch instead.');
-                } else {
-                    Response::badRequest('Invalid delete request');
+                    break;
                 }
-                break;
             }
             
             if ($action === 'bulk' || $is_bulk) {
