@@ -106,7 +106,7 @@ function handlePost($db, $user) {
             SELECT id FROM teacher_assignments 
             WHERE teacher_id = ? AND subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
         ");
-        $existing_check->execute([$input['teacher_id'], $input['subject_id'], $input['class_level'], $input['term_id'], $input['session_id']]);
+        $existing_check->execute([(int)$input['teacher_id'], (int)$input['subject_id'], (int)$input['class_level'], (int)$input['term_id'], (int)$input['session_id']]);
         
         if ($existing_check->fetch()) {
             Response::validationError('Teacher is already assigned to this subject and class');
@@ -114,7 +114,7 @@ function handlePost($db, $user) {
         
         // Validate subject exists in database
         $subject_check = $db->prepare("SELECT id FROM subjects WHERE id = ?");
-        $subject_check->execute([$input['subject_id']]);
+        $subject_check->execute([(int)$input['subject_id']]);
         
         if (!$subject_check->fetch()) {
             Response::validationError('Invalid subject selected');

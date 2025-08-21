@@ -350,7 +350,7 @@ try {
                     FROM questions 
                     WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
                 ");
-                $question_check->execute([$input['subject_id'], $input['class_level'], $input['term_id'], $input['session_id']]);
+                $question_check->execute([(int)$input['subject_id'], (int)$input['class_level'], (int)$input['term_id'], (int)$input['session_id']]);
                 $available_questions = $question_check->fetch()['count'];
                 
                 if ($input['total_questions'] > $available_questions) {

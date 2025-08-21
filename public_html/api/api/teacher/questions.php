@@ -17,7 +17,7 @@ function validateTeacherAssignment($db, $user_id, $subject_id, $class_level, $te
         FROM teacher_assignments 
         WHERE teacher_id = ? AND subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
     ");
-    $stmt->execute([$user_id, $subject_id, $class_level, $term_id, $session_id]);
+    $stmt->execute([(int)$user_id, (int)$subject_id, (int)$class_level, (int)$term_id, (int)$session_id]);
     $result = $stmt->fetch();
     return $result['count'] > 0;
 }

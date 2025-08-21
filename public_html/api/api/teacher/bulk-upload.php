@@ -43,7 +43,7 @@ try {
         SELECT id FROM teacher_assignments 
         WHERE teacher_id = ? AND subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
     ");
-    $assignment_stmt->execute([$user['id'], $subject_id, $class_level, $term_id, $session_id]);
+    $assignment_stmt->execute([(int)$user['id'], (int)$subject_id, (int)$class_level, (int)$term_id, (int)$session_id]);
     
     if (!$assignment_stmt->fetch()) {
         Response::forbidden('You are not assigned to teach this subject/class/term/session');
