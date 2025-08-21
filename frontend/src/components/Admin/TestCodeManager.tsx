@@ -294,7 +294,9 @@ export default function TestCodeManager() {
   const handleToggleBatchActivation = async (batchId: string, currentStatus: boolean) => {
     try {
       const newStatus = !currentStatus
-      await api.patch(`/admin/test-codes/batch/${batchId}/toggle-activation`, {
+      // Use POST with method override for InfinityFree compatibility
+      await api.post(`/admin/test-codes/batch/${batchId}/toggle-activation`, {
+        _method: 'PATCH',
         is_activated: newStatus
       })
 
@@ -334,7 +336,10 @@ export default function TestCodeManager() {
 
     setDeleting(true)
     try {
-      await api.delete(`/admin/test-codes/batch/${batchToDelete}`)
+      // Use POST with method override for InfinityFree compatibility
+      await api.post(`/admin/test-codes/batch/${batchToDelete}`, {
+        _method: 'DELETE'
+      })
 
       // Remove all codes from this batch locally
       setTestCodes(prevCodes => prevCodes.filter(code => code.batch_id !== batchToDelete))

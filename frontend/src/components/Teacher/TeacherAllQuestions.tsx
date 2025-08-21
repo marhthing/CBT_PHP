@@ -238,7 +238,11 @@ export default function TeacherAllQuestions() {
 
     setDeleting(true)
     try {
-      const response = await api.delete(`/teacher/questions?id=${questionToDelete}`)
+      // Use POST with method override for InfinityFree compatibility
+      const response = await api.post(`/teacher/questions?id=${questionToDelete}`, {
+        _method: 'DELETE',
+        id: questionToDelete
+      })
       if (response.data.success) {
         await fetchQuestions()
         setSuccessMessage('Question deleted successfully!')
@@ -258,7 +262,10 @@ export default function TeacherAllQuestions() {
 
     setSavingEdit(true)
     try {
-      const response = await api.put(`/teacher/questions?id=${originalQuestion.id}`, {
+      // Use POST with method override for InfinityFree compatibility
+      const response = await api.post(`/teacher/questions?id=${originalQuestion.id}`, {
+        _method: 'PUT',
+        id: originalQuestion.id,
         question_text: updatedQuestion.question_text,
         question_type: updatedQuestion.question_type,
         option_a: updatedQuestion.option_a,

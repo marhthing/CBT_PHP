@@ -147,7 +147,11 @@ export default function TeacherAssignment() {
 
     setDeleting(true)
     try {
-      const response = await api.delete(`/admin/assignments?id=${assignmentToDelete}`)
+      // Use POST with method override for InfinityFree compatibility
+      const response = await api.post(`/admin/assignments?id=${assignmentToDelete}`, {
+        _method: 'DELETE',
+        id: assignmentToDelete
+      })
       if (response.data.success) {
         await fetchAssignments()
         setSuccessMessage('Assignment deleted successfully')
