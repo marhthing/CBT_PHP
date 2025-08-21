@@ -22,6 +22,13 @@ Header always set X-XSS-Protection "1; mode=block"
 # Disable directory browsing
 Options -Indexes
 
+# React Router SPA Configuration
+# Handle client-side routing - redirect all requests to index.html unless they're files/directories
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/api/
+RewriteRule ^(.+)$ /index.html [QSA,L]
+
 # PHP Configuration
 php_value max_execution_time 300
 php_value memory_limit 128M
