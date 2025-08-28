@@ -39,7 +39,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd backend && php -S 0.0.0.0:8000 -t ."
+args = "cd backend && php -S 0.0.0.0:8000 -t . index.php"
 waitForPort = 8000
 
 [workflows.workflow.metadata]
