@@ -55,6 +55,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
 }
 
 function handleGet($db, $user) {
+    $database = new Database(); // Add database instance for compatibility methods
     try {
         // Check if requesting count only
         if (isset($_GET['count_only'])) {
@@ -102,11 +103,12 @@ function handleGet($db, $user) {
         
         // Check if requesting stats
         if (isset($_GET['stats'])) {
+            $dateSubQuery = $database->dateSubDays(7);
             $stats_stmt = $db->prepare("
                 SELECT 
                     COUNT(*) as total_questions,
                     COUNT(DISTINCT subject_id) as subjects_count,
-                    COUNT(CASE WHEN created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 END) as this_week
+                    COUNT(CASE WHEN created_at >= $dateSubQuery THEN 1 END) as this_week
                 FROM questions 
                 WHERE teacher_id = ?
             ");
@@ -186,7 +188,9 @@ function handleGet($db, $user) {
         Response::success('Questions retrieved', ['questions' => $questions]);
         
     } catch (Exception $e) {
-        Response::serverError('Failed to get questions');
+        error_log("Teacher questions error: " . $e->getMessage());
+        error_log("Teacher questions error line: " . $e->getLine());
+        Response::serverError('Failed to get questions: ' . $e->getMessage());
     }
 }
 
