@@ -381,7 +381,8 @@ export default function AllQuestions() {
       editingQuestion.option_b !== originalQuestion.option_b ||
       editingQuestion.option_c !== originalQuestion.option_c ||
       editingQuestion.option_d !== originalQuestion.option_d ||
-      editingQuestion.correct_answer !== originalQuestion.correct_answer
+      editingQuestion.correct_answer !== originalQuestion.correct_answer ||
+      editingQuestion.question_assignment !== originalQuestion.question_assignment
     )
   }, [editingQuestion, originalQuestion])
 
@@ -674,6 +675,13 @@ export default function AllQuestions() {
                         }`}>
                           {question.question_type === 'true_false' ? 'T/F' : 'MC'}
                         </span>
+                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                          question.question_assignment === 'First CA' 
+                            ? 'bg-orange-100 text-orange-800' 
+                            : 'bg-indigo-100 text-indigo-800'
+                        }`}>
+                          {question.question_assignment || 'First CA'}
+                        </span>
                       </div>
 
                       <h4 className="text-base font-medium text-gray-900 mb-2 line-clamp-2">
@@ -913,6 +921,20 @@ export default function AllQuestions() {
                       <option value="D">D</option>
                     </>
                   )}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Question Assignment
+                </label>
+                <select
+                  value={editingQuestion.question_assignment || 'First CA'}
+                  onChange={(e) => setEditingQuestion(prev => prev ? {...prev, question_assignment: e.target.value} : null)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="First CA">First CA</option>
+                  <option value="Second CA">Second CA</option>
                 </select>
               </div>
             </div>
