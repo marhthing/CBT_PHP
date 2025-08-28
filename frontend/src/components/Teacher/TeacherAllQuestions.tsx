@@ -17,6 +17,7 @@ interface Question {
   class_level: string
   term_id: number
   session_id: number
+  question_assignment: string
   created_at: string
 }
 
@@ -79,6 +80,7 @@ export default function TeacherAllQuestions() {
   const [termFilter, setTermFilter] = useState('')
   const [sessionFilter, setSessionFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
+  const [assignmentFilter, setAssignmentFilter] = useState('')
 
   // Manual question creation state
   const [showManualCreate, setShowManualCreate] = useState(false)
@@ -95,7 +97,8 @@ export default function TeacherAllQuestions() {
     subject_id: '',
     class_level: '',
     term_id: '',
-    session_id: ''
+    session_id: '',
+    question_assignment: 'First CA'
   })
   const [showQuestionForm, setShowQuestionForm] = useState(false)
   const [creatingQuestions, setCreatingQuestions] = useState(false)
@@ -141,6 +144,7 @@ export default function TeacherAllQuestions() {
       if (termFilter) params.append('term', termFilter)
       if (sessionFilter) params.append('session', sessionFilter)
       if (typeFilter) params.append('type', typeFilter)
+      if (assignmentFilter) params.append('assignment', assignmentFilter)
       params.append('limit', '100')
 
       const response = await api.get(`/teacher/questions?${params.toString()}`)
@@ -150,7 +154,7 @@ export default function TeacherAllQuestions() {
     } finally {
       setLoading(false)
     }
-  }, [searchTerm, subjectFilter, classFilter, termFilter, sessionFilter, typeFilter])
+  }, [searchTerm, subjectFilter, classFilter, termFilter, sessionFilter, typeFilter, assignmentFilter])
 
   const fetchAssignments = useCallback(async () => {
     try {
@@ -226,7 +230,7 @@ export default function TeacherAllQuestions() {
     }, 300)
 
     return () => clearTimeout(timeoutId)
-  }, [searchTerm, subjectFilter, classFilter, termFilter, sessionFilter, typeFilter, fetchQuestions])
+  }, [searchTerm, subjectFilter, classFilter, termFilter, sessionFilter, typeFilter, assignmentFilter, fetchQuestions])
 
   const deleteQuestion = useCallback((questionId: number) => {
     setQuestionToDelete(questionId)
@@ -276,7 +280,8 @@ export default function TeacherAllQuestions() {
         subject_id: updatedQuestion.subject_id,
         class_level: updatedQuestion.class_level,
         term_id: updatedQuestion.term_id,
-        session_id: updatedQuestion.session_id
+        session_id: updatedQuestion.session_id,
+        question_assignment: updatedQuestion.question_assignment
       })
 
       if (response.data.success) {
@@ -371,7 +376,7 @@ export default function TeacherAllQuestions() {
 
   // Manual question creation functions
   const handleCreateFiltersSubmit = useCallback(() => {
-    if (!createFilters.subject_id || !createFilters.class_level || !createFilters.term_id || !createFilters.session_id) {
+    if (!createFilters.subject_id || !createFilters.class_level || !createFilters.term_id || !createFilters.session_id || !createFilters.question_assignment) {
       setError('Please fill in all filter fields before proceeding')
       return
     }
@@ -471,7 +476,8 @@ export default function TeacherAllQuestions() {
         subject_id: parseInt(createFilters.subject_id),
         class_level: createFilters.class_level,
         term_id: parseInt(createFilters.term_id),
-        session_id: parseInt(createFilters.session_id)
+        session_id: parseInt(createFilters.session_id),
+        question_assignment: createFilters.question_assignment
       })
 
       if (response.data.success) {
@@ -479,7 +485,7 @@ export default function TeacherAllQuestions() {
         setShowManualCreate(false)
         setShowQuestionForm(false)
         setManualQuestions([])
-        setCreateFilters({ subject_id: '', class_level: '', term_id: '', session_id: '' })
+        setCreateFilters({ subject_id: '', class_level: '', term_id: '', session_id: '', question_assignment: 'First CA' })
         setSuccessMessage(`Successfully created ${response.data.data.created_count || manualQuestions.length} questions!`)
         setTimeout(() => setSuccessMessage(''), 3000)
       }
@@ -627,7 +633,7 @@ export default function TeacherAllQuestions() {
 
         {/* Filters */}
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
             <div className="relative">
               <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
@@ -692,6 +698,16 @@ export default function TeacherAllQuestions() {
               <option value="multiple_choice">Multiple Choice</option>
               <option value="true_false">True/False</option>
             </select>
+
+            <select
+              value={assignmentFilter}
+              onChange={(e) => setAssignmentFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              <option value="">All Assignments</option>
+              <option value="First CA">First CA</option>
+              <option value="Second CA">Second CA</option>
+            </select>
           </div>
         </div>
 
@@ -709,7 +725,7 @@ export default function TeacherAllQuestions() {
                 <BookOpen size={48} className="mx-auto text-gray-300 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">No questions found</h3>
                 <p className="text-gray-600">
-                  {searchTerm || subjectFilter || classFilter || termFilter || sessionFilter || typeFilter
+                  {searchTerm || subjectFilter || classFilter || termFilter || sessionFilter || typeFilter || assignmentFilter
                     ? 'Try adjusting your filters'
                     : 'No questions have been created yet'
                   }
@@ -1227,6 +1243,20 @@ export default function TeacherAllQuestions() {
                   {availableSessions.map(session => (
                     <option key={session.id} value={session.id}>{session.name}</option>
                   ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Question Assignment *
+                </label>
+                <select
+                  value={createFilters.question_assignment}
+                  onChange={(e) => setCreateFilters(prev => ({ ...prev, question_assignment: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="First CA">First CA</option>
+                  <option value="Second CA">Second CA</option>
                 </select>
               </div>
 

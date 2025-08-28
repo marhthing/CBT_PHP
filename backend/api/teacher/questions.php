@@ -82,6 +82,11 @@ function handleGet($db, $user) {
                 $params[] = $_GET['session_id'];
             }
             
+            if (isset($_GET['question_assignment']) && !empty($_GET['question_assignment'])) {
+                $where_conditions[] = 'question_assignment = ?';
+                $params[] = $_GET['question_assignment'];
+            }
+            
             $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
             
             $count_stmt = $db->prepare("
@@ -158,12 +163,15 @@ function handleGet($db, $user) {
             $params[] = $_GET['type'];
         }
         
-
+        if (isset($_GET['assignment']) && !empty($_GET['assignment'])) {
+            $where_conditions[] = 'question_assignment = ?';
+            $params[] = $_GET['assignment'];
+        }
         
         $sql = "
             SELECT q.id, q.question_text, q.question_type, q.option_a, q.option_b, q.option_c, q.option_d,
                    q.correct_answer, s.name as subject_name, q.subject_id, q.class_level, 
-                   q.term_id, q.session_id, q.created_at
+                   q.term_id, q.session_id, q.question_assignment, q.created_at
             FROM questions q
             LEFT JOIN subjects s ON q.subject_id = s.id
             WHERE " . implode(' AND ', $where_conditions) . "
@@ -195,7 +203,7 @@ function handlePost($db, $user, $input = null) {
         // Validate required fields
         $required_fields = [
             'question_text', 'question_type', 'option_a', 'option_b',
-            'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
+            'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id', 'question_assignment'
         ];
         Response::validateRequired($input, $required_fields);
         
@@ -213,8 +221,8 @@ function handlePost($db, $user, $input = null) {
         $stmt = $db->prepare("
             INSERT INTO questions (
                 question_text, question_type, option_a, option_b, option_c, option_d,
-                correct_answer, subject_id, class_level, term_id, session_id, teacher_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                correct_answer, subject_id, class_level, term_id, session_id, question_assignment, teacher_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $stmt->execute([
@@ -229,6 +237,7 @@ function handlePost($db, $user, $input = null) {
             $input['class_level'],
             $input['term_id'],
             $input['session_id'],
+            $input['question_assignment'],
             $user['id']
         ]);
         
@@ -270,7 +279,7 @@ function handlePut($db, $user, $input = null) {
         
         $allowed_fields = [
             'question_text', 'question_type', 'option_a', 'option_b', 'option_c', 'option_d',
-            'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
+            'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id', 'question_assignment'
         ];
         
         foreach ($allowed_fields as $field) {
