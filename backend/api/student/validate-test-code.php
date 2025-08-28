@@ -35,12 +35,11 @@ try {
     $database = new Database();
     $db = $database->getConnection();
 
-    // Validate test code - use authoritative status from database
+    // Validate test code
     $stmt = $db->prepare("
         SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level,
                tc.duration_minutes, tc.total_questions as question_count, tc.expires_at,
-               tc.is_active, tc.is_activated, tc.status, tc.subject_id, tc.term_id, tc.session_id, tc.test_type,
-               tc.used_by, tc.used_at, tc.batch_id
+               tc.is_active, tc.is_activated, tc.status, tc.subject_id, tc.term_id, tc.session_id, tc.test_type
         FROM test_codes tc
         LEFT JOIN subjects s ON tc.subject_id = s.id
         WHERE tc.code = ?
@@ -52,23 +51,20 @@ try {
         Response::notFound('Test code not found');
     }
 
-    // First check if the test code batch is activated
-    if (!$test['is_activated']) {
-        Response::badRequest('This test code batch is not activated yet');
-    }
-
-    // Then check if the individual test code is active
     if (!$test['is_active']) {
         Response::badRequest('Test code is not active');
     }
 
-    // Check individual test code status with specific messages
+    if (!$test['is_activated']) {
+        Response::badRequest('Test code is not activated yet');
+    }
+
     if ($test['status'] === 'used') {
-        Response::badRequest('This test code has been used by someone else');
+        Response::badRequest('This test code has already been used and is permanently deactivated');
     }
 
     if ($test['status'] === 'using') {
-        Response::badRequest('This test code is currently being used by someone else');
+        Response::badRequest('This test code is currently being used by another student');
     }
 
     if ($test['expires_at'] && strtotime($test['expires_at']) < time()) {
