@@ -35,11 +35,12 @@ try {
     $database = new Database();
     $db = $database->getConnection();
 
-    // Validate test code
+    // Validate test code - use authoritative status from database
     $stmt = $db->prepare("
         SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level,
                tc.duration_minutes, tc.total_questions as question_count, tc.expires_at,
-               tc.is_active, tc.is_activated, tc.status, tc.subject_id, tc.term_id, tc.session_id, tc.test_type
+               tc.is_active, tc.is_activated, tc.status, tc.subject_id, tc.term_id, tc.session_id, tc.test_type,
+               tc.used_by, tc.used_at
         FROM test_codes tc
         LEFT JOIN subjects s ON tc.subject_id = s.id
         WHERE tc.code = ?
@@ -60,7 +61,7 @@ try {
     }
 
     if ($test['status'] === 'used') {
-        Response::badRequest('This test code has already been used and is permanently deactivated');
+        Response::badRequest('This test code has already been used and cannot be used again');
     }
 
     if ($test['status'] === 'using') {
