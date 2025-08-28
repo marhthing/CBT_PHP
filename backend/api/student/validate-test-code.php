@@ -153,7 +153,8 @@ try {
         'subject' => $test['subject'],
         'class_level' => $test['class_level'],
         'duration_minutes' => $test['duration_minutes'],
-        'question_count' => $test['question_count']
+        'question_count' => $test['question_count'],
+        'test_type' => $test['test_type']
     ]);
 
 } catch (Exception $e) {

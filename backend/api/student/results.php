@@ -33,7 +33,8 @@ try {
             s.name as subject,
             tc.class_level,
             tc.duration_minutes,
-            tc.score_per_question
+            tc.score_per_question,
+            tc.test_type
         FROM test_results tr
         JOIN test_codes tc ON tr.test_code_id = tc.id
         LEFT JOIN subjects s ON tc.subject_id = s.id
@@ -60,12 +61,13 @@ try {
             'title' => $result['title'],
             'subject' => $result['subject'],
             'class_level' => $result['class_level'],
-            'duration_minutes' => $result['duration_minutes']
+            'duration_minutes' => $result['duration_minutes'],
+            'test_type' => $result['test_type']
         ];
         
         // Remove redundant fields
         unset($result['code'], $result['title'], $result['subject'], 
-             $result['class_level'], $result['duration_minutes']);
+             $result['class_level'], $result['duration_minutes'], $result['test_type']);
     }
     
     Response::logRequest('student/results', 'GET', $user['id']);

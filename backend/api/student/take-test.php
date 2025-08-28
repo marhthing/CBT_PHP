@@ -195,6 +195,7 @@ try {
         'subject' => $test['subject'],
         'class_level' => $test['class_level'],
         'duration_minutes' => $test['duration_minutes'],
+        'test_type' => $test['test_type'],
         'questions' => $questions
     ]);
 

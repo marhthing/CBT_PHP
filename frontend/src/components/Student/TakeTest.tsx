@@ -9,7 +9,8 @@ import {
   AlertCircle, 
   ArrowLeft, 
   ArrowRight,
-  Send
+  Send,
+  Award
 } from 'lucide-react'
 
 interface Question {
@@ -28,6 +29,7 @@ interface TestData {
   subject: string
   class_level: string
   duration_minutes: number
+  test_type: string
   questions: Question[]
 }
 
@@ -38,6 +40,7 @@ interface TestPreview {
   class_level: string
   duration_minutes: number
   question_count: number
+  test_type: string
 }
 
 export default function TakeTest() {
@@ -362,6 +365,16 @@ export default function TakeTest() {
                 </div>
 
                 <div className="space-y-3 sm:space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      Test Type
+                    </label>
+                    <div className="text-base sm:text-lg font-semibold text-gray-900 flex items-center gap-2">
+                      <Award size={18} className="sm:w-5 sm:h-5" />
+                      {testPreview.test_type || 'First CA'}
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-gray-500 mb-1">
                       Duration

@@ -27,6 +27,7 @@ interface TestResult {
     subject: string
     class_level: string
     duration_minutes: number
+    test_type: string
   }
 }
 
@@ -113,6 +114,19 @@ export default function TestResults() {
     if (percentage >= 70) return { bg: '#fef3c7', color: '#92400e' }
     if (percentage >= 50) return { bg: '#dbeafe', color: '#1e40af' }
     return { bg: '#fef2f2', color: '#dc2626' }
+  }
+
+  const getTestTypeColor = (testType: string) => {
+    switch (testType) {
+      case 'First CA':
+        return 'bg-blue-100 text-blue-800'
+      case 'Second CA':
+        return 'bg-green-100 text-green-800'
+      case 'Examination':
+        return 'bg-purple-100 text-purple-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
   }
 
   const statCards = [
@@ -368,7 +382,7 @@ export default function TestResults() {
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">
                           {result.test_code?.title}
                         </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-gray-600">
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-sm text-gray-600 mb-2">
                           <div>
                             <span className="font-medium">Subject:</span> {result.test_code?.subject}
                           </div>
@@ -380,6 +394,12 @@ export default function TestResults() {
                           </div>
                           <div>
                             <span className="font-medium">Date:</span> {new Date(result.submitted_at).toLocaleDateString()}
+                          </div>
+                          <div>
+                            <span className="font-medium">Type:</span> 
+                            <span className={`ml-1 px-2 py-1 text-xs rounded-full font-medium ${getTestTypeColor(result.test_code?.test_type)}`}>
+                              {result.test_code?.test_type || 'First CA'}
+                            </span>
                           </div>
                         </div>
                       </div>
