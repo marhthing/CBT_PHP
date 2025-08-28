@@ -33,7 +33,7 @@ try {
     
     // Get test information
     $stmt = $db->prepare("
-        SELECT id, total_questions as question_count, duration_minutes, is_active, expires_at, is_used, score_per_question, subject_id, class_level, term_id, session_id
+        SELECT id, total_questions as question_count, duration_minutes, is_active, expires_at, is_used, score_per_question, subject_id, class_level, term_id, session_id, test_type
         FROM test_codes 
         WHERE code = ?
     ");
@@ -45,11 +45,11 @@ try {
         Response::notFound('Test code not found');
     }
     
-    if (!$test['is_active'] || ($test['expires_at'] && strtotime($test['expires_at']) < time())) {
+    if (($test['is_active'] !== true && $test['is_active'] !== 't') || ($test['expires_at'] && strtotime($test['expires_at']) < time())) {
         Response::error('Test is no longer available');
     }
     
-    if ($test['is_used']) {
+    if ($test['is_used'] === true || $test['is_used'] === 't') {
         Response::error('This test code has already been used');
     }
     
@@ -65,7 +65,7 @@ try {
         Response::error('Test already submitted', 409);
     }
     
-    // Check if student has already taken a test for this subject, class, term, and session
+    // Check if student has already taken a test for this subject, class, term, session, AND test type
     $duplicate_check_stmt = $db->prepare("
         SELECT tr.id FROM test_results tr
         JOIN test_codes tc ON tr.test_code_id = tc.id
@@ -74,6 +74,7 @@ try {
         AND tc.class_level = ? 
         AND tc.term_id = ? 
         AND tc.session_id = ?
+        AND tc.test_type = ?
     ");
     
     $duplicate_check_stmt->execute([
@@ -81,11 +82,12 @@ try {
         $test['subject_id'], 
         $test['class_level'], 
         $test['term_id'], 
-        $test['session_id']
+        $test['session_id'],
+        $test['test_type']
     ]);
     
     if ($duplicate_check_stmt->fetch()) {
-        Response::error('You have already taken a test for this subject, class, term and session', 409);
+        Response::error('You have already taken a ' . $test['test_type'] . ' test for this subject, class, term and session', 409);
     }
     
     // Validate time taken (allow 10% buffer)
@@ -156,7 +158,10 @@ try {
             $is_correct = isset($answer_mappings[$question_id]) && 
                          strtoupper($student_answer) === strtoupper($answer_mappings[$question_id]);
             
-            $answer_stmt->execute([$result_id, $question_id, strtoupper($student_answer), $is_correct ? 'true' : 'false']);
+            // Convert boolean to PostgreSQL compatible value
+            $boolean_value = $is_correct ? 1 : 0;
+            
+            $answer_stmt->execute([$result_id, $question_id, strtoupper($student_answer), $boolean_value]);
         }
         
         // Mark test code as used (permanently deactivated)
@@ -192,7 +197,8 @@ try {
     }
     
 } catch (Exception $e) {
-    Response::serverError('Failed to submit test');
+    error_log("Submit test error: " . $e->getMessage() . " at " . $e->getFile() . ":" . $e->getLine());
+    Response::serverError('Failed to submit test: ' . $e->getMessage());
 }
 
 ?>
