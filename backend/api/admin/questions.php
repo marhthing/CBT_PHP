@@ -686,6 +686,7 @@ function handlePut($db, $user) {
                 option_d = ?,
                 correct_answer = ?,
                 question_type = ?,
+                question_assignment = ?,
                 updated_at = CURRENT_TIMESTAMP
             WHERE id = ?
         ");
@@ -698,6 +699,7 @@ function handlePut($db, $user) {
             $question_type === 'true_false' ? null : $input['option_d'],
             $input['correct_answer'],
             $question_type,
+            $input['question_assignment'] ?? 'First CA',
             $question_id
         ]);
         
