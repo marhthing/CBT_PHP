@@ -32,7 +32,7 @@ try {
         SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level, tc.duration_minutes, tc.total_questions as question_count, tc.is_active, tc.expires_at, tc.subject_id, tc.term_id, tc.session_id, tc.status, tc.used_by, tc.test_type
         FROM test_codes tc
         LEFT JOIN subjects s ON tc.subject_id = s.id
-        WHERE tc.code = ? AND tc.is_active = 1 AND tc.is_activated = 1 AND tc.status = 'using'
+        WHERE tc.code = ? AND tc.is_active = true AND tc.is_activated = true AND tc.status = 'using'
     ");
 
     $stmt->execute([$test_code]);
