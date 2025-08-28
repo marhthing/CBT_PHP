@@ -45,11 +45,18 @@ try {
         Response::notFound('Test code not found');
     }
     
-    if (($test['is_active'] !== true && $test['is_active'] !== 't') || ($test['expires_at'] && strtotime($test['expires_at']) < time())) {
+    // Check if test is active - handle both MySQL (1/0) and PostgreSQL (true/false)
+    $is_active = ($test['is_active'] == 1 || $test['is_active'] === true || $test['is_active'] === 't');
+    $is_expired = ($test['expires_at'] && strtotime($test['expires_at']) < time());
+    
+    if (!$is_active || $is_expired) {
         Response::error('Test is no longer available');
     }
     
-    if ($test['is_used'] === true || $test['is_used'] === 't') {
+    // Check if test is already used - handle both MySQL (1/0) and PostgreSQL (true/false)
+    $is_used = ($test['is_used'] == 1 || $test['is_used'] === true || $test['is_used'] === 't');
+    
+    if ($is_used) {
         Response::error('This test code has already been used');
     }
     
@@ -167,7 +174,7 @@ try {
         // Mark test code as used (permanently deactivated)
         $used_stmt = $db->prepare("
             UPDATE test_codes 
-            SET status = 'used', is_used = true, used_at = CURRENT_TIMESTAMP, used_by = ?
+            SET status = 'used', is_used = 1, used_at = CURRENT_TIMESTAMP, used_by = ?
             WHERE id = ?
         ");
         $used_stmt->execute([$user['id'], $test['id']]);

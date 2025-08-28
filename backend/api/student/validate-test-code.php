@@ -20,16 +20,16 @@ if (!$user || $user['role'] !== 'student') {
 try {
     // Get JSON input
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     if (!$input) {
         Response::validationError('Invalid JSON input');
     }
-    
+
     // Validate required fields
     Response::validateRequired($input, ['test_code']);
-    
+
     $test_code = strtoupper(trim($input['test_code']));
-    
+
     // Get database connection
     require_once __DIR__ . '/../../config/database.php';
     $database = new Database();
@@ -51,8 +51,19 @@ try {
         Response::notFound('Test code not found');
     }
 
-    if (!$test['is_active']) {
-        Response::badRequest('Test code is not active');
+    // Check if test is active - handle both MySQL (1/0) and PostgreSQL (true/false)
+    $is_active = ($test['is_active'] == 1 || $test['is_active'] === true || $test['is_active'] === 't');
+    $is_expired = ($test['expires_at'] && strtotime($test['expires_at']) < time());
+
+    if (!$is_active || $is_expired) {
+        Response::error('Test is no longer available', 400);
+    }
+
+    // Check if test is already used - handle both MySQL (1/0) and PostgreSQL (true/false)
+    $is_used = ($test['is_used'] == 1 || $test['is_used'] === true || $test['is_used'] === 't');
+
+    if ($is_used) {
+        Response::error('This test code has already been used', 400);
     }
 
     if (!$test['is_activated']) {
@@ -67,10 +78,6 @@ try {
         Response::badRequest('This test code is currently being used by another student');
     }
 
-    if ($test['expires_at'] && strtotime($test['expires_at']) < time()) {
-        Response::badRequest('Test code has expired');
-    }
-
     // Check if student has already taken this test
     $stmt = $db->prepare("
         SELECT id FROM test_results 
@@ -82,7 +89,7 @@ try {
     if ($existing_result) {
         Response::badRequest('You have already taken this test');
     }
-    
+
     // Check if student has already taken a test for this subject, class, term, AND test type
     $duplicate_check_stmt = $db->prepare("
         SELECT tr.id FROM test_results tr
@@ -93,7 +100,7 @@ try {
         AND tc.term_id = ?
         AND tc.test_type = ?
     ");
-    
+
     $duplicate_check_stmt->execute([
         $user['id'], 
         $test['subject_id'],
@@ -101,14 +108,14 @@ try {
         $test['term_id'],
         $test['test_type']
     ]);
-    
+
     if ($duplicate_check_stmt->fetch()) {
         Response::badRequest('You have already taken a ' . $test['test_type'] . ' test for this subject, class, and term');
     }
 
     // Check if there are enough questions for this test based on test_type
     $test_type = $test['test_type'] ?? 'First CA';
-    
+
     if ($test_type === 'Examination') {
         // For Examination, count ALL questions from both First CA and Second CA
         $stmt = $db->prepare("
@@ -128,7 +135,7 @@ try {
         ");
         $stmt->execute([$test['subject_id'], $test['class_level'], $test['term_id'], $test_type]);
     }
-    
+
     $available_questions = $stmt->fetch()['question_count'];
 
     if ($available_questions < $test['question_count']) {
