@@ -494,8 +494,8 @@ function handlePost($db, $user) {
                 }
             }
             
-            // Validate class level
-            $check_stmt = $db->prepare("SELECT name FROM class_levels WHERE name = ? AND is_active = true");
+            // Validate class level using existing classes table
+            $check_stmt = $db->prepare("SELECT classes FROM classes WHERE classes = ?");
             $check_stmt->execute([$input['class_level']]);
             if (!$check_stmt->fetch()) {
                 Response::validationError('Invalid class level');

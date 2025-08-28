@@ -2,7 +2,7 @@
 -- Generated: August 4, 2025 at 8:28 AM
 -- Extracted from database: neondb
 -- Structure: All tables
--- Data: users, class_levels, sessions, terms, subjects tables only
+-- Data: users, classes, sessions, terms, subjects tables only
 
 --
 -- PostgreSQL database dump
@@ -70,8 +70,7 @@ ALTER TABLE IF EXISTS ONLY public.subjects DROP CONSTRAINT IF EXISTS subjects_co
 ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_pkey;
 ALTER TABLE IF EXISTS ONLY public.sessions DROP CONSTRAINT IF EXISTS sessions_name_key;
 ALTER TABLE IF EXISTS ONLY public.questions DROP CONSTRAINT IF EXISTS questions_pkey;
-ALTER TABLE IF EXISTS ONLY public.class_levels DROP CONSTRAINT IF EXISTS class_levels_pkey;
-ALTER TABLE IF EXISTS ONLY public.class_levels DROP CONSTRAINT IF EXISTS class_levels_name_key;
+ALTER TABLE IF EXISTS ONLY public.classes DROP CONSTRAINT IF EXISTS classes_pkey;
 ALTER TABLE IF EXISTS public.users ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.test_results ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.test_codes ALTER COLUMN id DROP DEFAULT;
@@ -81,7 +80,7 @@ ALTER TABLE IF EXISTS public.teacher_assignments ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.subjects ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.sessions ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.questions ALTER COLUMN id DROP DEFAULT;
-ALTER TABLE IF EXISTS public.class_levels ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.classes ALTER COLUMN id DROP DEFAULT;
 DROP SEQUENCE IF EXISTS public.users_id_seq;
 DROP TABLE IF EXISTS public.users;
 DROP SEQUENCE IF EXISTS public.test_results_id_seq;
@@ -100,33 +99,29 @@ DROP SEQUENCE IF EXISTS public.sessions_id_seq;
 DROP TABLE IF EXISTS public.sessions;
 DROP SEQUENCE IF EXISTS public.questions_id_seq;
 DROP TABLE IF EXISTS public.questions;
-DROP SEQUENCE IF EXISTS public.class_levels_id_seq;
-DROP TABLE IF EXISTS public.class_levels;
+DROP SEQUENCE IF EXISTS public.classes_id_seq;
+DROP TABLE IF EXISTS public.classes;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: class_levels; Type: TABLE; Schema: public; Owner: -
+-- Name: classes; Type: TABLE; Schema: public; Owner: -
 --
 
-CREATE TABLE public.class_levels (
+CREATE TABLE public.classes (
     id integer NOT NULL,
-    name character varying(50) NOT NULL,
-    display_name character varying(100) NOT NULL,
-    display_order integer NOT NULL,
-    level_type character varying(20) NOT NULL,
-    is_active boolean DEFAULT true,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT class_levels_level_type_check CHECK (((level_type)::text = ANY (ARRAY[('junior'::character varying)::text, ('senior'::character varying)::text])))
+    classes character varying(50) DEFAULT NULL,
+    date_added character varying(50) DEFAULT NULL,
+    time_added timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
 
 --
--- Name: class_levels_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+-- Name: classes_id_seq; Type: SEQUENCE; Schema: public; Owner: -
 --
 
-CREATE SEQUENCE public.class_levels_id_seq
+CREATE SEQUENCE public.classes_id_seq
     AS integer
     START WITH 1
     INCREMENT BY 1
@@ -136,10 +131,10 @@ CREATE SEQUENCE public.class_levels_id_seq
 
 
 --
--- Name: class_levels_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+-- Name: classes_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
 --
 
-ALTER SEQUENCE public.class_levels_id_seq OWNED BY public.class_levels.id;
+ALTER SEQUENCE public.classes_id_seq OWNED BY public.classes.id;
 
 
 --
@@ -489,10 +484,10 @@ ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
 
 
 --
--- Name: class_levels id; Type: DEFAULT; Schema: public; Owner: -
+-- Name: classes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.class_levels ALTER COLUMN id SET DEFAULT nextval('public.class_levels_id_seq'::regclass);
+ALTER TABLE ONLY public.classes ALTER COLUMN id SET DEFAULT nextval('public.classes_id_seq'::regclass);
 
 
 --
@@ -559,19 +554,11 @@ ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_
 
 
 --
--- Name: class_levels class_levels_name_key; Type: CONSTRAINT; Schema: public; Owner: -
+-- Name: classes classes_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
-ALTER TABLE ONLY public.class_levels
-    ADD CONSTRAINT class_levels_name_key UNIQUE (name);
-
-
---
--- Name: class_levels class_levels_pkey; Type: CONSTRAINT; Schema: public; Owner: -
---
-
-ALTER TABLE ONLY public.class_levels
-    ADD CONSTRAINT class_levels_pkey PRIMARY KEY (id);
+ALTER TABLE ONLY public.classes
+    ADD CONSTRAINT classes_pkey PRIMARY KEY (id);
 
 
 --
@@ -995,7 +982,7 @@ SELECT pg_catalog.setval('public.users_id_seq', 3, true);
 
 
 --
--- Data for Name: class_levels; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: classes; Type: TABLE DATA; Schema: public; Owner: -
 --
 
 --
@@ -1017,24 +1004,24 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Data for Name: class_levels; Type: TABLE DATA; Schema: public; Owner: -
+-- Data for Name: classes; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.class_levels (id, name, display_name, display_order, level_type, is_active, created_at) FROM stdin;
-1       JSS1    JSS 1   1       junior  t       2025-08-03 16:24:08.784969
-2       JSS2    JSS 2   2       junior  t       2025-08-03 16:24:08.784969
-3       JSS3    JSS 3   3       junior  t       2025-08-03 16:24:08.784969
-6       SS3     SSS 3   6       senior  t       2025-08-03 16:24:08.784969
-4       SS1     SSS 1   4       senior  t       2025-08-03 16:24:08.784969
-5       SS2     SSS 2   5       senior  t       2025-08-03 16:24:08.784969
+COPY public.classes (id, classes, date_added, time_added) FROM stdin;
+1       JSS1    2025-08-03      2025-08-03 16:24:08.784969
+2       JSS2    2025-08-03      2025-08-03 16:24:08.784969
+3       JSS3    2025-08-03      2025-08-03 16:24:08.784969
+4       SS1     2025-08-03      2025-08-03 16:24:08.784969
+5       SS2     2025-08-03      2025-08-03 16:24:08.784969
+6       SS3     2025-08-03      2025-08-03 16:24:08.784969
 \.
 
 
 --
--- Name: class_levels_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+-- Name: classes_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.class_levels_id_seq', 6, true);
+SELECT pg_catalog.setval('public.classes_id_seq', 6, true);
 
 
 --
