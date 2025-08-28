@@ -35,12 +35,13 @@ try {
 
 
     // Validate required fields
-    Response::validateRequired($input, ['questions', 'subject_id', 'class_level', 'term_id', 'session_id']);
+    Response::validateRequired($input, ['questions', 'subject_id', 'class_level', 'term_id', 'session_id', 'question_assignment']);
 
     $subject_id = (int)$input['subject_id'];
     $class_level = $input['class_level'];
     $term_id = (int)$input['term_id'];
     $session_id = (int)$input['session_id'];
+    $question_assignment = $input['question_assignment'];
     $questions = $input['questions'];
 
     if (!is_array($questions) || empty($questions)) {
@@ -129,8 +130,8 @@ try {
         $stmt = $db->prepare("
             INSERT INTO questions (
                 question_text, option_a, option_b, option_c, option_d,
-                correct_answer, question_type, subject_id, class_level, term_id, session_id, teacher_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                correct_answer, question_type, subject_id, class_level, term_id, session_id, teacher_id, question_assignment
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
 
         $created_count = 0;
@@ -147,7 +148,8 @@ try {
                 $class_level,
                 $term_id,
                 $session_id,
-                $user['id']
+                $user['id'],
+                $question_assignment
             ]);
             $created_count++;
         }
