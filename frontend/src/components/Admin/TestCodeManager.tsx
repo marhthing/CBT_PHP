@@ -604,12 +604,7 @@ export default function TestCodeManager() {
                     e.preventDefault()
                     handleToggleBatchActivation(batch.batchId, batch.isActivated)
                   }}
-                  disabled={batch.hasUsedCodes && !batch.isActivated}
-                  className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
-                    batch.hasUsedCodes && !batch.isActivated
-                      ? 'opacity-50 cursor-not-allowed'
-                      : 'cursor-pointer'
-                  } ${
+                  className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-colors cursor-pointer ${
                     batch.isActivated 
                       ? 'bg-red-600 hover:bg-red-700 text-white' 
                       : 'bg-green-600 hover:bg-green-700 text-white'
