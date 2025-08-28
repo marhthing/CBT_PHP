@@ -1,54 +1,5 @@
 <?php
 
-require_once __DIR__ . '/../../../cors.php';
-require_once __DIR__ . '/../../../includes/auth.php';
-require_once __DIR__ . '/../../../includes/response.php';
-
-// Get the request method
-$request_method = $_SERVER['REQUEST_METHOD'];
-
-// Initialize auth and verify admin role
-$auth = new Auth();
-$user = $auth->getCurrentUser();
-
-if (!$user || $user['role'] !== 'admin') {
-    Response::unauthorized('Admin access required');
-}
-
-try {
-    if ($request_method === 'GET') {
-        $subject_id = $_GET['subject_id'] ?? null;
-        
-        if (!$subject_id) {
-            Response::badRequest('Subject ID is required');
-        }
-        
-        // Get database connection
-        require_once __DIR__ . '/../../../config/database.php';
-        $database = new Database();
-        $db = $database->getConnection();
-        
-        // Count questions for the subject
-        $stmt = $db->prepare("
-            SELECT COUNT(*) as count 
-            FROM questions 
-            WHERE subject_id = ?
-        ");
-        $stmt->execute([$subject_id]);
-        $result = $stmt->fetch();
-        
-        Response::success('Question count retrieved', [
-            'count' => (int)$result['count'],
-            'subject_id' => $subject_id
-        ]);
-    } else {
-        Response::methodNotAllowed('Only GET method is allowed');
-    }
-} catch (Exception $e) {
-    Response::error('Failed to get question count', 500);
-}
-<?php
-
 // Extra CORS headers for InfinityFree compatibility
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
@@ -81,20 +32,29 @@ try {
     $subject_id = $_GET['subject_id'] ?? null;
     $class_level = $_GET['class_level'] ?? null;
     $term_id = $_GET['term_id'] ?? null;
-    $session_id = $_GET['session_id'] ?? null;
+    $test_type = $_GET['test_type'] ?? null;
 
-    if (!$subject_id || !$class_level || !$term_id || !$session_id) {
-        Response::validationError('subject_id, class_level, term_id, and session_id are required');
+    if (!$subject_id || !$class_level || !$term_id || !$test_type) {
+        Response::validationError('subject_id, class_level, term_id, and test_type are required');
     }
 
-    // Build query with filters
+    // Build query based on test type
     $where_conditions = [
         'q.subject_id = ?',
         'q.class_level = ?',
-        'q.term_id = ?',
-        'q.session_id = ?'
+        'q.term_id = ?'
     ];
-    $params = [$subject_id, $class_level, $term_id, $session_id];
+    $params = [$subject_id, $class_level, $term_id];
+
+    // Filter by question_assignment based on test_type
+    if ($test_type === 'First CA') {
+        $where_conditions[] = 'q.question_assignment = ?';
+        $params[] = 'First CA';
+    } elseif ($test_type === 'Second CA') {
+        $where_conditions[] = 'q.question_assignment = ?';
+        $params[] = 'Second CA';
+    }
+    // For 'Examination' test_type, include all questions (no additional filter)
 
     $where_clause = implode(' AND ', $where_conditions);
     
@@ -112,7 +72,7 @@ try {
         'subject_id' => (int)$subject_id,
         'class_level' => $class_level,
         'term_id' => (int)$term_id,
-        'session_id' => (int)$session_id
+        'test_type' => $test_type
     ]);
 
 } catch (Exception $e) {

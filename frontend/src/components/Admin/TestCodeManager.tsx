@@ -88,7 +88,7 @@ export default function TestCodeManager() {
     session_id: '',
     expires_at: '',
     count: 1,
-    test_type: 'test'
+    test_type: 'First CA'
   })
 
   // Fetch test codes
@@ -118,7 +118,7 @@ export default function TestCodeManager() {
 
   // Check available questions without causing re-renders
   const checkAvailableQuestions = useCallback(async () => {
-    if (!createForm.subject_id || !createForm.class_level || !createForm.term_id || !createForm.session_id) {
+    if (!createForm.subject_id || !createForm.class_level || !createForm.term_id || !createForm.test_type) {
       if (availableQuestions !== 0) setAvailableQuestions(0)
       return
     }
@@ -129,7 +129,7 @@ export default function TestCodeManager() {
           subject_id: createForm.subject_id,
           class_level: createForm.class_level,
           term_id: createForm.term_id,
-          session_id: createForm.session_id
+          test_type: createForm.test_type
         }
       })
       const newCount = response.data.data?.count || 0
@@ -150,7 +150,7 @@ export default function TestCodeManager() {
         if (availableQuestions !== 0) setAvailableQuestions(0)
       }
     }
-  }, [createForm.subject_id, createForm.class_level, createForm.term_id, createForm.session_id, availableQuestions])
+  }, [createForm.subject_id, createForm.class_level, createForm.term_id, createForm.test_type, availableQuestions])
 
   // Auto-generate title without triggering re-renders
   const generateTitle = useCallback(() => {
@@ -289,7 +289,7 @@ export default function TestCodeManager() {
         session_id: '',
         expires_at: '',
         count: 1,
-        test_type: 'test'
+        test_type: 'First CA'
       })
       setAvailableQuestions(0)
 
@@ -1236,41 +1236,6 @@ export default function TestCodeManager() {
                 marginBottom: '6px',
                 color: '#374151'
               }}>
-                Test Type *
-              </label>
-              <select
-                value={createForm.test_type}
-                onChange={(e) => setCreateForm(prev => ({ ...prev, test_type: e.target.value }))}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #d1d5db',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  backgroundColor: 'white',
-                  outline: 'none',
-                  appearance: 'none',
-                  backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                  backgroundSize: '16px',
-                  paddingRight: '40px'
-                }}
-                required
-              >
-                <option value="test">Test</option>
-                <option value="examination">Examination</option>
-              </select>
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{
-                display: 'block',
-                fontSize: '14px',
-                fontWeight: '500',
-                marginBottom: '6px',
-                color: '#374151'
-              }}>
                 Duration (Minutes) *
               </label>
               <input
@@ -1303,6 +1268,42 @@ export default function TestCodeManager() {
               }}>
                 How long students have to complete the test
               </p>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{
+                display: 'block',
+                fontSize: '14px',
+                fontWeight: '500',
+                marginBottom: '6px',
+                color: '#374151'
+              }}>
+                Test Type *
+              </label>
+              <select
+                value={createForm.test_type}
+                onChange={(e) => setCreateForm(prev => ({ ...prev, test_type: e.target.value }))}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  backgroundColor: 'white',
+                  outline: 'none',
+                  appearance: 'none',
+                  backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6,9 12,15 18,9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  backgroundSize: '16px',
+                  paddingRight: '40px'
+                }}
+                required
+              >
+                <option value="First CA">First CA</option>
+                <option value="Second CA">Second CA</option>
+                <option value="Examination">Examination</option>
+              </select>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
