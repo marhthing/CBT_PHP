@@ -1,4 +1,3 @@
-
 import { ReactNode, useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate, useLocation } from 'react-router-dom'
@@ -29,10 +28,10 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768)
     }
-    
+
     checkIfMobile()
     window.addEventListener('resize', checkIfMobile)
-    
+
     return () => window.removeEventListener('resize', checkIfMobile)
   }, [])
 
@@ -82,7 +81,7 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
       {/* Sidebar Header */}
       <div className="p-6 border-b border-white/10">
         <div className="w-16 h-16 bg-white/15 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">
-          SFCS
+          SFGS
         </div>
         <div className="text-center">
           <div className="font-semibold text-sm truncate">
@@ -148,7 +147,7 @@ export default function ResponsiveLayout({ children }: ResponsiveLayoutProps) {
               <Menu size={20} />
             </button>
             <div>
-              <div className="font-bold text-lg">SFCS CBT</div>
+              <div className="font-bold text-lg">SFGS CBT</div>
               <div className="text-xs opacity-90 truncate max-w-48">
                 {user?.full_name}
               </div>

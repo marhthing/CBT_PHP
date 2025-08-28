@@ -27,13 +27,13 @@ export default function SimpleLogin() {
           {/* Header inside form */}
           <div className="text-center mb-6">
             <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-lg bg-blue-600 mb-4 shadow-sm">
-              <span className="text-white text-sm font-medium tracking-wide">SFCS</span>
+              <span className="text-white text-sm font-medium tracking-wide">SFGS</span>
             </div>
             <h1 className="text-2xl font-semibold text-blue-900 mb-2">
               CBT Portal
             </h1>
             <p className="text-blue-700 text-sm">
-              Sure Foundation Comprehensive School
+              Sure Foundation Group of School
             </p>
           </div>
           {error && (
