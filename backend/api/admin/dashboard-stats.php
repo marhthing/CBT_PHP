@@ -72,6 +72,23 @@ try {
     $stats['tests_today'] = (int)$main_stats['tests_today'];
     $stats['average_score'] = (float)$main_stats['average_score'];
 
+    // Get questions breakdown by assignment type
+    $stmt = $db->prepare("
+        SELECT 
+            COALESCE(question_assignment, 'First CA') as assignment_type,
+            COUNT(*) as count
+        FROM questions 
+        GROUP BY question_assignment
+        ORDER BY assignment_type
+    ");
+    $stmt->execute();
+    $assignment_stats = $stmt->fetchAll();
+    
+    $stats['questions_by_assignment'] = [];
+    foreach ($assignment_stats as $assignment) {
+        $stats['questions_by_assignment'][$assignment['assignment_type']] = (int)$assignment['count'];
+    }
+
     // Most active subject (separate query for clarity)
     $stmt = $db->prepare("
         SELECT s.name as subject_name, COUNT(q.id) as question_count
