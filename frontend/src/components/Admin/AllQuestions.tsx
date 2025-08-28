@@ -200,7 +200,8 @@ export default function AllQuestions() {
         option_b: updatedQuestion.option_b,
         option_c: updatedQuestion.option_c,
         option_d: updatedQuestion.option_d,
-        correct_answer: updatedQuestion.correct_answer
+        correct_answer: updatedQuestion.correct_answer,
+        question_assignment: updatedQuestion.question_assignment
       })
 
       if (response.data.success) {
