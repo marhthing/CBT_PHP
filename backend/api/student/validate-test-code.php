@@ -39,7 +39,7 @@ try {
     $stmt = $db->prepare("
         SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level,
                tc.duration_minutes, tc.total_questions as question_count, tc.expires_at,
-               tc.is_active, tc.is_activated, tc.status
+               tc.is_active, tc.is_activated, tc.status, tc.subject_id, tc.term_id, tc.session_id, tc.test_type
         FROM test_codes tc
         LEFT JOIN subjects s ON tc.subject_id = s.id
         WHERE tc.code = ?
@@ -83,37 +83,50 @@ try {
         Response::badRequest('You have already taken this test');
     }
     
-    // Check if student has already taken a test for this subject, class, term, and session
+    // Check if student has already taken a test for this subject, class, and term (session removed)
     $duplicate_check_stmt = $db->prepare("
         SELECT tr.id FROM test_results tr
         JOIN test_codes tc ON tr.test_code_id = tc.id
         WHERE tr.student_id = ? 
-        AND tc.subject_id = (SELECT subject_id FROM test_codes WHERE id = ?)
+        AND tc.subject_id = ?
         AND tc.class_level = ?
-        AND tc.term_id = (SELECT term_id FROM test_codes WHERE id = ?)
-        AND tc.session_id = (SELECT session_id FROM test_codes WHERE id = ?)
+        AND tc.term_id = ?
     ");
     
     $duplicate_check_stmt->execute([
         $user['id'], 
-        $test['id'],
+        $test['subject_id'],
         $test['class_level'], 
-        $test['id'],
-        $test['id']
+        $test['term_id']
     ]);
     
     if ($duplicate_check_stmt->fetch()) {
-        Response::badRequest('You have already taken a test for this subject, class, term and session');
+        Response::badRequest('You have already taken a test for this subject, class, and term');
     }
 
-    // Check if there are enough questions for this test
-    $stmt = $db->prepare("
-        SELECT COUNT(*) as question_count
-        FROM questions q
-        WHERE q.subject_id = (SELECT subject_id FROM test_codes WHERE id = ?)
-        AND q.class_level = ?
-    ");
-    $stmt->execute([$test['id'], $test['class_level']]);
+    // Check if there are enough questions for this test based on test_type
+    $test_type = $test['test_type'] ?? 'First CA';
+    
+    if ($test_type === 'Examination') {
+        // For Examination, count ALL questions from both First CA and Second CA
+        $stmt = $db->prepare("
+            SELECT COUNT(*) as question_count
+            FROM questions q
+            WHERE q.subject_id = ? AND q.class_level = ? AND q.term_id = ?
+            AND (COALESCE(q.question_assignment, 'First CA') = 'First CA' OR COALESCE(q.question_assignment, 'First CA') = 'Second CA')
+        ");
+        $stmt->execute([$test['subject_id'], $test['class_level'], $test['term_id']]);
+    } else {
+        // For specific assignment types (First CA, Second CA), filter by assignment type
+        $stmt = $db->prepare("
+            SELECT COUNT(*) as question_count
+            FROM questions q
+            WHERE q.subject_id = ? AND q.class_level = ? AND q.term_id = ?
+            AND COALESCE(q.question_assignment, 'First CA') = ?
+        ");
+        $stmt->execute([$test['subject_id'], $test['class_level'], $test['term_id'], $test_type]);
+    }
+    
     $available_questions = $stmt->fetch()['question_count'];
 
     if ($available_questions < $test['question_count']) {

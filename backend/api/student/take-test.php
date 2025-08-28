@@ -29,7 +29,7 @@ try {
 
     // Get test information and validate
     $stmt = $db->prepare("
-        SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level, tc.duration_minutes, tc.total_questions as question_count, tc.is_active, tc.expires_at, tc.subject_id, tc.term_id, tc.session_id, tc.status, tc.used_by
+        SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level, tc.duration_minutes, tc.total_questions as question_count, tc.is_active, tc.expires_at, tc.subject_id, tc.term_id, tc.session_id, tc.status, tc.used_by, tc.test_type
         FROM test_codes tc
         LEFT JOIN subjects s ON tc.subject_id = s.id
         WHERE tc.code = ? AND tc.is_active = 1 AND tc.is_activated = 1 AND tc.status = 'using'
@@ -59,20 +59,35 @@ try {
         Response::error('You have already completed this test', 409);
     }
 
-    // Get random questions for the test
+    // Get random questions for the test based on test_type
     // Use MariaDB 10.4 compatible LIMIT syntax (InfinityFree specific fix)
-    $base_query = "
-        SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
-        FROM questions 
-        WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
-    ";
-    
+    $test_type = $test['test_type'] ?? 'First CA';
     $limit = (int)$test['question_count'];
-    $full_query = $database->limitQuery($base_query, $limit);
     
-    $questions_stmt = $db->prepare($full_query);
-
-    $questions_stmt->execute([(int)$test['subject_id'], $test['class_level'], (int)$test['term_id'], (int)$test['session_id']]);
+    if ($test_type === 'Examination') {
+        // For Examination, get questions from both First CA and Second CA (shuffled together)
+        $base_query = "
+            SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
+            FROM questions 
+            WHERE subject_id = ? AND class_level = ? AND term_id = ?
+            AND (COALESCE(question_assignment, 'First CA') = 'First CA' OR COALESCE(question_assignment, 'First CA') = 'Second CA')
+        ";
+        $full_query = $database->limitQuery($base_query, $limit);
+        $questions_stmt = $db->prepare($full_query);
+        $questions_stmt->execute([(int)$test['subject_id'], $test['class_level'], (int)$test['term_id']]);
+    } else {
+        // For specific assignment types (First CA, Second CA), filter by assignment type
+        $base_query = "
+            SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
+            FROM questions 
+            WHERE subject_id = ? AND class_level = ? AND term_id = ?
+            AND COALESCE(question_assignment, 'First CA') = ?
+        ";
+        $full_query = $database->limitQuery($base_query, $limit);
+        $questions_stmt = $db->prepare($full_query);
+        $questions_stmt->execute([(int)$test['subject_id'], $test['class_level'], (int)$test['term_id'], $test_type]);
+    }
+    
     $raw_questions = $questions_stmt->fetchAll();
 
     if (count($raw_questions) < $limit) {
