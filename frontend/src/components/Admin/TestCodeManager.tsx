@@ -335,7 +335,7 @@ export default function TestCodeManager() {
       // On error, refresh to get the actual state
       fetchTestCodes()
     }
-  }</error>
+  }
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
