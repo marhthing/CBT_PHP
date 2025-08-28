@@ -1,5 +1,17 @@
 <?php
 
+// Extra CORS headers for InfinityFree compatibility
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept, Authorization, X-Authorization, Bearer");
+header("Access-Control-Max-Age: 3600");
+
+// Handle preflight OPTIONS requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 require_once __DIR__ . '/../../cors.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
@@ -57,6 +69,13 @@ try {
         // For ID-based operations: /admin/test-codes/{id} or /admin/test-codes/{id}/action
         $test_code_id = (int)$path_parts[0];
         $action = isset($path_parts[1]) ? $path_parts[1] : null;
+    }
+    
+    // Debug: Check if the path parsing is correct for bulk operations
+    // If neither bulk nor batch is detected but the path contains 'bulk', force it
+    if (!$is_bulk && !$is_batch && !$test_code_id && (strpos($path_info, '/bulk') !== false || strpos($_SERVER['REQUEST_URI'], '/bulk') !== false)) {
+        $action = 'bulk';
+        $is_bulk = true;
     }
 
     // Get database connection
@@ -123,11 +142,7 @@ try {
                 
                 $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
                 
-                // Use database-specific LIMIT syntax
-                $limit_clause = $database->limitQuery('', (int)$limit, (int)$offset);
-                $limit_clause = trim(substr($limit_clause, 0));  // Remove empty query part
-                
-                $stmt = $db->prepare("
+                $base_query = "
                     SELECT tc.*, s.name as subject_name, t.name as term_name, 
                            sess.name as session_name, u.full_name as created_by_name,
                            COUNT(tr.id) as usage_count
@@ -145,8 +160,11 @@ try {
                              tc.pass_score, tc.activated_at, tc.batch_id, tc.test_type,
                              s.name, t.name, sess.name, u.full_name
                     ORDER BY tc.created_at DESC
-                    LIMIT $limit OFFSET $offset
-                ");
+                ";
+                
+                // Use database-specific LIMIT syntax
+                $full_query = $database->limitQuery($base_query, (int)$limit, (int)$offset);
+                $stmt = $db->prepare($full_query);
                 $stmt->execute($params);
                 $test_codes = $stmt->fetchAll();
                 
@@ -470,9 +488,9 @@ try {
                 ");
                 $activated_at = $is_activated ? date('Y-m-d H:i:s') : null;
                 
-                // Ensure boolean is properly converted for PostgreSQL
-                $is_activated_pg = $is_activated ? 'true' : 'false';
-                $stmt->execute([$is_activated_pg, $activated_at, $batch_id]);
+                // Use database-specific boolean values
+                $is_activated_db = $is_activated ? $database->getBooleanTrue() : $database->getBooleanFalse();
+                $stmt->execute([$is_activated_db, $activated_at, $batch_id]);
                 
                 if ($stmt->rowCount() > 0) {
                     Response::success('Test code batch activation updated', [
@@ -526,8 +544,12 @@ try {
 
         case 'DELETE':
             if ($action === 'bulk' && isset($_GET['empty_table'])) {
-                // Empty the entire test_codes table
-                $stmt = $db->prepare("TRUNCATE TABLE test_codes RESTART IDENTITY CASCADE");
+                // Empty the entire test_codes table - database compatible way
+                if ($database->getDatabaseType() === 'mysql') {
+                    $stmt = $db->prepare("TRUNCATE TABLE test_codes");
+                } else {
+                    $stmt = $db->prepare("TRUNCATE TABLE test_codes RESTART IDENTITY CASCADE");
+                }
                 $stmt->execute();
                 
                 Response::success('All test codes have been deleted successfully');

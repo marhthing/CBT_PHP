@@ -11,34 +11,33 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
+    // Start session early
+    session_start();
+
     $auth = new Auth();
     $user = $auth->requireRole('student');
-    
+
     $database = new Database();
     $db = $database->getConnection();
-    
+
     // Get test code from URL parameter
     $test_code = $_GET['test_code'] ?? '';
-    
+
     if (empty($test_code)) {
         Response::validationError('Test code is required');
     }
-    
+
     // Get test information and validate
-    $database = new Database();
-    $is_active_condition = $database->getBooleanTrue();
-    $is_activated_condition = $database->getBooleanTrue();
-    
     $stmt = $db->prepare("
         SELECT tc.id, tc.code, tc.title, s.name as subject, tc.class_level, tc.duration_minutes, tc.total_questions as question_count, tc.is_active, tc.expires_at, tc.subject_id, tc.term_id, tc.session_id, tc.status, tc.used_by
         FROM test_codes tc
         LEFT JOIN subjects s ON tc.subject_id = s.id
-        WHERE tc.code = ? AND tc.is_active = ? AND tc.is_activated = ? AND tc.status = 'using'
+        WHERE tc.code = ? AND tc.is_active = 1 AND tc.is_activated = 1 AND tc.status = 'using'
     ");
-    
-    $stmt->execute([$test_code, $is_active_condition, $is_activated_condition]);
+
+    $stmt->execute([$test_code]);
     $test = $stmt->fetch();
-    
+
     if (!$test) {
         Response::notFound('Test code not found, expired, or not in "using" status');
     }
@@ -47,41 +46,43 @@ try {
     if ($test['used_by'] != $user['id']) {
         Response::unauthorized('This test code was validated by another student');
     }
-    
+
     // Check if student has already taken this test
     $check_stmt = $db->prepare("
         SELECT id FROM test_results 
         WHERE test_code_id = ? AND student_id = ?
     ");
-    
-    $check_stmt->execute([$test['id'], $user['id']]);
-    
+
+    $check_stmt->execute([(int)$test['id'], (int)$user['id']]);
+
     if ($check_stmt->fetch()) {
         Response::error('You have already completed this test', 409);
     }
-    
-    // Get random questions for the test with correct answers for shuffling
-    $random_order = $database->getRandomOrder();
-    
-    $questions_stmt = $db->prepare("
+
+    // Get random questions for the test
+    // Use MariaDB 10.4 compatible LIMIT syntax (InfinityFree specific fix)
+    $base_query = "
         SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
         FROM questions 
         WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
-        ORDER BY $random_order
-        LIMIT ?
-    ");
+    ";
     
-    $questions_stmt->execute([(int)$test['subject_id'], $test['class_level'], (int)$test['term_id'], (int)$test['session_id'], (int)$test['question_count']]);
+    $limit = (int)$test['question_count'];
+    $full_query = $database->limitQuery($base_query, $limit);
+    
+    $questions_stmt = $db->prepare($full_query);
+
+    $questions_stmt->execute([(int)$test['subject_id'], $test['class_level'], (int)$test['term_id'], (int)$test['session_id']]);
     $raw_questions = $questions_stmt->fetchAll();
-    
-    if (count($raw_questions) < $test['question_count']) {
-        Response::error('Insufficient questions available for this test');
+
+    if (count($raw_questions) < $limit) {
+        Response::error('Insufficient questions available for this test. Found ' . count($raw_questions) . ' questions, but test requires ' . $limit . ' questions.');
     }
-    
+
     // Shuffle options for each question and create answer mapping
     $questions = [];
     $answer_mappings = [];
-    
+
     foreach ($raw_questions as $question) {
         // Handle True/False questions differently to avoid shuffling empty options
         if ($question['question_type'] === 'true_false') {
@@ -90,11 +91,11 @@ try {
                 'A' => $question['option_a'],
                 'B' => $question['option_b']
             ];
-            
+
             // Get the values and shuffle them
             $option_values = array_values($original_options);
             shuffle($option_values);
-            
+
             // Create new shuffled mapping for True/False
             $shuffled_options = [
                 'A' => $option_values[0],
@@ -102,11 +103,11 @@ try {
                 'C' => null,
                 'D' => null
             ];
-            
+
             // Find where the correct answer ended up after shuffling
             $original_correct_answer = $question['correct_answer'];
             $original_correct_text = $original_options[$original_correct_answer];
-            
+
             $new_correct_answer = 'A';
             foreach ($shuffled_options as $new_key => $text) {
                 if ($text === $original_correct_text) {
@@ -122,16 +123,16 @@ try {
                 'C' => $question['option_c'],
                 'D' => $question['option_d']
             ];
-            
+
             // Filter out empty options before shuffling
             $valid_options = array_filter($original_options, function($value) {
                 return !empty(trim($value));
             });
-            
+
             // Get the values and shuffle them
             $option_values = array_values($valid_options);
             shuffle($option_values);
-            
+
             // Create new shuffled mapping, filling available slots
             $shuffled_options = [
                 'A' => $option_values[0] ?? null,
@@ -139,11 +140,11 @@ try {
                 'C' => $option_values[2] ?? null,
                 'D' => $option_values[3] ?? null
             ];
-            
+
             // Find where the correct answer ended up after shuffling
             $original_correct_answer = $question['correct_answer'];
             $original_correct_text = $original_options[$original_correct_answer];
-            
+
             $new_correct_answer = 'A';
             foreach ($shuffled_options as $new_key => $text) {
                 if ($text === $original_correct_text) {
@@ -152,10 +153,10 @@ try {
                 }
             }
         }
-        
+
         // Store the answer mapping for this question (for submission validation)
         $answer_mappings[$question['id']] = $new_correct_answer;
-        
+
         // Add processed question to final array
         $questions[] = [
             'id' => $question['id'],
@@ -167,13 +168,12 @@ try {
             'question_type' => $question['question_type']
         ];
     }
-    
+
     // Store answer mappings in session for later validation during submission
-    session_start();
     $_SESSION['answer_mappings_' . $test['id'] . '_' . $user['id']] = $answer_mappings;
-    
+
     Response::logRequest('student/take-test', 'GET', $user['id']);
-    
+
     Response::success('Test data retrieved', [
         'id' => $test['id'],
         'title' => $test['title'],
@@ -182,9 +182,9 @@ try {
         'duration_minutes' => $test['duration_minutes'],
         'questions' => $questions
     ]);
-    
+
 } catch (Exception $e) {
-    Response::serverError('Failed to load test');
+    Response::serverError('Failed to load test: ' . $e->getMessage());
 }
 
 ?>
