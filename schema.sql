@@ -162,6 +162,7 @@ CREATE TABLE public.questions (
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     question_type character varying(20) DEFAULT 'multiple_choice'::character varying NOT NULL,
+    question_assignment character varying(50) DEFAULT 'First CA',
     CONSTRAINT questions_correct_answer_check CHECK ((correct_answer = ANY (ARRAY['A'::bpchar, 'B'::bpchar, 'C'::bpchar, 'D'::bpchar])))
 );
 
@@ -975,9 +976,9 @@ SET row_security = off;
 --
 
 COPY public.users (id, username, email, reg_number, password, role, full_name, is_active, created_at, last_login, current_term, current_session) FROM stdin;
-2	teacher1	teacher1@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	teacher	John Doe	t	2025-08-03 11:46:51.454306	2025-08-04 08:09:41.951693	First	2024/2025
-3	2023001	student1@sfgs.edu.ng	2023001	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	student	Jane Smith	t	2025-08-03 11:46:51.454306	2025-08-04 08:11:05.184543	First	2024/2025
-1	admin	admin@sfgs.edu.ng	\N	$2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i	admin	System Administrator	t	2025-08-03 11:46:51.454306	2025-08-04 08:19:31.980207	First	2024/2025
+2       teacher1        teacher1@sfgs.edu.ng    \N      $2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i    teacher John Doe        t       2025-08-03 11:46:51.454306      2025-08-04 08:09:41.951693      First   2024/2025
+3       2023001 student1@sfgs.edu.ng    2023001 $2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i    student Jane Smith      t       2025-08-03 11:46:51.454306      2025-08-04 08:11:05.184543      First   2024/2025
+1       admin   admin@sfgs.edu.ng       \N      $2y$10$NFr/gHdemA0I28HcRGEw8.2eOR20IvLmLVBi6TPrdnryI6pkeZI2i    admin   System Administrator    t       2025-08-03 11:46:51.454306      2025-08-04 08:19:31.980207      First   2024/2025
 \.
 
 
@@ -1020,12 +1021,12 @@ SET row_security = off;
 --
 
 COPY public.class_levels (id, name, display_name, display_order, level_type, is_active, created_at) FROM stdin;
-1	JSS1	JSS 1	1	junior	t	2025-08-03 16:24:08.784969
-2	JSS2	JSS 2	2	junior	t	2025-08-03 16:24:08.784969
-3	JSS3	JSS 3	3	junior	t	2025-08-03 16:24:08.784969
-6	SS3	SSS 3	6	senior	t	2025-08-03 16:24:08.784969
-4	SS1	SSS 1	4	senior	t	2025-08-03 16:24:08.784969
-5	SS2	SSS 2	5	senior	t	2025-08-03 16:24:08.784969
+1       JSS1    JSS 1   1       junior  t       2025-08-03 16:24:08.784969
+2       JSS2    JSS 2   2       junior  t       2025-08-03 16:24:08.784969
+3       JSS3    JSS 3   3       junior  t       2025-08-03 16:24:08.784969
+6       SS3     SSS 3   6       senior  t       2025-08-03 16:24:08.784969
+4       SS1     SSS 1   4       senior  t       2025-08-03 16:24:08.784969
+5       SS2     SSS 2   5       senior  t       2025-08-03 16:24:08.784969
 \.
 
 
@@ -1068,9 +1069,9 @@ SET row_security = off;
 --
 
 COPY public.sessions (id, name, start_date, end_date, is_current, is_active, created_at) FROM stdin;
-1	2023/2024	2023-09-01	2024-08-31	f	t	2025-08-03 16:23:19.029861
-2	2024/2025	2024-09-01	2025-08-31	t	t	2025-08-03 16:23:19.029861
-3	2025/2026	2025-09-01	2026-08-31	f	t	2025-08-03 16:23:19.029861
+1       2023/2024       2023-09-01      2024-08-31      f       t       2025-08-03 16:23:19.029861
+2       2024/2025       2024-09-01      2025-08-31      t       t       2025-08-03 16:23:19.029861
+3       2025/2026       2025-09-01      2026-08-31      f       t       2025-08-03 16:23:19.029861
 \.
 
 
@@ -1113,9 +1114,9 @@ SET row_security = off;
 --
 
 COPY public.terms (id, name, display_order, is_active, created_at) FROM stdin;
-1	First Term	1	t	2025-08-03 16:23:17.091241
-2	Second Term	2	t	2025-08-03 16:23:17.091241
-3	Third Term	3	t	2025-08-03 16:23:17.091241
+1       First Term      1       t       2025-08-03 16:23:17.091241
+2       Second Term     2       t       2025-08-03 16:23:17.091241
+3       Third Term      3       t       2025-08-03 16:23:17.091241
 \.
 
 
@@ -1158,21 +1159,21 @@ SET row_security = off;
 --
 
 COPY public.subjects (id, name, code, description, is_active, created_at) FROM stdin;
-1	Mathematics	MATH	Core Mathematics including Algebra, Geometry, and Statistics	t	2025-08-03 16:23:03.281244
-2	English Language	ENG	English Language and Literature	t	2025-08-03 16:23:03.281244
-3	Physics	PHY	General Physics and Applied Physics	t	2025-08-03 16:23:03.281244
-4	Chemistry	CHEM	General Chemistry and Applied Chemistry	t	2025-08-03 16:23:03.281244
-5	Biology	BIO	General Biology and Applied Biology	t	2025-08-03 16:23:03.281244
-6	Geography	GEO	Physical and Human Geography	t	2025-08-03 16:23:03.281244
-7	History	HIST	Nigerian and World History	t	2025-08-03 16:23:03.281244
-8	Economics	ECON	Principles of Economics	t	2025-08-03 16:23:03.281244
-9	Government	GOV	Government and Civic Education	t	2025-08-03 16:23:03.281244
-10	Literature in English	LIT	Literature in English	t	2025-08-03 16:23:03.281244
-11	Agricultural Science	AGRIC	Agricultural Science and Practice	t	2025-08-03 16:23:03.281244
-12	Computer Science	CS	Computer Science and ICT	t	2025-08-03 16:23:03.281244
-13	Further Mathematics	FMATH	Advanced Mathematics	t	2025-08-03 16:23:03.281244
-14	Accounting	ACCT	Financial Accounting and Cost Accounting	t	2025-08-03 16:23:03.281244
-15	Commerce	COMM	Principles of Commerce	t	2025-08-03 16:23:03.281244
+1       Mathematics     MATH    Core Mathematics including Algebra, Geometry, and Statistics    t       2025-08-03 16:23:03.281244
+2       English Language        ENG     English Language and Literature t       2025-08-03 16:23:03.281244
+3       Physics PHY     General Physics and Applied Physics     t       2025-08-03 16:23:03.281244
+4       Chemistry       CHEM    General Chemistry and Applied Chemistry t       2025-08-03 16:23:03.281244
+5       Biology BIO     General Biology and Applied Biology     t       2025-08-03 16:23:03.281244
+6       Geography       GEO     Physical and Human Geography    t       2025-08-03 16:23:03.281244
+7       History HIST    Nigerian and World History      t       2025-08-03 16:23:03.281244
+8       Economics       ECON    Principles of Economics t       2025-08-03 16:23:03.281244
+9       Government      GOV     Government and Civic Education  t       2025-08-03 16:23:03.281244
+10      Literature in English   LIT     Literature in English   t       2025-08-03 16:23:03.281244
+11      Agricultural Science    AGRIC   Agricultural Science and Practice       t       2025-08-03 16:23:03.281244
+12      Computer Science        CS      Computer Science and ICT        t       2025-08-03 16:23:03.281244
+13      Further Mathematics     FMATH   Advanced Mathematics    t       2025-08-03 16:23:03.281244
+14      Accounting      ACCT    Financial Accounting and Cost Accounting        t       2025-08-03 16:23:03.281244
+15      Commerce        COMM    Principles of Commerce  t       2025-08-03 16:23:03.281244
 \.
 
 
