@@ -587,7 +587,7 @@ export default function TestCodeManager() {
               <div className="space-y-2 text-sm text-gray-600 mb-4">
                 <div><span className="font-medium">Subject:</span> {batch.codes[0].subject_name}</div>
                 <div><span className="font-medium">Class:</span> {batch.codes[0].class_level}</div>
-                <div><span className="font-medium">Type:</span> {batch.codes[0].test_type === 'examination' ? 'Examination' : 'Test'}</div>
+                <div><span className="font-medium">Type:</span> {batch.codes[0].test_type || 'Test'}</div>
                 <div><span className="font-medium">Duration:</span> {batch.codes[0].duration_minutes} minutes</div>
                 <div><span className="font-medium">Questions:</span> {batch.codes[0].total_questions}</div>
                 {batch.hasUsedCodes && (

@@ -346,13 +346,26 @@ try {
                 
                 // First verify there are enough questions for the specific subject, class, term, and assignment type
                 $test_type = $input['test_type'] ?? 'First CA';
-                $question_check = $db->prepare("
-                    SELECT COUNT(*) as count 
-                    FROM questions 
-                    WHERE subject_id = ? AND class_level = ? AND term_id = ? 
-                    AND COALESCE(question_assignment, 'First CA') = ?
-                ");
-                $question_check->execute([$input['subject_id'], $input['class_level'], $input['term_id'], $test_type]);
+                
+                if ($test_type === 'Examination') {
+                    // For Examination, count ALL questions regardless of assignment type
+                    $question_check = $db->prepare("
+                        SELECT COUNT(*) as count 
+                        FROM questions 
+                        WHERE subject_id = ? AND class_level = ? AND term_id = ?
+                    ");
+                    $question_check->execute([$input['subject_id'], $input['class_level'], $input['term_id']]);
+                } else {
+                    // For specific assignment types (First CA, Second CA), filter by assignment type
+                    $question_check = $db->prepare("
+                        SELECT COUNT(*) as count 
+                        FROM questions 
+                        WHERE subject_id = ? AND class_level = ? AND term_id = ? 
+                        AND COALESCE(question_assignment, 'First CA') = ?
+                    ");
+                    $question_check->execute([$input['subject_id'], $input['class_level'], $input['term_id'], $test_type]);
+                }
+                
                 $available_questions = $question_check->fetch()['count'];
                 
                 if ($available_questions == 0) {
