@@ -614,8 +614,6 @@ export default function AllQuestions() {
             <option value="">All Types</option>
             <option value="multiple_choice">Multiple Choice</option>
             <option value="true_false">True/False</option>
-            <option value="first_ca">First CA</option>
-            <option value="second_ca">Second CA</option>
           </select>
         </div>
       </div>
@@ -855,8 +853,6 @@ export default function AllQuestions() {
                 >
                   <option value="multiple_choice">Multiple Choice</option>
                   <option value="true_false">True/False</option>
-                  <option value="first_ca">First CA</option>
-                  <option value="second_ca">Second CA</option>
                 </select>
               </div>
 
@@ -1181,8 +1177,6 @@ export default function AllQuestions() {
                       >
                         <option value="multiple_choice">Multiple Choice</option>
                         <option value="true_false">True/False</option>
-                        <option value="first_ca">First CA</option>
-                        <option value="second_ca">Second CA</option>
                       </select>
                     </div>
 
