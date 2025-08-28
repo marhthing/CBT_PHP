@@ -37,17 +37,9 @@ try {
             break;
 
         case 'class_levels':
-            // Use existing classes table structure
-            $stmt = $conn->prepare("SELECT id, classes as name, classes as display_name FROM classes ORDER BY id");
+            $stmt = $conn->prepare("SELECT name as id, display_name as name, level_type, display_order FROM class_levels WHERE is_active = true ORDER BY display_order");
             $stmt->execute();
             $data = $stmt->fetchAll();
-            // Add level_type based on class name for compatibility
-            foreach ($data as &$row) {
-                $class_name = strtoupper($row['name']);
-                $row['level_type'] = (strpos($class_name, 'JSS') === 0 || strpos($class_name, 'JS') === 0) ? 'junior' : 'senior';
-                $row['display_order'] = $row['id'];
-                $row['id'] = $row['name']; // Use classes name as id for compatibility
-            }
             break;
 
         case 'difficulties':
@@ -77,18 +69,10 @@ try {
             $stmt->execute();
             $data['sessions'] = $stmt->fetchAll();
             
-            // Get class levels using existing classes table
-            $stmt = $conn->prepare("SELECT id, classes as name, classes as display_name FROM classes ORDER BY id");
+            // Get class levels
+            $stmt = $conn->prepare("SELECT name as id, display_name as name, level_type, display_order FROM class_levels WHERE is_active = true ORDER BY display_order");
             $stmt->execute();
-            $class_data = $stmt->fetchAll();
-            // Add level_type based on class name for compatibility
-            foreach ($class_data as &$row) {
-                $class_name = strtoupper($row['name']);
-                $row['level_type'] = (strpos($class_name, 'JSS') === 0 || strpos($class_name, 'JS') === 0) ? 'junior' : 'senior';
-                $row['display_order'] = $row['id'];
-                $row['id'] = $row['name']; // Use classes name as id for compatibility
-            }
-            $data['class_levels'] = $class_data;
+            $data['class_levels'] = $stmt->fetchAll();
             break;
     }
 

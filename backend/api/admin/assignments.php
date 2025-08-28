@@ -120,10 +120,10 @@ function handlePost($db, $user) {
             Response::validationError('Invalid subject selected');
         }
         
-        // Get valid class levels from database using existing classes table
-        $class_stmt = $db->prepare("SELECT classes FROM classes");
-        $class_stmt->execute();
-        $valid_classes = $class_stmt->fetchAll(PDO::FETCH_COLUMN);
+        // Get valid class levels from database
+$class_stmt = $db->prepare("SELECT name FROM class_levels WHERE is_active = true");
+$class_stmt->execute();
+$valid_classes = $class_stmt->fetchAll(PDO::FETCH_COLUMN);
         
         if (!in_array($input['class_level'], $valid_classes)) {
             Response::validationError('Invalid class level selected');
