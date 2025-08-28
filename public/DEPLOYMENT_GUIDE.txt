@@ -1,0 +1,74 @@
+CBT PORTAL - INFINITYFREE DEPLOYMENT GUIDE
+==========================================
+
+This folder contains your complete CBT Portal application ready for InfinityFree hosting.
+
+FOLDER STRUCTURE:
+================
+public/
+├── index.html              # Main React app entry point
+├── assets/                 # CSS and JavaScript bundles
+├── api/                    # PHP backend API
+│   ├── .htaccess          # API routing configuration
+│   ├── .env               # Database configuration (CONFIGURE THIS!)
+│   ├── api/               # API endpoints
+│   ├── config/            # Database and system config
+│   ├── includes/          # Shared PHP functions
+│   └── index.php          # API entry point
+├── .htaccess              # Frontend routing configuration
+└── DEPLOYMENT_GUIDE.txt   # This file
+
+DEPLOYMENT STEPS:
+================
+
+1. UPLOAD FILES:
+   - Upload all contents of this 'public' folder to your InfinityFree htdocs directory
+   - Ensure all files maintain their folder structure
+
+2. CONFIGURE DATABASE:
+   - Edit public/api/.env file with your InfinityFree MySQL credentials
+   - Update the following values:
+     * DB_HOST=your_database_host
+     * DB_USERNAME=your_database_username  
+     * DB_PASSWORD=your_database_password
+     * DB_DATABASE=your_database_name
+     * JWT_SECRET=generate-a-random-32-character-string
+
+3. IMPORT DATABASE:
+   - Create a MySQL database in your InfinityFree control panel
+   - Import the schema.sql file (from your original project) into the database
+   - This creates all necessary tables and sample data
+
+4. SET PERMISSIONS:
+   - Ensure .htaccess files are readable (644)
+   - Ensure PHP files are executable (644)
+   - Ensure .env file is protected (600 if possible)
+
+5. TEST YOUR DEPLOYMENT:
+   - Visit your domain to see the React frontend
+   - Login with: admin / admin (admin account)
+   - Test API functionality through the interface
+
+IMPORTANT NOTES:
+===============
+- The frontend is pre-configured to use /api for all backend requests
+- All CORS headers are configured for InfinityFree compatibility
+- The system supports both MySQL and PostgreSQL databases
+- JWT authentication is configured for secure access
+- All routes are properly handled by .htaccess files
+
+TROUBLESHOOTING:
+===============
+- If you see 404 errors, check that .htaccess files are uploaded
+- If database connection fails, verify your .env configuration
+- If CORS errors occur, check your hosting panel's PHP settings
+- For permission issues, contact InfinityFree support
+
+SECURITY:
+=========
+- Change default admin password immediately after deployment
+- Generate a secure JWT_SECRET key
+- Keep your .env file secure and never share credentials
+- Regularly backup your database
+
+Your CBT Portal is now ready for production use on InfinityFree!
