@@ -286,31 +286,39 @@ try {
                             $is_activated = (bool)$input['is_activated'];
                         }
                         
-                        // Check if any codes in this batch have been used
-                        $check_stmt = $db->prepare("
-                            SELECT COUNT(*) as used_count 
-                            FROM test_codes tc
-                            LEFT JOIN test_results tr ON tc.id = tr.test_code_id
-                            WHERE tc.batch_id = ? AND tr.id IS NOT NULL
-                        ");
-                        $check_stmt->execute([$batch_id]);
-                        $used_check = $check_stmt->fetch();
-                        
-                        if ($used_check['used_count'] > 0 && $is_activated) {
-                            Response::badRequest('Cannot activate batch with used codes. Once a code is used, the batch cannot be reactivated.');
+                        // When reactivating, only update unused codes in the batch
+                        // When deactivating, update all codes in the batch
+                        if ($is_activated) {
+                            // For activation: only update codes that haven't been used
+                            $stmt = $db->prepare("
+                                UPDATE test_codes 
+                                SET is_activated = ?, activated_at = ? 
+                                WHERE batch_id = ? 
+                                AND id NOT IN (
+                                    SELECT DISTINCT tc.id 
+                                    FROM test_codes tc 
+                                    INNER JOIN test_results tr ON tc.id = tr.test_code_id 
+                                    WHERE tc.batch_id = ?
+                                )
+                            ");
+                            $activated_at = date('Y-m-d H:i:s');
+                            
+                            // Use database-specific boolean values
+                            $is_activated_db = $database->getBooleanTrue();
+                            $stmt->execute([$is_activated_db, $activated_at, $batch_id, $batch_id]);
+                        } else {
+                            // For deactivation: update all codes in the batch
+                            $stmt = $db->prepare("
+                                UPDATE test_codes 
+                                SET is_activated = ?, activated_at = ? 
+                                WHERE batch_id = ?
+                            ");
+                            $activated_at = null;
+                            
+                            // Use database-specific boolean values
+                            $is_activated_db = $database->getBooleanFalse();
+                            $stmt->execute([$is_activated_db, $activated_at, $batch_id]);
                         }
-                        
-                        // Update all codes in the batch
-                        $stmt = $db->prepare("
-                            UPDATE test_codes 
-                            SET is_activated = ?, activated_at = ? 
-                            WHERE batch_id = ?
-                        ");
-                        $activated_at = $is_activated ? date('Y-m-d H:i:s') : null;
-                        
-                        // Use database-specific boolean values
-                        $is_activated_db = $is_activated ? $database->getBooleanTrue() : $database->getBooleanFalse();
-                        $stmt->execute([$is_activated_db, $activated_at, $batch_id]);
                         
                         if ($stmt->rowCount() > 0) {
                             Response::success('Test code batch activation updated', [
@@ -485,31 +493,39 @@ try {
                     $is_activated = (bool)$input['is_activated'];
                 }
                 
-                // Check if any codes in this batch have been used
-                $check_stmt = $db->prepare("
-                    SELECT COUNT(*) as used_count 
-                    FROM test_codes tc
-                    LEFT JOIN test_results tr ON tc.id = tr.test_code_id
-                    WHERE tc.batch_id = ? AND tr.id IS NOT NULL
-                ");
-                $check_stmt->execute([$batch_id]);
-                $used_check = $check_stmt->fetch();
-                
-                if ($used_check['used_count'] > 0 && $is_activated) {
-                    Response::badRequest('Cannot activate batch with used codes. Once a code is used, the batch cannot be reactivated.');
+                // When reactivating, only update unused codes in the batch
+                // When deactivating, update all codes in the batch
+                if ($is_activated) {
+                    // For activation: only update codes that haven't been used
+                    $stmt = $db->prepare("
+                        UPDATE test_codes 
+                        SET is_activated = ?, activated_at = ? 
+                        WHERE batch_id = ? 
+                        AND id NOT IN (
+                            SELECT DISTINCT tc.id 
+                            FROM test_codes tc 
+                            INNER JOIN test_results tr ON tc.id = tr.test_code_id 
+                            WHERE tc.batch_id = ?
+                        )
+                    ");
+                    $activated_at = date('Y-m-d H:i:s');
+                    
+                    // Use database-specific boolean values
+                    $is_activated_db = $database->getBooleanTrue();
+                    $stmt->execute([$is_activated_db, $activated_at, $batch_id, $batch_id]);
+                } else {
+                    // For deactivation: update all codes in the batch
+                    $stmt = $db->prepare("
+                        UPDATE test_codes 
+                        SET is_activated = ?, activated_at = ? 
+                        WHERE batch_id = ?
+                    ");
+                    $activated_at = null;
+                    
+                    // Use database-specific boolean values
+                    $is_activated_db = $database->getBooleanFalse();
+                    $stmt->execute([$is_activated_db, $activated_at, $batch_id]);
                 }
-                
-                // Update all codes in the batch
-                $stmt = $db->prepare("
-                    UPDATE test_codes 
-                    SET is_activated = ?, activated_at = ? 
-                    WHERE batch_id = ?
-                ");
-                $activated_at = $is_activated ? date('Y-m-d H:i:s') : null;
-                
-                // Use database-specific boolean values
-                $is_activated_db = $is_activated ? $database->getBooleanTrue() : $database->getBooleanFalse();
-                $stmt->execute([$is_activated_db, $activated_at, $batch_id]);
                 
                 if ($stmt->rowCount() > 0) {
                     Response::success('Test code batch activation updated', [
