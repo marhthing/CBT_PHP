@@ -70,11 +70,11 @@ export default function MobileBottomBar({ children }: MobileBottomBarProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-xs font-semibold">SFCS</span>
+                <span className="text-white text-xs font-semibold">SFGS</span>
               </div>
               <div>
                 <h1 className="text-lg font-semibold text-gray-900">CBT Portal</h1>
-                <p className="text-xs text-gray-500">Sure Foundation Comprehensive School</p>
+                <p className="text-xs text-gray-500">Sure Foundation Group of School</p>
               </div>
             </div>
           </div>
@@ -94,11 +94,11 @@ export default function MobileBottomBar({ children }: MobileBottomBarProps) {
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center space-x-3">
               <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white text-sm font-semibold">SFCS</span>
+                <span className="text-white text-sm font-semibold">SFGS</span>
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">CBT Portal</h1>
-                <p className="text-sm text-gray-500">Sure Foundation Comprehensive School</p>
+                <p className="text-sm text-gray-500">Sure Foundation Group of School</p>
               </div>
             </div>
           </div>
