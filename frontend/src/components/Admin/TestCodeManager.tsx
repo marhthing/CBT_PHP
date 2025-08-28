@@ -321,14 +321,21 @@ export default function TestCodeManager() {
         )
       )
 
+      // Force a re-fetch to ensure sync with database
+      setTimeout(() => {
+        fetchTestCodes()
+      }, 500)
+
       setSuccessMessage(`Test code batch ${newStatus ? 'activated' : 'deactivated'} successfully`)
 
       // Auto-clear success message
       setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
       setError(error.response?.data?.message || 'Failed to toggle batch activation')
+      // On error, refresh to get the actual state
+      fetchTestCodes()
     }
-  }
+  }</error>
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
