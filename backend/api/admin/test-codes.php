@@ -344,15 +344,15 @@ try {
                     Response::badRequest('Count must be between 1 and 100');
                 }
                 
-                // First verify there are enough questions for the specific subject, class, term, session, and assignment type
+                // First verify there are enough questions for the specific subject, class, term, and assignment type
                 $test_type = $input['test_type'] ?? 'First CA';
                 $question_check = $db->prepare("
                     SELECT COUNT(*) as count 
                     FROM questions 
-                    WHERE subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ? 
+                    WHERE subject_id = ? AND class_level = ? AND term_id = ? 
                     AND COALESCE(question_assignment, 'First CA') = ?
                 ");
-                $question_check->execute([$input['subject_id'], $input['class_level'], $input['term_id'], $input['session_id'], $test_type]);
+                $question_check->execute([$input['subject_id'], $input['class_level'], $input['term_id'], $test_type]);
                 $available_questions = $question_check->fetch()['count'];
                 
                 if ($available_questions == 0) {
