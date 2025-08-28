@@ -182,6 +182,11 @@ function handleGet($db, $user) {
             $params[] = $_GET['type'];
         }
         
+        if (isset($_GET['assignment']) && !empty($_GET['assignment'])) {
+            $where_conditions[] = 'q.question_assignment = ?';
+            $params[] = $_GET['assignment'];
+        }
+        
         $limit = min(100, max(1, intval($_GET['limit'] ?? 50)));
         $page = max(1, intval($_GET['page'] ?? 1));
         $offset = ($page - 1) * $limit;
@@ -199,6 +204,7 @@ function handleGet($db, $user) {
                 q.correct_answer,
                 q.class_level,
                 q.question_type,
+                q.question_assignment,
                 q.created_at,
                 s.name as subject_name,
                 s.id as subject_id,
@@ -410,8 +416,8 @@ function handlePost($db, $user) {
                                 INSERT INTO questions (
                                     question_text, option_a, option_b, option_c, option_d,
                                     correct_answer, question_type, subject_id, class_level, 
-                                    term_id, session_id, teacher_id
-                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                    term_id, session_id, teacher_id, question_assignment
+                                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                             ");
                             
                             $insert_stmt->execute([
@@ -426,7 +432,8 @@ function handlePost($db, $user) {
                                 $class_level,
                                 $term_id,
                                 $session_id,
-                                $user['id'] // Admin as teacher_id
+                                $user['id'], // Admin as teacher_id
+                                $_POST['question_assignment'] ?? 'First CA'
                             ]);
                             
                             $success_count++;
@@ -513,8 +520,8 @@ function handlePost($db, $user) {
             $stmt = $db->prepare("
                 INSERT INTO questions (
                     question_text, option_a, option_b, option_c, option_d,
-                    correct_answer, question_type, subject_id, class_level, term_id, session_id, teacher_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    correct_answer, question_type, subject_id, class_level, term_id, session_id, teacher_id, question_assignment
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
             $stmt->execute([
@@ -529,7 +536,8 @@ function handlePost($db, $user) {
                 $input['class_level'],
                 $input['term_id'],
                 $input['session_id'],
-                $user['id'] // Admin as teacher_id
+                $user['id'], // Admin as teacher_id
+                $input['question_assignment'] ?? 'First CA'
             ]);
             
             $question_id = $db->lastInsertId();

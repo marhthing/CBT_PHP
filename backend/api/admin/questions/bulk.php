@@ -49,6 +49,7 @@ try {
     $class_level = $input['class_level'];
     $term_id = $input['term_id'];
     $session_id = $input['session_id'];
+    $question_assignment = $input['question_assignment'] ?? 'First CA';
     
     if (!is_array($questions) || empty($questions)) {
         Response::validationError('Questions must be a non-empty array');
@@ -138,8 +139,8 @@ try {
         $stmt = $db->prepare("
             INSERT INTO questions (
                 question_text, option_a, option_b, option_c, option_d,
-                correct_answer, question_type, subject_id, class_level, term_id, session_id, teacher_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                correct_answer, question_type, subject_id, class_level, term_id, session_id, teacher_id, question_assignment
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         
         $created_count = 0;
@@ -156,7 +157,8 @@ try {
                 $class_level,
                 $term_id,
                 $session_id,
-                $user['id']
+                $user['id'],
+                $question_assignment
             ]);
             $created_count++;
         }
