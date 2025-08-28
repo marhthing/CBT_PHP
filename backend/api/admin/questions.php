@@ -460,8 +460,8 @@ function handlePost($db, $user) {
             // Determine question type (default to multiple_choice if not specified)
             $question_type = $input['question_type'] ?? 'multiple_choice';
             
-            if (!in_array($question_type, ['multiple_choice', 'true_false'])) {
-                Response::validationError('Question type must be multiple_choice or true_false');
+            if (!in_array($question_type, ['multiple_choice', 'true_false', 'first_ca', 'second_ca'])) {
+                Response::validationError('Question type must be multiple_choice, true_false, first_ca, or second_ca');
             }
             
             // Validate required fields based on question type
@@ -476,14 +476,15 @@ function handlePost($db, $user) {
                     Response::validationError('For True/False questions, correct answer must be A or B');
                 }
             } else {
+                // For multiple choice, first_ca, and second_ca - all require 4 options
                 Response::validateRequired($input, [
                     'question_text', 'option_a', 'option_b', 'option_c', 'option_d',
                     'correct_answer', 'subject_id', 'class_level', 'term_id', 'session_id'
                 ]);
                 
-                // For multiple choice, correct answer must be A, B, C, or D
+                // For all multi-option questions, correct answer must be A, B, C, or D
                 if (!in_array($input['correct_answer'], ['A', 'B', 'C', 'D'])) {
-                    Response::validationError('For Multiple Choice questions, correct answer must be A, B, C, or D');
+                    Response::validationError('For Multiple Choice/CA questions, correct answer must be A, B, C, or D');
                 }
             }
             

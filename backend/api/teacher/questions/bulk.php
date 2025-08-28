@@ -62,8 +62,8 @@ try {
         // Determine question type (default to multiple_choice if not specified)
         $question_type = $question['question_type'] ?? 'multiple_choice';
 
-        if (!in_array($question_type, ['multiple_choice', 'true_false'])) {
-            $question_errors[] = "Question " . ($index + 1) . ": Invalid question type";
+        if (!in_array($question_type, ['multiple_choice', 'true_false', 'first_ca', 'second_ca'])) {
+            $question_errors[] = "Question " . ($index + 1) . ": Question type must be multiple_choice, true_false, first_ca, or second_ca";
         }
 
         // Required fields based on question type
@@ -93,7 +93,7 @@ try {
                 }
             } else {
                 if (!in_array($correct_answer, ['A', 'B', 'C', 'D'])) {
-                    $question_errors[] = "Question " . ($index + 1) . ": For Multiple Choice questions, correct answer must be A, B, C, or D";
+                    $question_errors[] = "Question " . ($index + 1) . ": For Multiple Choice/CA questions, correct answer must be A, B, C, or D";
                 }
             }
         }

@@ -199,9 +199,20 @@ function handlePost($db, $user, $input = null) {
         ];
         Response::validateRequired($input, $required_fields);
         
-        // Validate correct answer
-        if (!in_array(strtoupper($input['correct_answer']), ['A', 'B', 'C', 'D'])) {
-            Response::validationError('Correct answer must be A, B, C, or D');
+        // Validate question type
+        if (!in_array($input['question_type'], ['multiple_choice', 'true_false', 'first_ca', 'second_ca'])) {
+            Response::validationError('Question type must be multiple_choice, true_false, first_ca, or second_ca');
+        }
+        
+        // Validate correct answer based on question type
+        if ($input['question_type'] === 'true_false') {
+            if (!in_array(strtoupper($input['correct_answer']), ['A', 'B'])) {
+                Response::validationError('For True/False questions, correct answer must be A or B');
+            }
+        } else {
+            if (!in_array(strtoupper($input['correct_answer']), ['A', 'B', 'C', 'D'])) {
+                Response::validationError('For Multiple Choice/CA questions, correct answer must be A, B, C, or D');
+            }
         }
         
         // Check if teacher is assigned to this subject/class/term/session
