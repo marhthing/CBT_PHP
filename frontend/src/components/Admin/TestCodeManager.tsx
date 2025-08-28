@@ -191,14 +191,23 @@ export default function TestCodeManager() {
       batches.get(batchKey)!.push(code)
     })
 
-    return Array.from(batches.entries()).map(([batchId, codes]) => ({
-      batchId,
-      codes,
-      title: codes[0].title.replace(/ \(\d+\)$/, ''),
-      isActivated: codes.every(code => code.is_activated),
-      hasUsedCodes: codes.some(code => code.is_used),
-      canActivate: codes.every(code => !code.is_used)
-    }))
+    return Array.from(batches.entries()).map(([batchId, codes]) => {
+      const usedCodes = codes.filter(code => code.is_used)
+      const unusedCodes = codes.filter(code => !code.is_used)
+      
+      // A batch is considered "activated" if all unused codes are activated
+      // Used codes should remain inactive and cannot be reactivated
+      const isActivated = unusedCodes.length > 0 ? unusedCodes.every(code => code.is_activated) : false
+      
+      return {
+        batchId,
+        codes,
+        title: codes[0].title.replace(/ \(\d+\)$/, ''),
+        isActivated,
+        hasUsedCodes: usedCodes.length > 0,
+        canActivate: unusedCodes.length > 0 // Can activate if there are unused codes
+      }
+    })
   }, [testCodes])
 
   const filteredBatches = useMemo(() => {
@@ -307,21 +316,45 @@ export default function TestCodeManager() {
     try {
       const newStatus = !currentStatus
       // Use POST with method override for InfinityFree compatibility
-      await api.post(`/admin/test-codes/batch/${batchId}/toggle-activation`, {
+      const response = await api.post(`/admin/test-codes/batch/${batchId}/toggle-activation`, {
         _method: 'PATCH',
         is_activated: newStatus
       })
 
-      // Update state locally instead of full refresh
-      setTestCodes(prevCodes => 
-        prevCodes.map(code => 
-          code.batch_id === batchId 
-            ? { ...code, is_activated: newStatus }
-            : code
+      // Update state based on actual backend response
+      if (response.data.data?.codes_state) {
+        const codesState = response.data.data.codes_state
+        
+        setTestCodes(prevCodes => 
+          prevCodes.map(code => {
+            if (code.batch_id === batchId) {
+              const updatedState = codesState.find((cs: any) => cs.id == code.id)
+              if (updatedState) {
+                return {
+                  ...code,
+                  is_activated: updatedState.is_activated,
+                  is_used: updatedState.is_used
+                }
+              }
+            }
+            return code
+          })
         )
-      )
+      } else {
+        // Fallback to previous logic if codes_state not available
+        setTestCodes(prevCodes => 
+          prevCodes.map(code => 
+            code.batch_id === batchId && !code.is_used
+              ? { ...code, is_activated: newStatus }
+              : code
+          )
+        )
+      }
 
-      setSuccessMessage(`Test code batch ${newStatus ? 'activated' : 'deactivated'} successfully`)
+      const actionText = newStatus ? 'activated' : 'deactivated'
+      const updatedCount = response.data.data?.updated_codes || 0
+      
+      setSuccessMessage(`Test code batch ${actionText} successfully (${updatedCount} codes updated)`)
 
       // Auto-clear success message
       setTimeout(() => setSuccessMessage(''), 3000)

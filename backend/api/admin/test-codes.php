@@ -528,10 +528,30 @@ try {
                 }
                 
                 if ($stmt->rowCount() > 0) {
+                    // Get the current state of all codes in the batch after update
+                    $batch_state_stmt = $db->prepare("
+                        SELECT id, is_activated, 
+                               CASE WHEN EXISTS (
+                                   SELECT 1 FROM test_results tr WHERE tr.test_code_id = tc.id
+                               ) THEN " . $database->getBooleanTrue() . " ELSE " . $database->getBooleanFalse() . " END as is_used
+                        FROM test_codes tc 
+                        WHERE batch_id = ?
+                    ");
+                    $batch_state_stmt->execute([$batch_id]);
+                    $codes_state = $batch_state_stmt->fetchAll(PDO::FETCH_ASSOC);
+                    
+                    // Convert boolean values for JSON response
+                    foreach ($codes_state as &$code_state) {
+                        // Convert database boolean values to actual boolean for JSON
+                        $code_state['is_activated'] = (bool)($code_state['is_activated'] == $database->getBooleanTrue() || $code_state['is_activated'] === true || $code_state['is_activated'] === 1);
+                        $code_state['is_used'] = (bool)($code_state['is_used'] == $database->getBooleanTrue() || $code_state['is_used'] === true || $code_state['is_used'] === 1);
+                    }
+                    
                     Response::success('Test code batch activation updated', [
                         'batch_id' => $batch_id,
                         'is_activated' => $is_activated,
-                        'updated_codes' => $stmt->rowCount()
+                        'updated_codes' => $stmt->rowCount(),
+                        'codes_state' => $codes_state
                     ]);
                 } else {
                     Response::notFound('Test code batch not found');
