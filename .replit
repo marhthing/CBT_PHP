@@ -58,7 +58,7 @@ localPort = 8000
 externalPort = 80
 
 [deployment]
-run = ["bash", "-c", "cd backend && php -S 0.0.0.0:8000 -t . index.php & cd frontend && npm run preview -- --host 0.0.0.0 --port 5000"]
+run = ["bash", "-c", "cd backend && php -S 0.0.0.0:8000 -t . index.php & cd frontend && npm run dev"]
 deploymentTarget = "vm"
 build = ["bash", "-c", "cd frontend && npm run build"]
 
