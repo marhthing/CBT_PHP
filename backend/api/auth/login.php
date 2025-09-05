@@ -1,5 +1,13 @@
 <?php
 
+// Load environment variables first (same as index.php)
+$system_env_vars = ['PGHOST', 'PGDATABASE', 'PGUSER', 'PGPASSWORD', 'PGPORT', 'DATABASE_URL'];
+foreach ($system_env_vars as $var) {
+    if (getenv($var) !== false) {
+        $_ENV[$var] = getenv($var);
+    }
+}
+
 require_once __DIR__ . '/../../cors.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
