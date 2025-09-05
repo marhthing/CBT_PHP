@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../../cors.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
+require_once __DIR__ . '/../../services/StatsService.php';
 
 // Only allow GET requests
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -18,110 +19,64 @@ if (!$user || $user['role'] !== 'admin') {
 }
 
 try {
-    $database = new Database();
-    $db = $database->getConnection();
-
-    // Get dashboard statistics with optimized combined query
-    $stats = [];
-
-    // Use database-compatible date functions  
-    $db_type = $database->getDatabaseType();
-    $interval_7_days = $db_type === 'mysql' ? 'DATE_SUB(NOW(), INTERVAL 7 DAY)' : 'NOW() - INTERVAL \'7 days\'';
-    $current_date = $db_type === 'mysql' ? 'CURDATE()' : 'CURRENT_DATE';
+    $statsService = StatsService::getInstance();
     
-    // Combine multiple counts into a single query for better performance
-    $stmt = $db->prepare("
-        SELECT 
-            (SELECT COUNT(*) FROM questions) as total_questions,
-            (SELECT COUNT(*) FROM test_codes) as total_test_codes,
-            (SELECT COUNT(*) FROM test_codes WHERE is_active = true AND is_activated = true) as active_test_codes,
-            (SELECT COUNT(*) FROM test_codes WHERE is_active = false OR is_activated = false) as inactive_test_codes,
-            (SELECT COUNT(*) FROM users WHERE role = 'teacher' AND is_active = true) as total_teachers,
-            (SELECT COUNT(*) FROM users WHERE role = 'student' AND is_active = true) as total_students,
-            (SELECT COUNT(*) FROM users WHERE role = 'admin' AND is_active = true) as total_admins,
-            (SELECT COUNT(*) FROM teacher_assignments) as total_assignments,
-            (SELECT COUNT(*) FROM test_results WHERE submitted_at >= $interval_7_days) as recent_tests,
-            (SELECT COUNT(*) FROM test_results WHERE DATE(submitted_at) = $current_date) as tests_today,
-            (SELECT 
-                COALESCE(
-                    ROUND(
-                        AVG(
-                            (" . $database->castAsDecimal('tr.score') . " / " . $database->castAsDecimal('tc.score_per_question') . ") / " . $database->castAsDecimal('tr.total_questions') . " * 100
-                        ), 1
-                    ), 
-                    0
-                ) 
-                FROM test_results tr 
-                JOIN test_codes tc ON tr.test_code_id = tc.id 
-                WHERE tr.total_questions > 0
-            ) as average_score
-    ");
-    $stmt->execute();
-    $main_stats = $stmt->fetch();
+    // Get admin dashboard statistics using service
+    $stats = $statsService->getAdminDashboardStats();
     
-    // Assign the stats
-    $stats['total_questions'] = (int)$main_stats['total_questions'];
-    $stats['total_test_codes'] = (int)$main_stats['total_test_codes'];
-    $stats['active_test_codes'] = (int)$main_stats['active_test_codes'];
-    $stats['inactive_test_codes'] = (int)$main_stats['inactive_test_codes'];
-    $stats['total_teachers'] = (int)$main_stats['total_teachers'];
-    $stats['total_students'] = (int)$main_stats['total_students'];
-    $stats['total_admins'] = (int)$main_stats['total_admins'];
-    $stats['total_assignments'] = (int)$main_stats['total_assignments'];
-    $stats['recent_tests'] = (int)$main_stats['recent_tests'];
-    $stats['tests_today'] = (int)$main_stats['tests_today'];
-    $stats['average_score'] = (float)$main_stats['average_score'];
-
-    // Get questions breakdown by assignment type
-    $stmt = $db->prepare("
-        SELECT 
-            COALESCE(question_assignment, 'First CA') as assignment_type,
-            COUNT(*) as count
-        FROM questions 
-        GROUP BY question_assignment
-        ORDER BY assignment_type
-    ");
-    $stmt->execute();
-    $assignment_stats = $stmt->fetchAll();
+    // Get additional statistics not covered by main dashboard stats
     
-    $stats['questions_by_assignment'] = [];
-    foreach ($assignment_stats as $assignment) {
-        $stats['questions_by_assignment'][$assignment['assignment_type']] = (int)$assignment['count'];
+    // Get questions breakdown by assignment type (using service)
+    // Note: This could be moved to a specialized method in QuestionService if needed
+    require_once __DIR__ . '/../../services/QuestionService.php';
+    $questionService = QuestionService::getInstance();
+    $questionStats = $questionService->getQuestionStats();
+    
+    $assignment_breakdown = [];
+    if (isset($questionStats['by_assignment'])) {
+        foreach ($questionStats['by_assignment'] as $assignment) {
+            $assignment_breakdown[$assignment['question_assignment']] = (int)$assignment['question_count'];
+        }
     }
-
-    // Most active subject (separate query for clarity)
-    $stmt = $db->prepare("
-        SELECT s.name as subject_name, COUNT(q.id) as question_count
-        FROM subjects s
-        LEFT JOIN questions q ON s.id = q.subject_id
-        GROUP BY s.id, s.name
-        ORDER BY question_count DESC
-        LIMIT 1
-    ");
-    $stmt->execute();
-    $most_active = $stmt->fetch();
-    $stats['most_active_subject'] = $most_active ? $most_active['subject_name'] : 'No subjects';
-    $stats['most_active_subject_count'] = $most_active ? (int)$most_active['question_count'] : 0;
-
-    // Test completion rate (separate query for clarity)
-    $stmt = $db->prepare("
-        SELECT 
-            COUNT(CASE WHEN tr.id IS NOT NULL THEN 1 END) as completed_tests,
-            COUNT(tc.id) as total_activated_codes
-        FROM test_codes tc
-        LEFT JOIN test_results tr ON tc.id = tr.test_code_id
-        WHERE tc.is_activated = true
-    ");
-    $stmt->execute();
-    $completion_data = $stmt->fetch();
-    $stats['completion_rate'] = $completion_data['total_activated_codes'] > 0 
-        ? round(($completion_data['completed_tests'] / $completion_data['total_activated_codes']) * 100, 1)
-        : 0;
+    $stats['questions_by_assignment'] = $assignment_breakdown;
+    
+    // Get most active subject
+    $most_active_subject = 'No subjects';
+    $most_active_count = 0;
+    if (isset($questionStats['by_subject']) && !empty($questionStats['by_subject'])) {
+        $top_subject = $questionStats['by_subject'][0]; // First one is highest due to ORDER BY question_count DESC
+        $most_active_subject = $top_subject['subject_name'];
+        $most_active_count = (int)$top_subject['question_count'];
+    }
+    $stats['most_active_subject'] = $most_active_subject;
+    $stats['most_active_subject_count'] = $most_active_count;
+    
+    // Calculate test completion rate
+    // This is a simple calculation based on activated test codes vs completed tests
+    $completion_rate = 0;
+    if ($stats['active_test_codes'] > 0 && $stats['recent_tests'] > 0) {
+        // Rough estimate: recent tests as percentage of active test codes
+        $completion_rate = min(100, round(($stats['recent_tests'] / $stats['active_test_codes']) * 100, 1));
+    }
+    $stats['completion_rate'] = $completion_rate;
+    
+    // Ensure all values are properly typed
+    $stats['total_questions'] = (int)($stats['total_questions'] ?? 0);
+    $stats['total_test_codes'] = (int)($stats['total_test_codes'] ?? 0);
+    $stats['active_test_codes'] = (int)($stats['active_test_codes'] ?? 0);
+    $stats['inactive_test_codes'] = (int)($stats['inactive_test_codes'] ?? 0);
+    $stats['total_teachers'] = (int)($stats['total_teachers'] ?? 0);
+    $stats['total_students'] = (int)($stats['total_students'] ?? 0);
+    $stats['total_admins'] = (int)($stats['total_admins'] ?? 0);
+    $stats['total_assignments'] = (int)($stats['total_assignments'] ?? 0);
+    $stats['recent_tests'] = (int)($stats['recent_tests'] ?? 0);
+    $stats['tests_today'] = (int)($stats['tests_today'] ?? 0);
+    $stats['average_score'] = (float)($stats['average_score'] ?? 0);
 
     Response::success('Dashboard statistics retrieved', $stats);
 
 } catch (Exception $e) {
-    Response::serverError('Failed to retrieve dashboard statistics');
+    Response::serverError('Failed to retrieve dashboard statistics: ' . $e->getMessage());
 }
 
 ?>
