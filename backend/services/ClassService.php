@@ -81,11 +81,24 @@ class ClassService extends BaseService {
     }
     
     /**
-     * Check if class exists and is active
+     * Check if class exists and is active (by ID)
      */
     public function isValidClass($id) {
         $class = $this->getClassById($id);
         return $class && $class['is_active'];
+    }
+    
+    /**
+     * Check if class level exists and is active (by name)
+     */
+    public function isValidClassLevel($classLevel) {
+        $cacheKey = "valid_class_level_{$classLevel}";
+        if (!isset($this->cache[$cacheKey])) {
+            $sql = "SELECT id FROM class_levels WHERE name = ? AND is_active = true";
+            $stmt = $this->executeQuery($sql, [$classLevel]);
+            $this->cache[$cacheKey] = $stmt && $stmt->fetch();
+        }
+        return (bool)$this->cache[$cacheKey];
     }
     
     /**

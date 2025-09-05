@@ -5,6 +5,7 @@ require_once __DIR__ . '/TermService.php';
 require_once __DIR__ . '/SessionService.php';
 require_once __DIR__ . '/SubjectService.php';
 require_once __DIR__ . '/AssignmentService.php';
+require_once __DIR__ . '/TeacherAssignmentService.php';
 
 /**
  * Data Manager
@@ -20,6 +21,7 @@ class DataManager {
     private $sessionService;
     private $subjectService;
     private $assignmentService;
+    private $teacherAssignmentService;
     
     private function __construct() {
         // Initialize all services
@@ -28,6 +30,7 @@ class DataManager {
         $this->sessionService = SessionService::getInstance();
         $this->subjectService = SubjectService::getInstance();
         $this->assignmentService = AssignmentService::getInstance();
+        $this->teacherAssignmentService = TeacherAssignmentService::getInstance();
     }
     
     public static function getInstance() {
@@ -75,6 +78,10 @@ class DataManager {
     
     public function isValidClass($id) {
         return $this->classService->isValidClass($id);
+    }
+    
+    public function isValidClassLevel($classLevel) {
+        return $this->classService->isValidClassLevel($classLevel);
     }
     
     // =================================================================
@@ -194,43 +201,99 @@ class DataManager {
     }
     
     // =================================================================
-    // ASSIGNMENT METHODS
+    // ASSIGNMENT METHODS (Test Types: First CA, Second CA, Examination)
     // =================================================================
     
     public function getAllAssignments() {
         return $this->assignmentService->getAllAssignments();
     }
     
-    public function getAssignmentById($id) {
-        return $this->assignmentService->getAssignmentById($id);
+    public function getAssignmentByName($name) {
+        return $this->assignmentService->getAssignmentByName($name);
+    }
+    
+    public function getAssignmentDisplayName($name) {
+        return $this->assignmentService->getAssignmentDisplayName($name);
+    }
+    
+    public function getAssignmentCode($name) {
+        return $this->assignmentService->getAssignmentCode($name);
+    }
+    
+    public function isValidAssignment($name) {
+        return $this->assignmentService->isValidAssignment($name);
+    }
+    
+    public function getAssignmentOptions() {
+        return $this->assignmentService->getAssignmentOptions();
+    }
+    
+    public function getAssignmentCodeOptions() {
+        return $this->assignmentService->getAssignmentCodeOptions();
+    }
+    
+    public function getAssignmentsOrdered() {
+        return $this->assignmentService->getAssignmentsOrdered();
+    }
+    
+    public function getQuestionsCountByAssignment($subjectId = null, $classLevel = null, $termId = null, $sessionId = null) {
+        return $this->assignmentService->getQuestionsCountByAssignment($subjectId, $classLevel, $termId, $sessionId);
+    }
+    
+    public function getTestCodesCountByType($subjectId = null, $classLevel = null, $termId = null, $sessionId = null) {
+        return $this->assignmentService->getTestCodesCountByType($subjectId, $classLevel, $termId, $sessionId);
+    }
+    
+    public function getAssignmentStats($subjectId, $classLevel, $termId, $sessionId) {
+        return $this->assignmentService->getAssignmentStats($subjectId, $classLevel, $termId, $sessionId);
+    }
+    
+    public function getAvailableAssignments($subjectId, $classLevel, $termId, $sessionId) {
+        return $this->assignmentService->getAvailableAssignments($subjectId, $classLevel, $termId, $sessionId);
+    }
+    
+    public function validateAssignmentForTest($assignmentName, $subjectId, $classLevel, $termId, $sessionId, $requiredQuestions = 1) {
+        return $this->assignmentService->validateAssignmentForTest($assignmentName, $subjectId, $classLevel, $termId, $sessionId, $requiredQuestions);
+    }
+    
+    public function mapAssignmentToTestType($assignmentName) {
+        return $this->assignmentService->mapAssignmentToTestType($assignmentName);
+    }
+    
+    // =================================================================
+    // TEACHER ASSIGNMENT METHODS (Which teacher teaches what)
+    // =================================================================
+    
+    public function getAllTeacherAssignments() {
+        return $this->teacherAssignmentService->getAllTeacherAssignments();
+    }
+    
+    public function getTeacherAssignmentById($id) {
+        return $this->teacherAssignmentService->getTeacherAssignmentById($id);
     }
     
     public function getAssignmentsByTeacher($teacherId) {
-        return $this->assignmentService->getAssignmentsByTeacher($teacherId);
+        return $this->teacherAssignmentService->getAssignmentsByTeacher($teacherId);
     }
     
     public function getAssignmentsBySubject($subjectId) {
-        return $this->assignmentService->getAssignmentsBySubject($subjectId);
+        return $this->teacherAssignmentService->getAssignmentsBySubject($subjectId);
     }
     
     public function getAssignmentsByClass($classLevel) {
-        return $this->assignmentService->getAssignmentsByClass($classLevel);
-    }
-    
-    public function getAssignmentsBySessionTerm($sessionId, $termId) {
-        return $this->assignmentService->getAssignmentsBySessionTerm($sessionId, $termId);
+        return $this->teacherAssignmentService->getAssignmentsByClass($classLevel);
     }
     
     public function isTeacherAssigned($teacherId, $subjectId, $classLevel, $sessionId, $termId) {
-        return $this->assignmentService->isTeacherAssigned($teacherId, $subjectId, $classLevel, $sessionId, $termId);
+        return $this->teacherAssignmentService->isTeacherAssigned($teacherId, $subjectId, $classLevel, $sessionId, $termId);
     }
     
     public function getTeacherSubjects($teacherId, $classLevel = null, $sessionId = null, $termId = null) {
-        return $this->assignmentService->getTeacherSubjects($teacherId, $classLevel, $sessionId, $termId);
+        return $this->teacherAssignmentService->getTeacherSubjects($teacherId, $classLevel, $sessionId, $termId);
     }
     
     public function getTeacherClasses($teacherId, $subjectId = null, $sessionId = null, $termId = null) {
-        return $this->assignmentService->getTeacherClasses($teacherId, $subjectId, $sessionId, $termId);
+        return $this->teacherAssignmentService->getTeacherClasses($teacherId, $subjectId, $sessionId, $termId);
     }
     
     // =================================================================
@@ -246,10 +309,12 @@ class DataManager {
             'terms' => $this->getAllTerms(),
             'sessions' => $this->getAllSessions(),
             'subjects' => $this->getAllSubjects(),
+            'assignments' => $this->getAllAssignments(),
             'class_options' => $this->getClassOptions(),
             'term_options' => $this->getTermOptions(),
             'session_options' => $this->getSessionOptions(),
             'subject_options' => $this->getSubjectOptions(),
+            'assignment_options' => $this->getAssignmentOptions(),
             'current_session' => $this->getCurrentSession(),
             'current_term' => $this->getCurrentTerm()
         ];
@@ -263,17 +328,18 @@ class DataManager {
             'classes' => $this->getClassDisplayOptions(),
             'terms' => $this->getTermOptions(),
             'sessions' => $this->getSessionOptions(),
-            'subjects' => $this->getSubjectOptions()
+            'subjects' => $this->getSubjectOptions(),
+            'assignments' => $this->getAssignmentOptions()
         ];
     }
     
     /**
-     * Validate a complete assignment context
+     * Validate a complete test context
      */
-    public function validateAssignmentContext($classLevel, $termId, $sessionId, $subjectId) {
+    public function validateTestContext($classLevel, $termId, $sessionId, $subjectId, $assignmentName = null) {
         $errors = [];
         
-        if (!$this->isValidClass($classLevel)) {
+        if (!$this->isValidClassLevel($classLevel)) {
             $errors[] = 'Invalid class level';
         }
         
@@ -289,6 +355,10 @@ class DataManager {
             $errors[] = 'Invalid subject';
         }
         
+        if ($assignmentName && !$this->isValidAssignment($assignmentName)) {
+            $errors[] = 'Invalid assignment type';
+        }
+        
         return [
             'valid' => empty($errors),
             'errors' => $errors
@@ -296,16 +366,24 @@ class DataManager {
     }
     
     /**
-     * Get formatted assignment context (for display purposes)
+     * Get formatted test context (for display purposes)
      */
-    public function getAssignmentContext($classLevel, $termId, $sessionId, $subjectId) {
-        return [
+    public function getTestContext($classLevel, $termId, $sessionId, $subjectId, $assignmentName = null) {
+        $context = [
             'class_name' => $this->getClassDisplayName($classLevel),
             'term_name' => $this->getTermName($termId),
             'session_name' => $this->getSessionName($sessionId),
             'subject_name' => $this->getSubjectName($subjectId),
             'subject_code' => $this->getSubjectCode($subjectId)
         ];
+        
+        if ($assignmentName) {
+            $context['assignment_name'] = $assignmentName;
+            $context['assignment_display_name'] = $this->getAssignmentDisplayName($assignmentName);
+            $context['assignment_code'] = $this->getAssignmentCode($assignmentName);
+        }
+        
+        return $context;
     }
     
     /**
@@ -317,6 +395,7 @@ class DataManager {
         $this->sessionService->clearCache();
         $this->subjectService->clearCache();
         $this->assignmentService->clearCache();
+        $this->teacherAssignmentService->clearCache();
     }
     
     /**
@@ -340,6 +419,10 @@ class DataManager {
     
     public function getAssignmentService() {
         return $this->assignmentService;
+    }
+    
+    public function getTeacherAssignmentService() {
+        return $this->teacherAssignmentService;
     }
 }
 
