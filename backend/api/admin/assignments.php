@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../cors.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
+require_once __DIR__ . '/../../services/DataManager.php';
 
 $auth = new Auth();
 $user = $auth->requireRole('admin');
@@ -112,21 +113,27 @@ function handlePost($db, $user) {
             Response::validationError('Teacher is already assigned to this subject and class');
         }
         
-        // Validate subject exists in database
-        $subject_check = $db->prepare("SELECT id FROM subjects WHERE id = ?");
-        $subject_check->execute([$input['subject_id']]);
+        // Use DataManager for validation
+        $data = DataManager::getInstance();
         
-        if (!$subject_check->fetch()) {
+        // Validate subject exists
+        if (!$data->isValidSubject($input['subject_id'])) {
             Response::validationError('Invalid subject selected');
         }
         
-        // Get valid class levels from database
-$class_stmt = $db->prepare("SELECT name FROM class_levels WHERE is_active = true");
-$class_stmt->execute();
-$valid_classes = $class_stmt->fetchAll(PDO::FETCH_COLUMN);
-        
-        if (!in_array($input['class_level'], $valid_classes)) {
+        // Validate class level exists
+        if (!$data->isValidClassLevel($input['class_level'])) {
             Response::validationError('Invalid class level selected');
+        }
+        
+        // Validate term exists
+        if (!$data->isValidTerm($input['term_id'])) {
+            Response::validationError('Invalid term selected');
+        }
+        
+        // Validate session exists
+        if (!$data->isValidSession($input['session_id'])) {
+            Response::validationError('Invalid session selected');
         }
         
         // Create assignment

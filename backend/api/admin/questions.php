@@ -17,6 +17,7 @@ require_once __DIR__ . '/../../cors.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
+require_once __DIR__ . '/../../services/DataManager.php';
 
 $auth = new Auth();
 $user = $auth->requireRole('admin');
@@ -494,26 +495,28 @@ function handlePost($db, $user) {
                 }
             }
             
-            // Validate class level
-            $check_stmt = $db->prepare("SELECT name FROM class_levels WHERE name = ? AND is_active = true");
-            $check_stmt->execute([$input['class_level']]);
-            if (!$check_stmt->fetch()) {
+            // Use DataManager for validation
+            $data = DataManager::getInstance();
+            
+            // Validate all required fields
+            if (!$data->isValidClassLevel($input['class_level'])) {
                 Response::validationError('Invalid class level');
             }
             
-            // Validate foreign keys exist
-            $checks = [
-                ['subjects', 'id', $input['subject_id'], 'Subject'],
-                ['terms', 'id', $input['term_id'], 'Term'],
-                ['sessions', 'id', $input['session_id'], 'Session']
-            ];
+            if (!$data->isValidSubject($input['subject_id'])) {
+                Response::validationError('Invalid subject selected');
+            }
             
-            foreach ($checks as [$table, $column, $value, $name]) {
-                $check_stmt = $db->prepare("SELECT id FROM {$table} WHERE {$column} = ? AND is_active = true");
-                $check_stmt->execute([$value]);
-                if (!$check_stmt->fetch()) {
-                    Response::validationError("Invalid {$name} selected");
-                }
+            if (!$data->isValidTerm($input['term_id'])) {
+                Response::validationError('Invalid term selected');
+            }
+            
+            if (!$data->isValidSession($input['session_id'])) {
+                Response::validationError('Invalid session selected');
+            }
+            
+            if (!$data->isValidAssignment($input['question_assignment'])) {
+                Response::validationError('Invalid assignment type selected');
             }
             
             // Create question (using admin as teacher_id since admin is creating it)

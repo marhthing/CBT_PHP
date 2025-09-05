@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../cors.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
+require_once __DIR__ . '/../../services/DataManager.php';
 
 $auth = new Auth();
 $user = $auth->requireRole('teacher');
@@ -12,14 +13,8 @@ $database = new Database();
 $db = $database->getConnection();
 
 function validateTeacherAssignment($db, $user_id, $subject_id, $class_level, $term_id, $session_id) {
-    $stmt = $db->prepare("
-        SELECT COUNT(*) as count 
-        FROM teacher_assignments 
-        WHERE teacher_id = ? AND subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
-    ");
-    $stmt->execute([$user_id, $subject_id, $class_level, $term_id, $session_id]);
-    $result = $stmt->fetch();
-    return $result['count'] > 0;
+    $data = DataManager::getInstance();
+    return $data->isTeacherAssigned($user_id, $subject_id, $class_level, $session_id, $term_id);
 }
 
 // Get the request body once to avoid reading twice

@@ -4,6 +4,7 @@ require_once __DIR__ . '/../../cors.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
+require_once __DIR__ . '/../../services/DataManager.php';
 
 // Only allow GET requests
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -11,74 +12,167 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
-    // Lookup data is public - no authentication required
-    $database = new Database();
-    $conn = $database->getConnection();
-
+    // Get DataManager instance
+    $data = DataManager::getInstance();
+    
     $lookup_type = $_GET['type'] ?? '';
 
     switch ($lookup_type) {
         case 'terms':
-            $stmt = $conn->prepare("SELECT id, name, display_order FROM terms WHERE is_active = true ORDER BY display_order");
-            $stmt->execute();
-            $data = $stmt->fetchAll();
+            $terms = $data->getAllTerms();
+            // Format for frontend compatibility
+            $formatted_data = [];
+            foreach ($terms as $term) {
+                $formatted_data[] = [
+                    'id' => $term['id'],
+                    'name' => $term['name'],
+                    'display_order' => $term['display_order']
+                ];
+            }
+            Response::success("Terms retrieved successfully", $formatted_data);
             break;
 
         case 'sessions':
-            $stmt = $conn->prepare("SELECT id, name, start_date, end_date, is_current FROM sessions WHERE is_active = true ORDER BY name DESC");
-            $stmt->execute();
-            $data = $stmt->fetchAll();
+            $sessions = $data->getAllSessions();
+            // Format for frontend compatibility
+            $formatted_data = [];
+            foreach ($sessions as $session) {
+                $formatted_data[] = [
+                    'id' => $session['id'],
+                    'name' => $session['name'],
+                    'start_date' => $session['start_date'],
+                    'end_date' => $session['end_date'],
+                    'is_current' => $session['is_current']
+                ];
+            }
+            Response::success("Sessions retrieved successfully", $formatted_data);
             break;
 
         case 'subjects':
-            $stmt = $conn->prepare("SELECT id, name, code, description FROM subjects WHERE is_active = true ORDER BY name");
-            $stmt->execute();
-            $data = $stmt->fetchAll();
+            $subjects = $data->getAllSubjects();
+            // Format for frontend compatibility
+            $formatted_data = [];
+            foreach ($subjects as $subject) {
+                $formatted_data[] = [
+                    'id' => $subject['id'],
+                    'name' => $subject['name'],
+                    'code' => $subject['code'],
+                    'description' => $subject['description']
+                ];
+            }
+            Response::success("Subjects retrieved successfully", $formatted_data);
             break;
 
         case 'class_levels':
-            $stmt = $conn->prepare("SELECT name as id, display_name as name, level_type, display_order FROM class_levels WHERE is_active = true ORDER BY display_order");
-            $stmt->execute();
-            $data = $stmt->fetchAll();
+            $classes = $data->getAllClasses();
+            // Format for frontend compatibility (using name as id for compatibility)
+            $formatted_data = [];
+            foreach ($classes as $class) {
+                $formatted_data[] = [
+                    'id' => $class['name'],
+                    'name' => $class['display_name'],
+                    'level_type' => $class['level_type'],
+                    'display_order' => $class['display_order']
+                ];
+            }
+            Response::success("Class levels retrieved successfully", $formatted_data);
+            break;
+
+        case 'assignments':
+            $assignments = $data->getAllAssignments();
+            // Format for frontend compatibility  
+            $formatted_data = [];
+            foreach ($assignments as $assignment) {
+                $formatted_data[] = [
+                    'id' => $assignment['name'],
+                    'name' => $assignment['display_name'],
+                    'code' => $assignment['code'],
+                    'order' => $assignment['order']
+                ];
+            }
+            Response::success("Assignments retrieved successfully", $formatted_data);
             break;
 
         case 'difficulties':
-            $data = [
+            $formatted_data = [
                 ['id' => 'easy', 'name' => 'Easy'],
                 ['id' => 'medium', 'name' => 'Medium'],
                 ['id' => 'hard', 'name' => 'Hard']
             ];
+            Response::success("Difficulties retrieved successfully", $formatted_data);
             break;
 
         default:
             // Return all lookup data if no type specified
-            $data = [];
+            $lookup_data = [
+                'subjects' => [],
+                'terms' => [],
+                'sessions' => [],
+                'class_levels' => [],
+                'assignments' => []
+            ];
             
             // Get subjects
-            $stmt = $conn->prepare("SELECT id, name, code, description FROM subjects WHERE is_active = true ORDER BY name");
-            $stmt->execute();
-            $data['subjects'] = $stmt->fetchAll();
+            $subjects = $data->getAllSubjects();
+            foreach ($subjects as $subject) {
+                $lookup_data['subjects'][] = [
+                    'id' => $subject['id'],
+                    'name' => $subject['name'],
+                    'code' => $subject['code'],
+                    'description' => $subject['description']
+                ];
+            }
             
             // Get terms
-            $stmt = $conn->prepare("SELECT id, name, display_order FROM terms WHERE is_active = true ORDER BY display_order");
-            $stmt->execute();
-            $data['terms'] = $stmt->fetchAll();
+            $terms = $data->getAllTerms();
+            foreach ($terms as $term) {
+                $lookup_data['terms'][] = [
+                    'id' => $term['id'],
+                    'name' => $term['name'],
+                    'display_order' => $term['display_order']
+                ];
+            }
             
             // Get sessions
-            $stmt = $conn->prepare("SELECT id, name, start_date, end_date, is_current FROM sessions WHERE is_active = true ORDER BY name DESC");
-            $stmt->execute();
-            $data['sessions'] = $stmt->fetchAll();
+            $sessions = $data->getAllSessions();
+            foreach ($sessions as $session) {
+                $lookup_data['sessions'][] = [
+                    'id' => $session['id'],
+                    'name' => $session['name'],
+                    'start_date' => $session['start_date'],
+                    'end_date' => $session['end_date'],
+                    'is_current' => $session['is_current']
+                ];
+            }
             
             // Get class levels
-            $stmt = $conn->prepare("SELECT name as id, display_name as name, level_type, display_order FROM class_levels WHERE is_active = true ORDER BY display_order");
-            $stmt->execute();
-            $data['class_levels'] = $stmt->fetchAll();
+            $classes = $data->getAllClasses();
+            foreach ($classes as $class) {
+                $lookup_data['class_levels'][] = [
+                    'id' => $class['name'],
+                    'name' => $class['display_name'],
+                    'level_type' => $class['level_type'],
+                    'display_order' => $class['display_order']
+                ];
+            }
+            
+            // Get assignments
+            $assignments = $data->getAllAssignments();
+            foreach ($assignments as $assignment) {
+                $lookup_data['assignments'][] = [
+                    'id' => $assignment['name'],
+                    'name' => $assignment['display_name'],
+                    'code' => $assignment['code'],
+                    'order' => $assignment['order']
+                ];
+            }
+            
+            Response::success("All lookup data retrieved successfully", $lookup_data);
             break;
     }
 
-    Response::success("$lookup_type retrieved successfully", $data);
-
 } catch (Exception $e) {
+    error_log("Lookup error: " . $e->getMessage());
     Response::serverError('Failed to retrieve lookup data');
 }
 

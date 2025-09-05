@@ -16,6 +16,7 @@ require_once __DIR__ . '/../../../cors.php';
 require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../../includes/auth.php';
 require_once __DIR__ . '/../../../includes/response.php';
+require_once __DIR__ . '/../../../services/DataManager.php';
 
 // Only allow POST requests
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -55,11 +56,28 @@ try {
         Response::validationError('Questions must be a non-empty array');
     }
     
-    // Validate class level against database
-    $class_stmt = $db->prepare("SELECT name FROM class_levels WHERE name = ? AND is_active = true");
-    $class_stmt->execute([$class_level]);
-    if (!$class_stmt->fetch()) {
+    // Use DataManager for validation
+    $data = DataManager::getInstance();
+    
+    // Validate all required fields
+    if (!$data->isValidClassLevel($class_level)) {
         Response::validationError('Invalid class level');
+    }
+    
+    if (!$data->isValidSubject($subject_id)) {
+        Response::validationError('Invalid subject selected');
+    }
+    
+    if (!$data->isValidTerm($term_id)) {
+        Response::validationError('Invalid term selected');
+    }
+    
+    if (!$data->isValidSession($session_id)) {
+        Response::validationError('Invalid session selected');
+    }
+    
+    if (!$data->isValidAssignment($question_assignment)) {
+        Response::validationError('Invalid assignment type selected');
     }
 
     // Validate questions
