@@ -163,7 +163,7 @@ class Response {
     
     // Log API requests (for debugging)
     public static function logRequest($endpoint, $method, $user_id = null) {
-        if ($_ENV['APP_DEBUG'] === 'true') {
+        if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
             $log_data = [
                 'timestamp' => date('c'),
                 'endpoint' => $endpoint,
@@ -180,7 +180,7 @@ class Response {
 // Set up error handling for uncaught exceptions
 set_exception_handler(function($exception) {
     
-    if ($_ENV['APP_DEBUG'] === 'true') {
+    if (($_ENV['APP_DEBUG'] ?? 'false') === 'true') {
         Response::serverError('Internal server error: ' . $exception->getMessage());
     } else {
         Response::serverError('An unexpected error occurred');
