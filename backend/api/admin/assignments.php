@@ -1,7 +1,6 @@
 <?php
 
 require_once __DIR__ . '/../../cors.php';
-require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
 require_once __DIR__ . '/../../services/DataManager.php';
@@ -9,8 +8,8 @@ require_once __DIR__ . '/../../services/DataManager.php';
 $auth = new Auth();
 $user = $auth->requireRole('admin');
 
-$database = new Database();
-$db = $database->getConnection();
+$dataManager = DataManager::getInstance();
+$assignmentService = $dataManager->getAssignmentService();
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':

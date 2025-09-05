@@ -13,9 +13,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 }
 
 require_once __DIR__ . '/../../../cors.php';
-require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../../includes/auth.php';
 require_once __DIR__ . '/../../../includes/response.php';
+require_once __DIR__ . '/../../../services/DataManager.php';
+require_once __DIR__ . '/../../../services/ConstantsService.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     Response::methodNotAllowed();
@@ -24,8 +25,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $auth = new Auth();
 $user = $auth->requireRole('admin');
 
-$database = new Database();
-$db = $database->getConnection();
+$dataManager = DataManager::getInstance();
+$constantsService = ConstantsService::getInstance();
+$questionService = $dataManager->getQuestionService();
 
 try {
     // Get parameters
@@ -46,29 +48,17 @@ try {
     ];
     $params = [$subject_id, $class_level, $term_id];
 
-    // Filter by question_assignment based on test_type
-    if ($test_type === 'First CA') {
-        $where_conditions[] = 'q.question_assignment = ?';
-        $params[] = 'First CA';
-    } elseif ($test_type === 'Second CA') {
-        $where_conditions[] = 'q.question_assignment = ?';
-        $params[] = 'Second CA';
+    // Validate test type using constants service
+    if (!$constantsService->isValidTestType($test_type)) {
+        Response::validationError('Invalid test type provided');
     }
-    // For 'Examination' test_type, include all questions (no additional filter)
-
-    $where_clause = implode(' AND ', $where_conditions);
     
-    $count_stmt = $db->prepare("
-        SELECT COUNT(*) as question_count
-        FROM questions q
-        WHERE {$where_clause}
-    ");
-    $count_stmt->execute($params);
-    $result = $count_stmt->fetch();
+    // Get question count using service
+    $count = $questionService->getQuestionCount($subject_id, $class_level, $term_id, $test_type);
     
     Response::logRequest('admin/questions/count', 'GET', $user['id']);
     Response::success('Question count retrieved', [
-        'count' => (int)$result['question_count'],
+        'count' => $count,
         'subject_id' => (int)$subject_id,
         'class_level' => $class_level,
         'term_id' => (int)$term_id,

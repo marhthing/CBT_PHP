@@ -1,56 +1,35 @@
 <?php
 
 require_once __DIR__ . '/../../cors.php';
-require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
+require_once __DIR__ . '/../../services/UserService.php';
 
 $auth = new Auth();
 $user = $auth->requireRole('admin');
 
-$database = new Database();
-$db = $database->getConnection();
+$userService = UserService::getInstance();
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
-        handleGet($db, $user);
+        handleGet($userService, $user);
         break;
     case 'POST':
-        handlePost($db, $user);
+        handlePost($userService, $user);
         break;
     case 'PUT':
-        handlePut($db, $user);
+        handlePut($userService, $user);
         break;
     case 'DELETE':
-        handleDelete($db, $user);
+        handleDelete($userService, $user);
         break;
     default:
         Response::methodNotAllowed();
 }
 
-function handleGet($db, $user) {
+function handleGet($userService, $user) {
     try {
-        // Get all teachers
-        $stmt = $db->prepare("
-            SELECT 
-                u.id,
-                u.username,
-                u.email,
-                u.full_name,
-                u.created_at,
-                u.last_login,
-                COUNT(DISTINCT ta.id) as assignment_count,
-                COUNT(DISTINCT q.id) as question_count
-            FROM users u
-            LEFT JOIN teacher_assignments ta ON u.id = ta.teacher_id
-            LEFT JOIN questions q ON u.id = q.teacher_id
-            WHERE u.role = 'teacher'
-            GROUP BY u.id, u.username, u.email, u.full_name, u.created_at, u.last_login
-            ORDER BY u.created_at DESC
-        ");
-        
-        $stmt->execute();
-        $teachers = $stmt->fetchAll();
+        $teachers = $userService->getAllTeachers();
         
         Response::logRequest('admin/teachers', 'GET', $user['id']);
         Response::success('Teachers retrieved', ['teachers' => $teachers]);
@@ -60,7 +39,7 @@ function handleGet($db, $user) {
     }
 }
 
-function handlePost($db, $user) {
+function handlePost($userService, $user) {
     try {
         $input = json_decode(file_get_contents('php://input'), true);
         
@@ -81,42 +60,21 @@ function handlePost($db, $user) {
             Response::validationError('Password must be at least 6 characters long');
         }
         
-        // Check if username or email already exists
-        $check_stmt = $db->prepare("
-            SELECT id, username, email 
-            FROM users 
-            WHERE username = ? OR email = ?
-        ");
-        $check_stmt->execute([$input['username'], $input['email']]);
-        $existing = $check_stmt->fetch();
-        
-        if ($existing) {
-            if ($existing['username'] === $input['username']) {
-                Response::validationError('Username already exists');
-            }
-            if ($existing['email'] === $input['email']) {
-                Response::validationError('Email already exists');
-            }
+        // Check if username or email already exists using service
+        if ($userService->emailExists($input['email'])) {
+            Response::validationError('Email already exists');
         }
         
-        // Hash password
-        $auth_helper = new Auth();
-        $hashed_password = $auth_helper->hashPassword($input['password']);
+        if ($userService->usernameExists($input['username'])) {
+            Response::validationError('Username already exists');
+        }
         
-        // Insert new teacher
-        $stmt = $db->prepare("
-            INSERT INTO users (username, email, password, role, full_name)
-            VALUES (?, ?, ?, 'teacher', ?)
-        ");
+        // Create teacher using service
+        $teacher_id = $userService->createTeacher($input);
         
-        $stmt->execute([
-            $input['username'],
-            $input['email'],
-            $hashed_password,
-            $input['full_name']
-        ]);
-        
-        $teacher_id = $db->lastInsertId();
+        if (!$teacher_id) {
+            Response::serverError('Failed to create teacher');
+        }
         
         Response::logRequest('admin/teachers', 'POST', $user['id']);
         Response::created('Teacher created successfully', ['teacher_id' => $teacher_id]);
@@ -126,7 +84,7 @@ function handlePost($db, $user) {
     }
 }
 
-function handlePut($db, $user) {
+function handlePut($userService, $user) {
     try {
         $teacher_id = $_GET['id'] ?? null;
         
@@ -134,11 +92,9 @@ function handlePut($db, $user) {
             Response::validationError('Teacher ID is required');
         }
         
-        // Check if teacher exists
-        $check_stmt = $db->prepare("SELECT id FROM users WHERE id = ? AND role = 'teacher'");
-        $check_stmt->execute([$teacher_id]);
-        
-        if (!$check_stmt->fetch()) {
+        // Check if teacher exists using service
+        $teacher = $userService->getTeacherById($teacher_id);
+        if (!$teacher) {
             Response::notFound('Teacher not found');
         }
         
@@ -148,54 +104,31 @@ function handlePut($db, $user) {
             Response::validationError('Invalid JSON input');
         }
         
-        // Build update query dynamically
-        $update_fields = [];
-        $params = [];
-        
-        $allowed_fields = ['username', 'email', 'full_name', 'password'];
-        
-        foreach ($allowed_fields as $field) {
-            if (isset($input[$field]) && !empty($input[$field])) {
-                if ($field === 'email') {
-                    if (!filter_var($input[$field], FILTER_VALIDATE_EMAIL)) {
-                        Response::validationError('Invalid email format');
-                    }
-                    
-                    // Check if email is already used by another user
-                    $email_check = $db->prepare("SELECT id FROM users WHERE email = ? AND id != ?");
-                    $email_check->execute([$input[$field], $teacher_id]);
-                    if ($email_check->fetch()) {
-                        Response::validationError('Email already exists');
-                    }
-                } elseif ($field === 'username') {
-                    // Check if username is already used by another user
-                    $username_check = $db->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
-                    $username_check->execute([$input[$field], $teacher_id]);
-                    if ($username_check->fetch()) {
-                        Response::validationError('Username already exists');
-                    }
-                } elseif ($field === 'password') {
-                    if (strlen($input[$field]) < 6) {
-                        Response::validationError('Password must be at least 6 characters long');
-                    }
-                    $auth_helper = new Auth();
-                    $input[$field] = $auth_helper->hashPassword($input[$field]);
-                }
-                
-                $update_fields[] = "$field = ?";
-                $params[] = $input[$field];
-            }
+        // Validate email format if provided
+        if (isset($input['email']) && !filter_var($input['email'], FILTER_VALIDATE_EMAIL)) {
+            Response::validationError('Invalid email format');
         }
         
-        if (empty($update_fields)) {
-            Response::validationError('No valid fields to update');
+        // Validate password strength if provided
+        if (isset($input['password']) && strlen($input['password']) < 6) {
+            Response::validationError('Password must be at least 6 characters long');
         }
         
-        $params[] = $teacher_id;
+        // Check for duplicates using service
+        if (isset($input['email']) && $userService->emailExists($input['email'], $teacher_id)) {
+            Response::validationError('Email already exists');
+        }
         
-        $sql = "UPDATE users SET " . implode(', ', $update_fields) . " WHERE id = ?";
-        $stmt = $db->prepare($sql);
-        $stmt->execute($params);
+        if (isset($input['username']) && $userService->usernameExists($input['username'], $teacher_id)) {
+            Response::validationError('Username already exists');
+        }
+        
+        // Update teacher using service
+        $success = $userService->updateTeacher($teacher_id, $input);
+        
+        if (!$success) {
+            Response::serverError('Failed to update teacher');
+        }
         
         Response::logRequest('admin/teachers', 'PUT', $user['id']);
         Response::updated('Teacher updated successfully');
@@ -205,7 +138,7 @@ function handlePut($db, $user) {
     }
 }
 
-function handleDelete($db, $user) {
+function handleDelete($userService, $user) {
     try {
         $teacher_id = $_GET['id'] ?? null;
         
@@ -213,44 +146,21 @@ function handleDelete($db, $user) {
             Response::validationError('Teacher ID is required');
         }
         
-        // Check if teacher exists
-        $check_stmt = $db->prepare("SELECT id FROM users WHERE id = ? AND role = 'teacher'");
-        $check_stmt->execute([$teacher_id]);
-        
-        if (!$check_stmt->fetch()) {
+        // Check if teacher exists using service
+        $teacher = $userService->getTeacherById($teacher_id);
+        if (!$teacher) {
             Response::notFound('Teacher not found');
         }
         
-        // Check if teacher has questions
-        $question_check = $db->prepare("SELECT COUNT(*) as question_count FROM questions WHERE teacher_id = ?");
-        $question_check->execute([$teacher_id]);
-        $question_result = $question_check->fetch();
+        // Delete teacher using service (soft delete)
+        $success = $userService->deleteTeacher($teacher_id);
         
-        if ($question_result['question_count'] > 0) {
-            Response::error('Cannot delete teacher with existing questions. Please reassign or delete questions first.');
+        if (!$success) {
+            Response::serverError('Failed to delete teacher');
         }
         
-        // Begin transaction
-        $db->beginTransaction();
-        
-        try {
-            // Delete teacher assignments first
-            $delete_assignments = $db->prepare("DELETE FROM teacher_assignments WHERE teacher_id = ?");
-            $delete_assignments->execute([$teacher_id]);
-            
-            // Delete teacher
-            $delete_teacher = $db->prepare("DELETE FROM users WHERE id = ?");
-            $delete_teacher->execute([$teacher_id]);
-            
-            $db->commit();
-            
-            Response::logRequest('admin/teachers', 'DELETE', $user['id']);
-            Response::deleted('Teacher deleted successfully');
-            
-        } catch (Exception $e) {
-            $db->rollback();
-            throw $e;
-        }
+        Response::logRequest('admin/teachers', 'DELETE', $user['id']);
+        Response::deleted('Teacher deactivated successfully');
         
     } catch (Exception $e) {
         Response::serverError('Failed to delete teacher');
