@@ -391,12 +391,26 @@ try {
                 
                 try {
                     for ($i = 0; $i < $count; $i++) {
-                        // Generate unique test code
+                        // Generate unique test code (max 20 chars)
+                        $attempts = 0;
+                        $maxAttempts = 10;
                         do {
-                            $code = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6));
+                            // Generate 8-character code to ensure it fits in 20-char limit
+                            $code = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 8));
                             $check_stmt = $db->prepare("SELECT id FROM test_codes WHERE code = ?");
                             $check_stmt->execute([$code]);
-                        } while ($check_stmt->fetch());
+                            $attempts++;
+                        } while ($check_stmt->fetch() && $attempts < $maxAttempts);
+                        
+                        // Fallback if still duplicate
+                        if ($check_stmt->fetch()) {
+                            $timestamp = substr(str_replace('.', '', microtime(true)), -8);
+                            $code = 'TC' . $timestamp;
+                            // Ensure max 20 characters
+                            if (strlen($code) > 20) {
+                                $code = substr($code, 0, 20);
+                            }
+                        }
                         
                         // For single code, keep original title; for multiple codes, add numbering
                         $title = $count > 1 ? $input['title'] . " (" . ($i + 1) . ")" : $input['title'];

@@ -524,6 +524,8 @@ class TestCodeService extends BaseService {
      * Generate unique test code
      */
     private function generateUniqueCode($length = 8) {
+        // Ensure length doesn't exceed database limit
+        $length = min($length, 18); // Leave room for prefixes if needed
         $maxAttempts = 10;
         $attempts = 0;
         
@@ -543,12 +545,23 @@ class TestCodeService extends BaseService {
         
         if ($exists) {
             // Fallback to timestamp-based code, ensuring it fits within 20 characters
-            $timestamp = substr(str_replace('.', '', microtime(true)), -10); // Get last 10 digits
-            $code = 'TC' . $timestamp . mt_rand(10, 99); // TC + 10 digits + 2 random digits = 14 chars max
+            $timestamp = substr(str_replace('.', '', microtime(true)), -8); // Get last 8 digits
+            $rand = mt_rand(10, 99); // 2 random digits
+            $code = 'TC' . $timestamp . $rand; // TC + 8 digits + 2 random = 12 chars max
             
-            // Double check length and truncate if necessary
+            // Final safety check - ensure we never exceed 20 characters
             if (strlen($code) > 20) {
                 $code = substr($code, 0, 20);
+            }
+            
+            // Verify this fallback code is unique, if not, use a simple incremental approach
+            $finalAttempts = 0;
+            while ($this->count('test_codes', ['code' => $code]) > 0 && $finalAttempts < 100) {
+                $code = 'TC' . time() . str_pad($finalAttempts, 2, '0', STR_PAD_LEFT);
+                if (strlen($code) > 20) {
+                    $code = substr($code, 0, 20);
+                }
+                $finalAttempts++;
             }
         }
         
