@@ -542,8 +542,14 @@ class TestCodeService extends BaseService {
         } while ($exists && $attempts < $maxAttempts);
         
         if ($exists) {
-            // Fallback to timestamp-based code
-            $code = 'TC' . strtoupper(uniqid());
+            // Fallback to timestamp-based code, ensuring it fits within 20 characters
+            $timestamp = substr(str_replace('.', '', microtime(true)), -10); // Get last 10 digits
+            $code = 'TC' . $timestamp . mt_rand(10, 99); // TC + 10 digits + 2 random digits = 14 chars max
+            
+            // Double check length and truncate if necessary
+            if (strlen($code) > 20) {
+                $code = substr($code, 0, 20);
+            }
         }
         
         return $code;
