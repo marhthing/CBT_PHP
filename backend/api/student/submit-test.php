@@ -40,10 +40,17 @@ try {
     
     $test = $test_codes[0];
 
-    // Validate test code availability using service
-    $validation_result = $testCodeService->validateTestCodeAvailability($test['id'], $user['id']);
-    if (!$validation_result['success']) {
-        Response::error($validation_result['message']);
+    // Validate that the test is in a valid state for submission
+    if ($test['status'] === 'used') {
+        Response::error('This test has already been completed');
+    }
+    
+    if ($test['status'] === 'using' && $test['used_by'] != $user['id']) {
+        Response::error('This test is being used by another student');
+    }
+    
+    if ($test['status'] === 'active') {
+        Response::error('Test must be started before submission');
     }
 
     // Check for duplicate test attempt using service
