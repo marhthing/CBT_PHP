@@ -80,14 +80,25 @@ try {
         $is_bulk = true;
     }
     
-    // Additional check for direct bulk requests
+    // Additional check for direct bulk requests - check various possible paths
     if (!$is_bulk && !$is_batch && !$test_code_id && $request_method === 'POST') {
         // Check if this is a bulk request by examining the full URI
         $request_uri = $_SERVER['REQUEST_URI'] ?? '';
-        if (strpos($request_uri, 'test-codes/bulk') !== false) {
+        $script_name = $_SERVER['SCRIPT_NAME'] ?? '';
+        
+        // Check different possible routing patterns
+        if (strpos($request_uri, 'test-codes/bulk') !== false || 
+            strpos($request_uri, '/bulk') !== false ||
+            strpos($script_name, 'test-codes') !== false) {
             $action = 'bulk';
             $is_bulk = true;
         }
+    }
+    
+    // Final fallback - if this is a POST to test-codes with no specific action, treat as bulk
+    if (!$is_bulk && !$is_batch && !$test_code_id && $request_method === 'POST') {
+        $action = 'bulk';
+        $is_bulk = true;
     }
 
     // Get service instances
