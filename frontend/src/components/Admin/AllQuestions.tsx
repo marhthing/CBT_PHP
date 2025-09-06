@@ -98,7 +98,6 @@ export default function AllQuestions() {
   const fetchQuestions = useCallback(async () => {
     try {
       setError('')
-      setLoading(true)
       const params = new URLSearchParams()
       if (searchTerm) params.append('search', searchTerm)
       if (subjectFilter) params.append('subject', subjectFilter)
@@ -142,18 +141,21 @@ export default function AllQuestions() {
       fetchQuestionStats(),
       fetchLookupData()
     ])
-    // Initial questions load
-    fetchQuestions()
-  }, []) // Empty dependency array - only run once on mount
+  }, [fetchQuestionStats, fetchLookupData])
 
-  // Fetch questions when filters change (debounced)  
+  // Fetch questions when filters change (debounced)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchQuestions()
-    }, 300) // Reduced back to 300ms for better responsiveness
+    }, 300)
 
     return () => clearTimeout(timeoutId)
-  }, [searchTerm, subjectFilter, classFilter, typeFilter, assignmentFilter, currentPage, questionsPerPage]) // Direct dependencies instead of fetchQuestions
+  }, [fetchQuestions])
+
+  // Initial questions load
+  useEffect(() => {
+    fetchQuestions()
+  }, [fetchQuestions])
 
   const deleteQuestion = useCallback((questionId: number) => {
     setQuestionToDelete(questionId)
