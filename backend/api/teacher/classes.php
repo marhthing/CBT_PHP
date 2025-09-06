@@ -85,7 +85,7 @@ try {
         if (!isset($classes[$assignment['class_level']])) {
             $classes[$assignment['class_level']] = [
                 'id' => $assignment['class_level'],
-                'name' => $assignment['class_display_name']
+                'name' => $assignment['class_level']
             ];
         }
 
