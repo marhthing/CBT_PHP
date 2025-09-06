@@ -629,7 +629,7 @@ class TestCodeService extends BaseService {
             }
 
             if ($testCode['status'] === 'using') {
-                return ['success' => false, 'message' => 'This test code is currently being used by another student'];
+                return ['success' => false, 'message' => 'This test code is currently being used and cannot be revalidated'];
             }
 
             // Check if student already took this specific test
@@ -690,15 +690,14 @@ class TestCodeService extends BaseService {
                         used_by = ?, 
                         used_at = ?, 
                         updated_at = ? 
-                    WHERE id = ? AND (status = 'active' OR (status = 'using' AND used_by = ?))";
+                    WHERE id = ? AND status = 'active'";
                     
             $params = [
                 'using',
                 $studentId,
                 date('Y-m-d H:i:s'),
                 date('Y-m-d H:i:s'),
-                $testCodeId,
-                $studentId
+                $testCodeId
             ];
 
             $stmt = $this->executeQuery($sql, $params);
@@ -707,7 +706,7 @@ class TestCodeService extends BaseService {
                 $this->clearCache();
                 return ['success' => true, 'message' => 'Test code marked as using'];
             } else {
-                return ['success' => false, 'message' => 'Test code is no longer available or already in use by another student'];
+                return ['success' => false, 'message' => 'Test code is no longer available or already in use'];
             }
 
         } catch (Exception $e) {

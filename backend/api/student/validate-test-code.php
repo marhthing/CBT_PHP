@@ -49,12 +49,7 @@ try {
     $validation_result = $testCodeService->validateTestCodeAvailability($test['id'], $user['id']);
     
     if (!$validation_result['success']) {
-        // If test is already being used by this same student, allow them to continue
-        if ($test['status'] === 'using' && $test['used_by'] == $user['id']) {
-            // Allow the same student to re-validate their own test
-        } else {
-            Response::badRequest($validation_result['message']);
-        }
+        Response::badRequest($validation_result['message']);
     }
 
     // Check for duplicate test attempt (same subject, class, term, test type)
@@ -96,13 +91,11 @@ try {
         Response::badRequest('Not enough questions available for this test');
     }
 
-    // Mark test code as "using" using service (if not already using by this student)
-    if ($test['status'] !== 'using' || $test['used_by'] != $user['id']) {
-        $activation_result = $testCodeService->markTestCodeAsUsing($test['id'], $user['id']);
-        
-        if (!$activation_result['success']) {
-            Response::badRequest($activation_result['message']);
-        }
+    // Mark test code as "using" using service
+    $activation_result = $testCodeService->markTestCodeAsUsing($test['id'], $user['id']);
+    
+    if (!$activation_result['success']) {
+        Response::badRequest($activation_result['message']);
     }
 
     Response::logRequest('student/validate-test-code', 'POST', $user['id']);

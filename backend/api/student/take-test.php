@@ -55,11 +55,7 @@ try {
         }
         // Same student can continue - no need to change status again
     } else {
-        // Test is in 'active' status, mark it as 'using' for this student
-        $activation_result = $testCodeService->markTestCodeAsUsing($test['id'], $user['id']);
-        if (!$activation_result['success']) {
-            Response::badRequest($activation_result['message']);
-        }
+        Response::notFound('Test code is not in valid state for taking');
     }
 
     // Check if student has already taken this test using service
