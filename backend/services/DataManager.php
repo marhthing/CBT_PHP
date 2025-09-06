@@ -6,6 +6,7 @@ require_once __DIR__ . '/SessionService.php';
 require_once __DIR__ . '/SubjectService.php';
 require_once __DIR__ . '/AssignmentService.php';
 require_once __DIR__ . '/TeacherAssignmentService.php';
+require_once __DIR__ . '/ResultsService.php';
 
 /**
  * Data Manager
@@ -22,6 +23,7 @@ class DataManager {
     private $subjectService;
     private $assignmentService;
     private $teacherAssignmentService;
+    private $resultsService;
     
     private function __construct() {
         // Initialize all services
@@ -31,6 +33,7 @@ class DataManager {
         $this->subjectService = SubjectService::getInstance();
         $this->assignmentService = AssignmentService::getInstance();
         $this->teacherAssignmentService = TeacherAssignmentService::getInstance();
+        $this->resultsService = ResultsService::getInstance();
     }
     
     public static function getInstance() {
@@ -423,6 +426,10 @@ class DataManager {
     
     public function getTeacherAssignmentService() {
         return $this->teacherAssignmentService;
+    }
+    
+    public function getResultsService() {
+        return $this->resultsService;
     }
 }
 
