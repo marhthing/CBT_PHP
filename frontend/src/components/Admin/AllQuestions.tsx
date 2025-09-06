@@ -142,21 +142,18 @@ export default function AllQuestions() {
       fetchQuestionStats(),
       fetchLookupData()
     ])
-  }, [fetchQuestionStats, fetchLookupData])
+    // Initial questions load
+    fetchQuestions()
+  }, []) // Empty dependency array - only run once on mount
 
   // Fetch questions when filters change (debounced)  
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchQuestions()
-    }, 500) // Increased debounce to 500ms for smoother experience
+    }, 300) // Reduced back to 300ms for better responsiveness
 
     return () => clearTimeout(timeoutId)
-  }, [fetchQuestions])
-
-  // Initial questions load
-  useEffect(() => {
-    fetchQuestions()
-  }, [fetchQuestions])
+  }, [searchTerm, subjectFilter, classFilter, typeFilter, assignmentFilter, currentPage, questionsPerPage]) // Direct dependencies instead of fetchQuestions
 
   const deleteQuestion = useCallback((questionId: number) => {
     setQuestionToDelete(questionId)
