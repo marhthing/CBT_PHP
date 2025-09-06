@@ -26,7 +26,7 @@ $path_info = $_SERVER['PATH_INFO'] ?? '';
 if (empty($path_info)) {
     $request_uri = $_SERVER['REQUEST_URI'] ?? '';
     $path = parse_url($request_uri, PHP_URL_PATH);
-    
+
     // Remove the base path and extract the admin/test-codes part
     if (strpos($path, '/admin/test-codes') !== false) {
         $path_info = $path;
@@ -44,23 +44,23 @@ if (!$user || $user['role'] !== 'admin') {
 try {
     // Parse the path to get test code ID if provided
     $path_parts = explode('/', trim($path_info, '/'));
-    
+
     // Remove admin/test-codes prefix if present (when called via index.php routing)
     if (count($path_parts) >= 2 && $path_parts[0] === 'admin' && $path_parts[1] === 'test-codes') {
         $path_parts = array_slice($path_parts, 2);
     }
-    
+
     // Filter out empty parts
     $path_parts = array_values(array_filter($path_parts, function($part) {
         return $part !== '';
     }));
-    
+
     // Handle special cases first (bulk, etc.)
     $is_bulk = isset($path_parts[0]) && $path_parts[0] === 'bulk';
     $is_batch = isset($path_parts[0]) && $path_parts[0] === 'batch';
     $test_code_id = null;
     $action = null;
-    
+
     if ($is_bulk) {
         // For bulk operations: /admin/test-codes/bulk
         $action = 'bulk';
@@ -72,7 +72,7 @@ try {
         $test_code_id = (int)$path_parts[0];
         $action = isset($path_parts[1]) ? $path_parts[1] : null;
     }
-    
+
     // Debug: Check if the path parsing is correct for bulk operations
     // If neither bulk nor batch is detected but the path contains 'bulk', force it
     if (!$is_bulk && !$is_batch && !$test_code_id && (strpos($path_info, '/bulk') !== false || strpos($_SERVER['REQUEST_URI'], '/bulk') !== false)) {
@@ -87,20 +87,20 @@ try {
     function handlePatchOperation($testCodeService, $path_info, $path_parts, $input) {
         // Check if this is a batch activation request
         $path_segments = explode('/', trim($path_info, '/'));
-        
+
         // Remove admin/test-codes prefix if present
         if (count($path_segments) >= 2 && $path_segments[0] === 'admin' && $path_segments[1] === 'test-codes') {
             $path_segments = array_slice($path_segments, 2);
         }
-        
+
         if (count($path_segments) >= 3 && $path_segments[0] === 'batch' && $path_segments[2] === 'toggle-activation') {
             // Batch activation using service
             $batch_id = $path_segments[1];
-            
+
             if (!isset($input['is_activated'])) {
                 Response::badRequest('is_activated field is required');
             }
-            
+
             // Handle proper boolean conversion
             $is_activated = false;
             if (is_bool($input['is_activated'])) {
@@ -116,18 +116,18 @@ try {
             } else {
                 $is_activated = (bool)$input['is_activated'];
             }
-            
+
             // Get all test code IDs in the batch
             $batch_codes = $testCodeService->getTestCodes(['batch_id' => $batch_id], 1000, 0);
             $test_code_ids = array_column($batch_codes, 'id');
-            
+
             if (empty($test_code_ids)) {
                 Response::notFound('No test codes found for this batch');
             }
-            
+
             // Use service to toggle activation
             $result = $testCodeService->toggleActivation($test_code_ids, $is_activated);
-            
+
             if ($result['success']) {
                 Response::success("Test codes {$result['action']} successfully", [
                     'batch_id' => $batch_id,
@@ -141,9 +141,9 @@ try {
         } elseif (isset($path_parts[0]) && is_numeric($path_parts[0])) {
             // Individual test code update
             $test_code_id = (int)$path_parts[0];
-            
+
             $result = $testCodeService->updateTestCode($test_code_id, $input);
-            
+
             if ($result['success']) {
                 Response::success('Test code updated successfully');
             } else {
@@ -165,39 +165,39 @@ try {
             require_once __DIR__ . '/../../config/database.php';
             $database = new Database();
             $db = $database->getConnection();
-            
+
             if ($database->getDatabaseType() === 'mysql') {
                 $stmt = $db->prepare("TRUNCATE TABLE test_codes");
             } else {
                 $stmt = $db->prepare("TRUNCATE TABLE test_codes RESTART IDENTITY CASCADE");
             }
             $stmt->execute();
-            
+
             Response::success('All test codes have been deleted successfully');
         } elseif ($is_batch && isset($path_parts[1])) {
             // Delete entire batch using service
             $batch_id = $path_parts[1];
-            
+
             // Get all test codes in the batch
             $batch_codes = $testCodeService->getTestCodes(['batch_id' => $batch_id], 1000, 0);
-            
+
             if (empty($batch_codes)) {
                 Response::notFound('Test code batch not found');
             }
-            
+
             // Check if any codes in the batch have been used
             $used_codes = array_filter($batch_codes, function($code) {
                 return $code['times_taken'] > 0;
             });
-            
+
             if (!empty($used_codes)) {
                 Response::badRequest('Cannot delete batch with used codes');
             }
-            
+
             // Delete all codes in the batch
             $deleted_count = 0;
             $errors = [];
-            
+
             foreach ($batch_codes as $code) {
                 $result = $testCodeService->deleteTestCode($code['id']);
                 if ($result['success']) {
@@ -206,7 +206,7 @@ try {
                     $errors[] = "Failed to delete code {$code['code']}: {$result['message']}";
                 }
             }
-            
+
             if ($deleted_count > 0) {
                 Response::success('Test code batch deleted successfully', [
                     'batch_id' => $batch_id,
@@ -229,50 +229,50 @@ try {
             if ($test_code_id) {
                 // Get specific test code using service
                 $test_codes = $testCodeService->getTestCodes(['id' => $test_code_id], 1, 0);
-                
+
                 if (empty($test_codes)) {
                     Response::notFound('Test code not found');
                 }
-                
+
                 $test_code = $test_codes[0];
                 Response::success('Test code retrieved', $test_code);
             } else {
                 // Get all test codes with filters using service
                 $filters = [];
-                
+
                 if (!empty($_GET['subject_id'])) {
                     $filters['subject_id'] = $_GET['subject_id'];
                 }
-                
+
                 if (!empty($_GET['class_level'])) {
                     $filters['class_level'] = $_GET['class_level'];
                 }
-                
+
                 if (!empty($_GET['term_id'])) {
                     $filters['term_id'] = $_GET['term_id'];
                 }
-                
+
                 if (!empty($_GET['session_id'])) {
                     $filters['session_id'] = $_GET['session_id'];
                 }
-                
+
                 if (isset($_GET['is_active'])) {
                     $filters['is_active'] = $_GET['is_active'] === 'true' || $_GET['is_active'] === '1';
                 }
-                
+
                 if (!empty($_GET['batch_id'])) {
                     $filters['batch_id'] = $_GET['batch_id'];
                 }
-                
+
                 if (!empty($_GET['search'])) {
                     $filters['search'] = $_GET['search'];
                 }
-                
+
                 $limit = min(100, max(1, intval($_GET['limit'] ?? 50)));
                 $offset = intval($_GET['offset'] ?? 0);
-                
+
                 $test_codes = $testCodeService->getTestCodes($filters, $limit, $offset);
-                
+
                 Response::success('Test codes retrieved', $test_codes);
             }
             break;
@@ -291,30 +291,30 @@ try {
                     break;
                 }
             }
-            
+
             // Handle actual POST - bulk creation
             if ($action === 'bulk' || $is_bulk) {
                 // Bulk creation using service
                 if (!$input) {
                     Response::badRequest('Invalid JSON data');
                 }
-                
+
                 Response::validateRequired($input, [
-                    'title', 'subject_id', 'class_level', 'duration_minutes', 
+                    'title', 'subject_id', 'class_level', 'duration_minutes',
                     'total_questions', 'score_per_question', 'term_id', 'session_id', 'count'
                 ]);
-                
+
                 $count = (int)($input['count'] ?? 1);
                 if ($count < 1 || $count > 100) {
                     Response::badRequest('Count must be between 1 and 100');
                 }
-                
+
                 // Map test_type to assignment for validation
                 $test_type = $input['test_type'] ?? 'first_ca';
-                
+
                 // Create test codes using service
                 $result = $testCodeService->bulkCreateTestCodes($input, $count, $user['id']);
-                
+
                 if ($result['success']) {
                     Response::created('Test codes created successfully', [
                         'batch_id' => $result['batch_id'],
@@ -329,7 +329,7 @@ try {
             } else {
                 // Single test code creation
                 $result = $testCodeService->createTestCode($input, $user['id']);
-                
+
                 if ($result['success']) {
                     Response::created('Test code created successfully', [
                         'id' => $result['id'],
