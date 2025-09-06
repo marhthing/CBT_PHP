@@ -207,8 +207,12 @@ function handlePost($db, $user, $input = null) {
         Response::validateRequired($input, $required_fields);
         
         // Validate correct answer
-        if (!in_array(strtoupper($input['correct_answer']), ['A', 'B', 'C', 'D'])) {
-            Response::validationError('Correct answer must be A, B, C, or D');
+        require_once __DIR__ . '/../../services/ConstantsService.php';
+        $constants = ConstantsService::getInstance();
+        $valid_answers = $constants->getAnswerOptions();
+        if (!in_array(strtoupper($input['correct_answer']), $valid_answers)) {
+            $answer_options = implode(', ', $valid_answers);
+            Response::validationError("Correct answer must be one of: $answer_options");
         }
         
         // Check if teacher is assigned to this subject/class/term/session
@@ -284,7 +288,9 @@ function handlePut($db, $user, $input = null) {
         foreach ($allowed_fields as $field) {
             if (isset($input[$field])) {
                 if ($field === 'correct_answer') {
-                    if (!in_array(strtoupper($input[$field]), ['A', 'B', 'C', 'D'])) {
+                    $constants = ConstantsService::getInstance();
+                    $valid_answers = $constants->getAnswerOptions();
+                    if (!in_array(strtoupper($input[$field]), $valid_answers)) {
                         Response::validationError('Correct answer must be A, B, C, or D');
                     }
                     $update_fields[] = "$field = ?";

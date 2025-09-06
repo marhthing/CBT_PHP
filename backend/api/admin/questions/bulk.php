@@ -50,7 +50,9 @@ try {
     $class_level = $input['class_level'];
     $term_id = $input['term_id'];
     $session_id = $input['session_id'];
-    $question_assignment = $input['question_assignment'] ?? 'First CA';
+    require_once __DIR__ . '/../../../services/ConstantsService.php';
+    $constants = ConstantsService::getInstance();
+    $question_assignment = $input['question_assignment'] ?? $constants->getDefaultAssignmentType();
     
     if (!is_array($questions) || empty($questions)) {
         Response::validationError('Questions must be a non-empty array');
@@ -120,7 +122,10 @@ try {
                     $question_errors[] = "Question " . ($index + 1) . ": For True/False questions, correct answer must be A or B";
                 }
             } else {
-                if (!in_array($correct_answer, ['A', 'B', 'C', 'D'])) {
+                require_once __DIR__ . '/../../../services/ConstantsService.php';
+                $constants = ConstantsService::getInstance();
+                $valid_answers = $constants->getAnswerOptions();
+                if (!in_array($correct_answer, $valid_answers)) {
                     $question_errors[] = "Question " . ($index + 1) . ": For Multiple Choice questions, correct answer must be A, B, C, or D";
                 }
             }

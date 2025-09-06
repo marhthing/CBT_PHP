@@ -270,7 +270,7 @@ function handlePost($user) {
                                 'class_level' => $_POST['class_level'],
                                 'term_id' => $_POST['term_id'],
                                 'session_id' => $_POST['session_id'],
-                                'question_assignment' => $_POST['question_assignment'] ?? 'First CA'
+                                'question_assignment' => $_POST['question_assignment'] ?? ConstantsService::getInstance()->getDefaultAssignmentType()
                             ];
                             
                             $questions[] = $question_data;

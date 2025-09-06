@@ -37,8 +37,10 @@ try {
     $password = $input['password']; // Don't sanitize password
     $role = Response::sanitizeInput($input['role']);
     
-    // Validate role
-    $allowed_roles = ['student', 'teacher', 'admin'];
+    // Validate role using constants
+    require_once __DIR__ . '/../../services/ConstantsService.php';
+    $constants = ConstantsService::getInstance();
+    $allowed_roles = ['student', 'teacher', 'admin']; // These are system roles, not user-defined constants
     if (!in_array($role, $allowed_roles)) {
         Response::validationError('Invalid role specified');
     }

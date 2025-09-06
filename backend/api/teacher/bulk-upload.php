@@ -189,9 +189,13 @@ function validateQuestionRow($row, $row_number) {
         }
     }
     
-    // Validate correct answer
-    if (!empty($row['correct_answer']) && !in_array($row['correct_answer'], ['A', 'B', 'C', 'D'])) {
-        $errors[] = "Row $row_number: Correct answer must be A, B, C, or D";
+    // Validate correct answer using constants
+    require_once __DIR__ . '/../../services/ConstantsService.php';
+    $constants = ConstantsService::getInstance();
+    $valid_answers = $constants->getAnswerOptions();
+    if (!empty($row['correct_answer']) && !in_array($row['correct_answer'], $valid_answers)) {
+        $answer_options = implode(', ', $valid_answers);
+        $errors[] = "Row $row_number: Correct answer must be one of: $answer_options";
     }
     
     // Check minimum length for question and options

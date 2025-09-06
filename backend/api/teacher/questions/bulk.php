@@ -93,8 +93,12 @@ try {
                     $question_errors[] = "Question " . ($index + 1) . ": For True/False questions, correct answer must be A or B";
                 }
             } else {
-                if (!in_array($correct_answer, ['A', 'B', 'C', 'D'])) {
-                    $question_errors[] = "Question " . ($index + 1) . ": For Multiple Choice questions, correct answer must be A, B, C, or D";
+                require_once __DIR__ . '/../../../services/ConstantsService.php';
+                $constants = ConstantsService::getInstance();
+                $valid_answers = $constants->getAnswerOptions();
+                if (!in_array($correct_answer, $valid_answers)) {
+                    $answer_options = implode(', ', $valid_answers);
+                    $question_errors[] = "Question " . ($index + 1) . ": For Multiple Choice questions, correct answer must be one of: $answer_options";
                 }
             }
         }

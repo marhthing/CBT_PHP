@@ -66,7 +66,9 @@ try {
     }
 
     // Check if there are enough questions for this test using service
-    $test_type = $test['test_type'] ?? 'First CA';
+    require_once __DIR__ . '/../../services/ConstantsService.php';
+    $constants = ConstantsService::getInstance();
+    $test_type = $test['test_type'] ?? $constants->getDefaultAssignmentType();
     
     $question_filters = [
         'subject_id' => $test['subject_id'],
@@ -74,9 +76,10 @@ try {
         'term_id' => $test['term_id']
     ];
     
-    if ($test_type === 'Examination') {
+    $test_types = $constants->getTestTypes();
+    if ($test_type === $test_types['EXAMINATION']) {
         // For examination, include both First CA and Second CA questions
-        $question_filters['assignment_types'] = ['First CA', 'Second CA'];
+        $question_filters['assignment_types'] = [$test_types['FIRST_CA'], $test_types['SECOND_CA']];
     } else {
         // For specific assignment types
         $question_filters['question_assignment'] = $test_type;
