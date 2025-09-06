@@ -139,11 +139,16 @@ export default function TestResults() {
   }
 
   const getGradeColor = (percentage: number) => {
-    // Use dynamic grading scale if available, otherwise log error
+    // Use dynamic grading scale if available, otherwise use fallback without warning
     if (gradingScale.length === 0) {
-      console.warn('Grading scale not loaded from API');
-      return { bg: '#f3f4f6', color: '#374151' }; // Neutral gray as final fallback
+      // Use fallback grading logic when API data not yet loaded
+      if (percentage >= 80) return { bg: '#dcfce7', color: '#166534' } // Green for A
+      if (percentage >= 70) return { bg: '#fef3c7', color: '#92400e' } // Yellow for B  
+      if (percentage >= 60) return { bg: '#dbeafe', color: '#1e40af' } // Blue for C
+      if (percentage >= 50) return { bg: '#fef3c7', color: '#92400e' } // Yellow for D
+      return { bg: '#fef2f2', color: '#dc2626' } // Red for F
     }
+    
     const scale = gradingScale
     
     // Find the appropriate grade based on percentage
