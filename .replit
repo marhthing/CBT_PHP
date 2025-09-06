@@ -58,9 +58,9 @@ localPort = 8000
 externalPort = 80
 
 [deployment]
-run = ["bash", "-c", "cd frontend && npm run build && cd .. && cp -r frontend/dist/* . && php -S 0.0.0.0:5000 -t . backend/index.php"]
+run = ["php", "-S", "0.0.0.0:5000", "-t", "frontend/dist", "backend/index.php"]
 deploymentTarget = "autoscale"
-build = ["bash", "-c", "cd frontend && npm run build"]
+build = ["npm", "run", "build", "--prefix", "frontend"]
 
 [agent]
 expertMode = true
