@@ -82,6 +82,12 @@ try {
         Response::validationError('Invalid assignment type selected');
     }
 
+    // Get valid question types from ConstantsService
+    require_once __DIR__ . '/../../../services/ConstantsService.php';
+    $constants = ConstantsService::getInstance();
+    $validQuestionTypes = array_values($constants->getQuestionTypes());
+    $defaultQuestionType = $constants->getDefaultQuestionType();
+
     // Validate questions
     $valid_questions = [];
     $errors = [];
@@ -89,11 +95,12 @@ try {
     foreach ($questions as $index => $question) {
         $question_errors = [];
         
-        // Determine question type (default to multiple_choice if not specified)
-        $question_type = $question['question_type'] ?? 'multiple_choice';
+        // Determine question type (default from ConstantsService if not specified)
+        $question_type = $question['question_type'] ?? $defaultQuestionType;
         
-        if (!in_array($question_type, ['multiple_choice', 'true_false'])) {
-            $question_errors[] = "Question " . ($index + 1) . ": Question type must be multiple_choice or true_false";
+        if (!in_array($question_type, $validQuestionTypes)) {
+            $validTypesString = implode(', ', $validQuestionTypes);
+            $question_errors[] = "Question " . ($index + 1) . ": Question type must be one of: {$validTypesString}";
         }
         
         // Required fields based on question type
@@ -122,11 +129,10 @@ try {
                     $question_errors[] = "Question " . ($index + 1) . ": For True/False questions, correct answer must be A or B";
                 }
             } else {
-                require_once __DIR__ . '/../../../services/ConstantsService.php';
-                $constants = ConstantsService::getInstance();
                 $valid_answers = $constants->getAnswerOptions();
                 if (!in_array($correct_answer, $valid_answers)) {
-                    $question_errors[] = "Question " . ($index + 1) . ": For Multiple Choice questions, correct answer must be A, B, C, or D";
+                    $answer_options = implode(', ', $valid_answers);
+                    $question_errors[] = "Question " . ($index + 1) . ": For Multiple Choice questions, correct answer must be one of: $answer_options";
                 }
             }
         }

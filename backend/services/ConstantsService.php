@@ -147,6 +147,13 @@ class ConstantsService {
     }
     
     /**
+     * Get default question type
+     */
+    public function getDefaultQuestionType() {
+        return self::DEFAULTS['QUESTION_TYPE'];
+    }
+    
+    /**
      * Validate test type
      */
     public function isValidTestType($testType) {

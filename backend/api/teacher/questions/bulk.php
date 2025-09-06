@@ -53,6 +53,12 @@ try {
         Response::forbidden('You are not assigned to teach this subject/class/term/session');
     }
 
+    // Get valid question types from ConstantsService
+    require_once __DIR__ . '/../../../services/ConstantsService.php';
+    $constants = ConstantsService::getInstance();
+    $validQuestionTypes = array_values($constants->getQuestionTypes());
+    $defaultQuestionType = $constants->getDefaultQuestionType();
+
     // Validate each question
     $errors = [];
     $valid_questions = [];
@@ -60,11 +66,12 @@ try {
     foreach ($questions as $index => $question) {
         $question_errors = [];
 
-        // Determine question type (default to multiple_choice if not specified)
-        $question_type = $question['question_type'] ?? 'multiple_choice';
+        // Determine question type (default from ConstantsService if not specified)
+        $question_type = $question['question_type'] ?? $defaultQuestionType;
 
-        if (!in_array($question_type, ['multiple_choice', 'true_false'])) {
-            $question_errors[] = "Question " . ($index + 1) . ": Invalid question type";
+        if (!in_array($question_type, $validQuestionTypes)) {
+            $validTypesString = implode(', ', $validQuestionTypes);
+            $question_errors[] = "Question " . ($index + 1) . ": Invalid question type. Must be one of: {$validTypesString}";
         }
 
         // Required fields based on question type
@@ -93,8 +100,6 @@ try {
                     $question_errors[] = "Question " . ($index + 1) . ": For True/False questions, correct answer must be A or B";
                 }
             } else {
-                require_once __DIR__ . '/../../../services/ConstantsService.php';
-                $constants = ConstantsService::getInstance();
                 $valid_answers = $constants->getAnswerOptions();
                 if (!in_array($correct_answer, $valid_answers)) {
                     $answer_options = implode(', ', $valid_answers);
