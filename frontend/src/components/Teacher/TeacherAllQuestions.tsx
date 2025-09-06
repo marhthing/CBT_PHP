@@ -98,7 +98,7 @@ export default function TeacherAllQuestions() {
     class_level: '',
     term_id: '',
     session_id: '',
-    question_assignment: 'First CA'
+    question_assignment: '' // Will be set from lookup data
   })
   const [showQuestionForm, setShowQuestionForm] = useState(false)
   const [creatingQuestions, setCreatingQuestions] = useState(false)
@@ -386,7 +386,7 @@ export default function TeacherAllQuestions() {
     if (manualQuestions.length === 0) {
       setManualQuestions([{
         question_text: '',
-        question_type: 'multiple_choice',
+        question_type: '', // Will be set from constants
         option_a: '',
         option_b: '',
         option_c: '',
@@ -399,7 +399,7 @@ export default function TeacherAllQuestions() {
   const addAnotherQuestion = useCallback(() => {
     setManualQuestions(prev => [...prev, {
       question_text: '',
-      question_type: 'multiple_choice',
+      question_type: '', // Will be set from constants
       option_a: '',
       option_b: '',
       option_c: '',
@@ -485,7 +485,7 @@ export default function TeacherAllQuestions() {
         setShowManualCreate(false)
         setShowQuestionForm(false)
         setManualQuestions([])
-        setCreateFilters({ subject_id: '', class_level: '', term_id: '', session_id: '', question_assignment: 'First CA' })
+        setCreateFilters({ subject_id: '', class_level: '', term_id: '', session_id: '', question_assignment: '' })
         setSuccessMessage(`Successfully created ${response.data.data.created_count || manualQuestions.length} questions!`)
         setTimeout(() => setSuccessMessage(''), 3000)
       }

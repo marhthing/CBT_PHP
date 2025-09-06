@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { api } from '../../lib/api'
+import { useAuth } from '../../contexts/AuthContext'
 import ErrorNotification from '../ui/ErrorNotification'
 import ConfirmationModal from '../ui/ConfirmationModal'
 import { 
@@ -36,6 +37,7 @@ interface LookupData {
   terms?: Array<{id: number, name: string}>
   sessions?: Array<{id: number, name: string}>
   class_levels?: Array<{id: string, name: string}>
+  assignments?: Array<{id: string, name: string, display_name: string, order: number}>
 }
 
 interface CreateForm {
@@ -53,6 +55,7 @@ interface CreateForm {
 }
 
 export default function TestCodeManager() {
+  const { user } = useAuth()
   const [testCodes, setTestCodes] = useState<TestCode[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -88,7 +91,7 @@ export default function TestCodeManager() {
     session_id: '',
     expires_at: '',
     count: 1,
-    test_type: 'First CA'
+    test_type: '' // Will be set from API lookup data
   })
 
   // Fetch test codes
@@ -181,11 +184,11 @@ export default function TestCodeManager() {
 
   // Set default test_type when lookup data is loaded
   useEffect(() => {
-    if (lookupData.assignments && lookupData.assignments.length > 0 && createForm.test_type === 'First CA') {
-      // Only update if still using the hardcoded default
-      const defaultAssignment = lookupData.assignments.find(a => a.order === 1) || lookupData.assignments[0]
-      if (defaultAssignment && defaultAssignment.id !== createForm.test_type) {
-        setCreateForm(prev => ({ ...prev, test_type: defaultAssignment.id }))
+    if (lookupData.assignments && lookupData.assignments.length > 0 && createForm.test_type === '') {
+      // Set the first assignment as default
+      const defaultAssignment = lookupData.assignments.find((a: any) => a.order === 1) || lookupData.assignments[0]
+      if (defaultAssignment) {
+        setCreateForm(prev => ({ ...prev, test_type: defaultAssignment.name }))
       }
     }
   }, [lookupData.assignments, createForm.test_type])
@@ -284,7 +287,7 @@ export default function TestCodeManager() {
           used_by: 0,
           created_at: new Date().toISOString(),
           expires_at: createForm.expires_at,
-          created_by_name: 'admin',
+          created_by_name: user?.full_name || 'Administrator',
           batch_id: response.data.data.batch_id,
           test_type: createForm.test_type
         }))
@@ -309,7 +312,7 @@ export default function TestCodeManager() {
         session_id: '',
         expires_at: '',
         count: 1,
-        test_type: 'First CA'
+        test_type: lookupData.assignments?.find((a: any) => a.order === 1)?.name || lookupData.assignments?.[0]?.name || ''
       })
       setAvailableQuestions(0)
 

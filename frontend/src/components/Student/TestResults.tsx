@@ -136,13 +136,12 @@ export default function TestResults() {
   }
 
   const getGradeColor = (percentage: number) => {
-    // Use dynamic grading scale if available, otherwise use fallback
-    const scale = gradingScale.length > 0 ? gradingScale : [
-      { min: 80, grade: 'A', color: { bg: '#dcfce7', text: '#166534' } },
-      { min: 70, grade: 'B', color: { bg: '#fef3c7', text: '#92400e' } },
-      { min: 50, grade: 'C', color: { bg: '#dbeafe', text: '#1e40af' } },
-      { min: 0, grade: 'F', color: { bg: '#fef2f2', text: '#dc2626' } }
-    ]
+    // Use dynamic grading scale if available, otherwise log error
+    if (gradingScale.length === 0) {
+      console.warn('Grading scale not loaded from API');
+      return { bg: '#f3f4f6', color: '#374151' }; // Neutral gray as final fallback
+    }
+    const scale = gradingScale
     
     // Find the appropriate grade based on percentage
     for (const grade of scale) {
@@ -157,15 +156,16 @@ export default function TestResults() {
   }
 
   const getTestTypeColor = (testType: string) => {
-    switch (testType) {
-      case 'First CA':
-        return 'bg-blue-100 text-blue-800'
-      case 'Second CA':
-        return 'bg-green-100 text-green-800'
-      case 'Examination':
-        return 'bg-purple-100 text-purple-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
+    // Use a more generic approach based on test type content rather than hardcoded names
+    const testTypeLower = testType.toLowerCase();
+    if (testTypeLower.includes('first') || testTypeLower.includes('1st')) {
+      return 'bg-blue-100 text-blue-800'
+    } else if (testTypeLower.includes('second') || testTypeLower.includes('2nd')) {
+      return 'bg-green-100 text-green-800'
+    } else if (testTypeLower.includes('exam') || testTypeLower.includes('final')) {
+      return 'bg-purple-100 text-purple-800'
+    } else {
+      return 'bg-gray-100 text-gray-800'
     }
   }
 
