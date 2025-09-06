@@ -79,6 +79,16 @@ try {
         $action = 'bulk';
         $is_bulk = true;
     }
+    
+    // Additional check for direct bulk requests
+    if (!$is_bulk && !$is_batch && !$test_code_id && $request_method === 'POST') {
+        // Check if this is a bulk request by examining the full URI
+        $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+        if (strpos($request_uri, 'test-codes/bulk') !== false) {
+            $action = 'bulk';
+            $is_bulk = true;
+        }
+    }
 
     // Get service instances
     $testCodeService = TestCodeService::getInstance();
