@@ -60,7 +60,7 @@ try {
         $normalizedTestType = $test_type; // Use original if normalization fails
     }
     
-    // Build filters for question counting
+    // Build filters for question counting - admin should see all questions regardless of creator
     $filters = [
         'subject_id' => $subject_id,
         'class_level' => $class_level,

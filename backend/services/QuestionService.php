@@ -139,6 +139,7 @@ class QuestionService extends BaseService {
             $params[] = $filters['session_id'];
         }
         
+        // Only filter by teacher_id if explicitly requested
         if (!empty($filters['teacher_id'])) {
             $whereConditions[] = 'teacher_id = ?';
             $params[] = $filters['teacher_id'];
