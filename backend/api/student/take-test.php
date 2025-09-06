@@ -105,7 +105,7 @@ try {
     Response::success('Test data retrieved', [
         'id' => $test['id'],
         'title' => $test['title'],
-        'subject' => $test['subject'],
+        'subject' => $test['subject_name'] ?? $test['subject'] ?? 'Unknown Subject',
         'class_level' => $test['class_level'],
         'duration_minutes' => $test['duration_minutes'],
         'test_type' => $test['test_type'],
