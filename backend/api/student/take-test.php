@@ -38,14 +38,11 @@ try {
     
     $test = $test_codes[0];
 
-    // Validate test availability and ownership
-    if (!$test['is_active'] || !$test['is_activated']) {
-        Response::notFound('Test code not found, expired, or not available');
-    }
-
-    // Check test status and ownership
-    if ($test['status'] === 'used') {
-        Response::notFound('This test code has already been completed');
+    // Validate that the test is in proper state for taking
+    $validation_result = $testCodeService->validateTestCodeForTaking($test['id'], $user['id']);
+    
+    if (!$validation_result['success']) {
+        Response::badRequest($validation_result['message']);
     }
 
     if ($test['status'] === 'using') {

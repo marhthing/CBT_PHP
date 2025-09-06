@@ -45,11 +45,19 @@ try {
     
     $test = $test_codes[0];
 
-    // Check if test is active and not expired using service validation
-    $validation_result = $testCodeService->validateTestCodeAvailability($test['id'], $user['id']);
-    
-    if (!$validation_result['success']) {
-        Response::badRequest($validation_result['message']);
+    // Check if test is active and available for validation
+    if (!$test['is_active'] || !$test['is_activated']) {
+        Response::badRequest('Test code is not active');
+    }
+
+    // Check if test is expired
+    if ($test['expires_at'] && strtotime($test['expires_at']) < time()) {
+        Response::badRequest('Test code has expired');
+    }
+
+    // Check if test code status allows validation (only 'active' status can be validated)
+    if ($test['status'] !== 'active') {
+        Response::badRequest('This test code is no longer available for use');
     }
 
     // Check for duplicate test attempt (same subject, class, term, test type)

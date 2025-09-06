@@ -596,9 +596,9 @@ class TestCodeService extends BaseService {
     }
 
     /**
-     * Validate test code availability for student
+     * Validate test code for taking (used during test access, not initial validation)
      */
-    public function validateTestCodeAvailability($testCodeId, $studentId) {
+    public function validateTestCodeForTaking($testCodeId, $studentId) {
         try {
             $testCode = $this->getById('test_codes', $testCodeId);
 
@@ -606,30 +606,17 @@ class TestCodeService extends BaseService {
                 return ['success' => false, 'message' => 'Test code not found'];
             }
 
-            // Check if test is active
-            $isActive = $this->getBooleanValue($testCode['is_active']);
-            if (!$isActive) {
-                return ['success' => false, 'message' => 'Test is no longer available'];
-            }
-
-            // Check if test is activated
-            $isActivated = $this->getBooleanValue($testCode['is_activated']);
-            if (!$isActivated) {
-                return ['success' => false, 'message' => 'Test code is not activated yet'];
-            }
-
-            // Check if test is expired
-            if ($testCode['expires_at'] && strtotime($testCode['expires_at']) < time()) {
-                return ['success' => false, 'message' => 'Test is no longer available'];
-            }
-
-            // Check status
+            // Check if test status allows taking
             if ($testCode['status'] === 'used') {
-                return ['success' => false, 'message' => 'This test code has already been used and is permanently deactivated'];
+                return ['success' => false, 'message' => 'This test has already been completed'];
             }
 
-            if ($testCode['status'] === 'using') {
-                return ['success' => false, 'message' => 'This test code is currently being used and cannot be revalidated'];
+            if ($testCode['status'] === 'using' && $testCode['used_by'] != $studentId) {
+                return ['success' => false, 'message' => 'This test is being used by another student'];
+            }
+
+            if ($testCode['status'] === 'active') {
+                return ['success' => false, 'message' => 'Test must be validated first'];
             }
 
             // Check if student already took this specific test
@@ -641,10 +628,10 @@ class TestCodeService extends BaseService {
                 return ['success' => false, 'message' => 'You have already taken this test'];
             }
 
-            return ['success' => true, 'message' => 'Test code is available'];
+            return ['success' => true, 'message' => 'Test code is ready for taking'];
 
         } catch (Exception $e) {
-            return ['success' => false, 'message' => 'Failed to validate test code availability'];
+            return ['success' => false, 'message' => 'Failed to validate test code for taking'];
         }
     }
 
@@ -743,7 +730,7 @@ class TestCodeService extends BaseService {
         try {
             // Begin transaction
             error_log("About to begin database transaction");
-            $this->db->beginTransaction();
+            $db->beginTransaction();
             error_log("Database transaction started successfully");
 
             // Get shuffled answer mappings from session
@@ -854,7 +841,7 @@ class TestCodeService extends BaseService {
             ];
 
         } catch (Exception $e) {
-            $db->rollback();
+            $db->rollBack();
             error_log("Test submission error: " . $e->getMessage());
             return [
                 'success' => false,
