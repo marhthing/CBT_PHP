@@ -87,7 +87,7 @@ try {
     
     $available_questions_count = $questionService->getQuestionCount($question_filters);
 
-    if ($available_questions_count < $test['question_count']) {
+    if ($available_questions_count < $test['total_questions']) {
         Response::badRequest('Not enough questions available for this test');
     }
 
@@ -103,15 +103,15 @@ try {
     Response::success('Test code is valid', [
         'test_id' => $test['id'],
         'title' => $test['title'],
-        'subject' => $test['subject'],
+        'subject' => $test['subject_name'],
         'class_level' => $test['class_level'],
         'duration_minutes' => $test['duration_minutes'],
-        'question_count' => $test['question_count'],
+        'question_count' => $test['total_questions'],
         'test_type' => $test['test_type']
     ]);
 
 } catch (Exception $e) {
-    Response::serverError('Failed to validate test code: ' . $e->getMessage());
+    Response::serverError('Debug - Failed to validate test code: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
 }
 
 ?>
