@@ -58,9 +58,9 @@ localPort = 8000
 externalPort = 80
 
 [deployment]
-run = ["bash", "-c", "cd backend && php -S 0.0.0.0:5000 -t . index.php"]
+run = ["php", "-d", "variables_order=EGPCS", "-S", "0.0.0.0:5000", "-t", "public_html", "public_html/index.php"]
 deploymentTarget = "autoscale"
-build = ["bash", "-c", "cd frontend && npm run build && cd .. && cp -r frontend/dist/* public_html/"]
+build = ["bash", "-c", "cd frontend && npm ci && npm run build && cd .. && rm -rf public_html/assets && mkdir -p public_html && cp -r frontend/dist/* public_html/ && cp -r backend/api public_html/ && cp backend/*.php public_html/ && cp -r backend/config public_html/ && cp -r backend/includes public_html/ && cp -r backend/services public_html/"]
 
 [agent]
 expertMode = true
