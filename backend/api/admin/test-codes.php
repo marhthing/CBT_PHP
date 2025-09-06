@@ -317,10 +317,24 @@ try {
                     Response::badRequest('Invalid JSON data');
                 }
 
-                Response::validateRequired($input, [
+                // Validate required fields with better error handling
+                $required_fields = [
                     'title', 'subject_id', 'class_level', 'duration_minutes',
                     'total_questions', 'score_per_question', 'term_id', 'session_id', 'count'
-                ]);
+                ];
+                
+                $missing_fields = [];
+                foreach ($required_fields as $field) {
+                    if (!isset($input[$field]) || $input[$field] === '' || $input[$field] === null) {
+                        $missing_fields[] = $field;
+                    }
+                }
+                
+                if (!empty($missing_fields)) {
+                    error_log("Missing required fields: " . implode(', ', $missing_fields));
+                    error_log("Input data: " . json_encode($input));
+                    Response::badRequest('Missing required fields: ' . implode(', ', $missing_fields));
+                }
 
                 $count = (int)($input['count'] ?? 1);
                 if ($count < 1 || $count > 100) {
