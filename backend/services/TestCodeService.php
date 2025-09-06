@@ -234,6 +234,18 @@ class TestCodeService extends BaseService {
             ];
         }
         
+        // Handle boolean values properly for database compatibility
+        $isActive = false;
+        if (isset($data['is_active'])) {
+            if (is_bool($data['is_active'])) {
+                $isActive = $data['is_active'];
+            } elseif (is_string($data['is_active'])) {
+                $isActive = in_array(strtolower($data['is_active']), ['true', '1', 'yes', 'on']);
+            } else {
+                $isActive = !empty($data['is_active']);
+            }
+        }
+        
         $testCodeData = [
             'code' => $code,
             'title' => $data['title'],
@@ -247,9 +259,9 @@ class TestCodeService extends BaseService {
             'pass_score' => $data['pass_score'] ?? 50,
             'test_type' => $testType,
             'score_per_question' => $data['score_per_question'] ?? 1,
-            'is_active' => !empty($data['is_active']) && ($data['is_active'] === true || $data['is_active'] === 'true' || $data['is_active'] === '1'),
-            'is_activated' => false,
-            'is_used' => false,
+            'is_active' => $isActive ? $this->database->getBooleanTrue() : $this->database->getBooleanFalse(),
+            'is_activated' => $this->database->getBooleanFalse(),
+            'is_used' => $this->database->getBooleanFalse(),
             'created_by' => $createdBy,
             'batch_id' => $data['batch_id'] ?? null,
             'expires_at' => !empty($data['expires_at']) ? $data['expires_at'] : null,
@@ -325,7 +337,19 @@ class TestCodeService extends BaseService {
         
         foreach ($allowedFields as $field) {
             if (isset($data[$field])) {
-                $updateData[$field] = $data[$field];
+                // Handle boolean fields properly
+                if ($field === 'is_active') {
+                    if (is_bool($data[$field])) {
+                        $updateData[$field] = $data[$field] ? $this->database->getBooleanTrue() : $this->database->getBooleanFalse();
+                    } elseif (is_string($data[$field])) {
+                        $isActive = in_array(strtolower($data[$field]), ['true', '1', 'yes', 'on']);
+                        $updateData[$field] = $isActive ? $this->database->getBooleanTrue() : $this->database->getBooleanFalse();
+                    } else {
+                        $updateData[$field] = !empty($data[$field]) ? $this->database->getBooleanTrue() : $this->database->getBooleanFalse();
+                    }
+                } else {
+                    $updateData[$field] = $data[$field];
+                }
             }
         }
         
@@ -400,12 +424,12 @@ class TestCodeService extends BaseService {
         
         foreach ($ids as $id) {
             $updateData = [
-                'is_active' => $activate,
+                'is_active' => $activate ? $this->database->getBooleanTrue() : $this->database->getBooleanFalse(),
                 'updated_at' => date('Y-m-d H:i:s')
             ];
             
             if ($activate) {
-                $updateData['is_activated'] = true;
+                $updateData['is_activated'] = $this->database->getBooleanTrue();
                 $updateData['activated_at'] = date('Y-m-d H:i:s');
             }
             
@@ -482,7 +506,7 @@ class TestCodeService extends BaseService {
      */
     public function markAsUsed($testCodeId, $studentId) {
         $updateData = [
-            'is_used' => true,
+            'is_used' => $this->database->getBooleanTrue(),
             'used_at' => date('Y-m-d H:i:s'),
             'used_by' => $studentId,
             'updated_at' => date('Y-m-d H:i:s')
@@ -758,7 +782,7 @@ class TestCodeService extends BaseService {
             // Mark test code as used (permanently deactivated)
             $update_data = [
                 'status' => 'used',
-                'is_used' => true,
+                'is_used' => $this->database->getBooleanTrue(),
                 'used_at' => date('Y-m-d H:i:s'),
                 'used_by' => $studentId,
                 'updated_at' => date('Y-m-d H:i:s')
