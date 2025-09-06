@@ -301,12 +301,12 @@ class TestCodeService extends BaseService {
             $batchId = 'B' . date('md') . '_' . substr(uniqid(), -8); // B0906_12345678 format (14 chars max)
             error_log("Generated batch_id for actual creation: $batchId");
 
-
             for ($i = 0; $i < $count; $i++) {
                 $codeData = $input;
                 $codeData['batch_id'] = $batchId;
 
-                $result = $this->createTestCode($codeData, $createdBy);
+                // Fix: Use correct parameter name
+                $result = $this->createTestCode($codeData, $created_by);
                 if ($result['success']) {
                     $created_codes[] = [
                         'id' => $result['id'],
