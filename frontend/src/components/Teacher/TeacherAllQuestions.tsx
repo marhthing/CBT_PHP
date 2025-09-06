@@ -98,7 +98,7 @@ export default function TeacherAllQuestions() {
     class_level: '',
     term_id: '',
     session_id: '',
-    question_assignment: '' // Will be set from lookup data
+    question_assignment: 'First CA' // Default to First CA
   })
   const [showQuestionForm, setShowQuestionForm] = useState(false)
   const [creatingQuestions, setCreatingQuestions] = useState(false)
