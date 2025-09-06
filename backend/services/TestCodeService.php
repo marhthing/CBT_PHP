@@ -85,6 +85,11 @@ class TestCodeService extends BaseService {
             $params[] = $filters['batch_id'];
         }
 
+        if (!empty($filters['code'])) {
+            $whereConditions[] = 'tc.code = ?';
+            $params[] = $filters['code'];
+        }
+
         if (!empty($filters['search'])) {
             $searchTerm = "%{$filters['search']}%";
             $whereConditions[] = '(tc.code LIKE ? OR tc.title LIKE ? OR tc.description LIKE ?)';
@@ -680,20 +685,28 @@ class TestCodeService extends BaseService {
      */
     public function markTestCodeAsUsing($testCodeId, $studentId) {
         try {
-            $updateData = [
-                'status' => 'using',
-                'used_by' => $studentId,
-                'used_at' => date('Y-m-d H:i:s'),
-                'updated_at' => date('Y-m-d H:i:s')
+            $sql = "UPDATE test_codes SET 
+                        status = ?, 
+                        used_by = ?, 
+                        used_at = ?, 
+                        updated_at = ? 
+                    WHERE id = ? AND status = 'active'";
+                    
+            $params = [
+                'using',
+                $studentId,
+                date('Y-m-d H:i:s'),
+                date('Y-m-d H:i:s'),
+                $testCodeId
             ];
 
-            $updated = $this->update('test_codes', $testCodeId, $updateData, ['status' => 'active']);
+            $stmt = $this->executeQuery($sql, $params);
 
-            if ($updated) {
+            if ($stmt && $stmt->rowCount() > 0) {
                 $this->clearCache();
                 return ['success' => true, 'message' => 'Test code marked as using'];
             } else {
-                return ['success' => false, 'message' => 'Test code is no longer available'];
+                return ['success' => false, 'message' => 'Test code is no longer available or already in use'];
             }
 
         } catch (Exception $e) {

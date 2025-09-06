@@ -62,7 +62,7 @@ try {
     require_once __DIR__ . '/../../services/ConstantsService.php';
     $constants = ConstantsService::getInstance();
     $test_type = $test['test_type'] ?? $constants->getDefaultAssignmentType();
-    $question_count = (int)$test['question_count'];
+    $question_count = (int)$test['total_questions'];
     
     $question_filters = [
         'subject_id' => $test['subject_id'],
