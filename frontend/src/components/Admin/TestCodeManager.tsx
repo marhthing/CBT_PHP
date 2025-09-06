@@ -634,7 +634,13 @@ export default function TestCodeManager() {
               <div className="space-y-2 text-sm text-gray-600 mb-4">
                 <div><span className="font-medium">Subject:</span> {batch.codes[0].subject_name}</div>
                 <div><span className="font-medium">Class:</span> {batch.codes[0].class_level}</div>
-                <div><span className="font-medium">Type:</span> {batch.codes[0].test_type || 'Test'}</div>
+                <div><span className="font-medium">Type:</span> {
+                  (() => {
+                    const testType = batch.codes[0].test_type;
+                    const assignment = lookupData.assignments?.find(a => a.id === testType);
+                    return assignment ? assignment.name : testType || 'Unknown';
+                  })()
+                }</div>
                 <div><span className="font-medium">Duration:</span> {batch.codes[0].duration_minutes} minutes</div>
                 <div><span className="font-medium">Questions:</span> {batch.codes[0].total_questions}</div>
                 {batch.hasUsedCodes && (
@@ -882,7 +888,13 @@ export default function TestCodeManager() {
               }}>
                 <div><strong>Subject:</strong> {selectedBatch.codes[0].subject_name}</div>
                 <div><strong>Class:</strong> {selectedBatch.codes[0].class_level}</div>
-                <div><strong>Type:</strong> {selectedBatch.codes[0].test_type === 'examination' ? 'Examination' : 'Test'}</div>
+                <div><strong>Type:</strong> {
+                  (() => {
+                    const testType = selectedBatch.codes[0].test_type;
+                    const assignment = lookupData.assignments?.find(a => a.id === testType);
+                    return assignment ? assignment.name : testType || 'Unknown';
+                  })()
+                }</div>
                 <div><strong>Duration:</strong> {selectedBatch.codes[0].duration_minutes} minutes</div>
                 <div><strong>Questions:</strong> {selectedBatch.codes[0].total_questions}</div>
                 <div><strong>Score per Question:</strong> {selectedBatch.codes[0].score_per_question} points</div>
@@ -1342,9 +1354,10 @@ export default function TestCodeManager() {
                 }}
                 required
               >
-                <option value="First CA">First CA</option>
-                <option value="Second CA">Second CA</option>
-                <option value="Examination">Examination</option>
+                <option value="">Select Test Type</option>
+                {lookupData.assignments?.map(assignment => (
+                  <option key={assignment.id} value={assignment.id}>{assignment.name}</option>
+                ))}
               </select>
             </div>
 
