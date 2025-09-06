@@ -1425,8 +1425,8 @@ export default function TestCodeManager() {
                   color: '#6b7280',
                   marginTop: '4px'
                 }}>
-                  {availableQuestions} questions available for this combination</div>
-                </p>
+                  {availableQuestions} questions available for this combination
+                </div>
               )}
             </div>
 
