@@ -17,6 +17,8 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
 require_once __DIR__ . '/../../services/TestCodeService.php';
 require_once __DIR__ . '/../../services/DataManager.php';
+require_once __DIR__ . '/../../services/SubjectService.php';
+require_once __DIR__ . '/../../services/TermService.php';
 
 // Get the request method and path
 $request_method = $_SERVER['REQUEST_METHOD'];
@@ -369,8 +371,63 @@ try {
                             'errors' => $result['errors']
                         ]);
                     } else {
-                        error_log("TestCodeService failed: " . $result['message']);
-                        Response::badRequest($result['message']);
+                        // Create a detailed error message with context
+                        $errorMessage = 'Failed to create test codes';
+                        if (!empty($result['errors'])) {
+                            // Get the first error and clean it up for display
+                            $firstError = $result['errors'][0];
+                            // Extract the meaningful part (everything after "Code X: ")
+                            if (strpos($firstError, ': ') !== false) {
+                                $baseError = substr($firstError, strpos($firstError, ': ') + 2);
+                                
+                                // Add context information with actual names for better UX
+                                $contextInfo = [];
+                                
+                                // Get subject name
+                                if (!empty($input['subject_id'])) {
+                                    try {
+                                        $subjectService = SubjectService::getInstance();
+                                        $subjectName = $subjectService->getSubjectName($input['subject_id']);
+                                        $contextInfo[] = $subjectName ? $subjectName : "Subject ID: {$input['subject_id']}";
+                                    } catch (Exception $e) {
+                                        $contextInfo[] = "Subject ID: {$input['subject_id']}";
+                                    }
+                                }
+                                
+                                // Get term name
+                                if (!empty($input['term_id'])) {
+                                    try {
+                                        $termService = TermService::getInstance();
+                                        $termName = $termService->getTermName($input['term_id']);
+                                        $contextInfo[] = $termName ? $termName : "Term ID: {$input['term_id']}";
+                                    } catch (Exception $e) {
+                                        $contextInfo[] = "Term ID: {$input['term_id']}";
+                                    }
+                                }
+                                
+                                // Add class level
+                                if (!empty($input['class_level'])) {
+                                    $contextInfo[] = "Class: {$input['class_level']}";
+                                }
+                                
+                                // Add test type/assignment
+                                if (!empty($input['test_type'])) {
+                                    $contextInfo[] = "Assignment: {$input['test_type']}";
+                                }
+                                
+                                if (!empty($contextInfo)) {
+                                    $errorMessage = $baseError . ' for ' . implode(', ', $contextInfo);
+                                } else {
+                                    $errorMessage = $baseError;
+                                }
+                            } else {
+                                $errorMessage = $firstError;
+                            }
+                        }
+                        
+                        error_log("TestCodeService failed: " . $errorMessage);
+                        error_log("All errors: " . json_encode($result['errors']));
+                        Response::badRequest($errorMessage);
                     }
                 } catch (Exception $serviceException) {
                     error_log("TestCodeService threw exception: " . $serviceException->getMessage());
