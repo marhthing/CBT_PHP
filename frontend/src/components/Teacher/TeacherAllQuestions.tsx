@@ -159,7 +159,18 @@ export default function TeacherAllQuestions() {
   const fetchAssignments = useCallback(async () => {
     try {
       const response = await api.get('/teacher/classes')
-      setAssignments(response.data.data?.classes || [])
+      const data = response.data.data || {}
+      setAssignments(data.assignments || [])
+      // Update lookup data with the teacher's assigned data
+      if (data.subjects || data.terms || data.sessions) {
+        setLookupData(prev => ({
+          ...prev,
+          subjects: data.subjects || prev.subjects,
+          terms: data.terms || prev.terms,
+          sessions: data.sessions || prev.sessions,
+          class_levels: data.classes?.map(c => ({ id: c.id, name: c.name })) || prev.class_levels
+        }))
+      }
     } catch (error: any) {
       // Failed to fetch assignments
     }
