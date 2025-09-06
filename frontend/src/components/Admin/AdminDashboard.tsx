@@ -72,7 +72,8 @@ export default function AdminDashboard() {
       setApiResponseTime(`${endTime - startTime}ms`)
 
       setStats(statsResponse.data.data || statsResponse.data || {})
-      setRecentActivities(activitiesResponse.data.data || activitiesResponse.data || [])
+      const activities = activitiesResponse.data.data || activitiesResponse.data || []
+      setRecentActivities(Array.isArray(activities) ? activities : [])
       setError('')
     } catch (error: any) {
       if (retryCount < maxRetries) {
@@ -275,7 +276,7 @@ export default function AdminDashboard() {
                 <Activity size={20} />
                 Recent Test Codes
               </h2>
-              {recentActivities.length > 0 ? (
+              {Array.isArray(recentActivities) && recentActivities.length > 0 ? (
                 <div className="space-y-3">
                   {recentActivities.slice(0, 4).map((activity) => (
                     <div
