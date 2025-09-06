@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/BaseService.php';
+require_once __DIR__ . '/ConstantsService.php';
 
 /**
  * Assignment Service
@@ -9,31 +10,12 @@ require_once __DIR__ . '/BaseService.php';
 class AssignmentService extends BaseService {
     private static $instance = null;
     private $cache = [];
+    private $constantsService;
     
-    // Standard test assignments/types
-    private $testAssignments = [
-        'First CA' => [
-            'name' => 'First CA',
-            'display_name' => 'First Continuous Assessment',
-            'code' => 'CA1',
-            'order' => 1,
-            'description' => 'First term continuous assessment test'
-        ],
-        'Second CA' => [
-            'name' => 'Second CA',
-            'display_name' => 'Second Continuous Assessment', 
-            'code' => 'CA2',
-            'order' => 2,
-            'description' => 'Second term continuous assessment test'
-        ],
-        'Examination' => [
-            'name' => 'Examination',
-            'display_name' => 'Term Examination',
-            'code' => 'EXAM',
-            'order' => 3,
-            'description' => 'End of term examination'
-        ]
-    ];
+    public function __construct() {
+        parent::__construct();
+        $this->constantsService = ConstantsService::getInstance();
+    }
     
     public static function getInstance() {
         if (self::$instance === null) {
@@ -46,14 +28,14 @@ class AssignmentService extends BaseService {
      * Get all available test assignments
      */
     public function getAllAssignments() {
-        return array_values($this->testAssignments);
+        return array_values($this->constantsService->getAssignments());
     }
     
     /**
      * Get assignment by name
      */
     public function getAssignmentByName($name) {
-        return $this->testAssignments[$name] ?? null;
+        return $this->constantsService->getAssignment($name);
     }
     
     /**
@@ -76,7 +58,8 @@ class AssignmentService extends BaseService {
      * Check if assignment is valid
      */
     public function isValidAssignment($name) {
-        return isset($this->testAssignments[$name]);
+        $assignments = $this->constantsService->getAssignments();
+        return isset($assignments[$name]);
     }
     
     /**
@@ -84,7 +67,8 @@ class AssignmentService extends BaseService {
      */
     public function getAssignmentOptions() {
         $options = [];
-        foreach ($this->testAssignments as $name => $assignment) {
+        $assignments = $this->constantsService->getAssignments();
+        foreach ($assignments as $name => $assignment) {
             $options[$name] = $assignment['display_name'];
         }
         return $options;
@@ -95,7 +79,8 @@ class AssignmentService extends BaseService {
      */
     public function getAssignmentCodeOptions() {
         $options = [];
-        foreach ($this->testAssignments as $name => $assignment) {
+        $assignments = $this->constantsService->getAssignments();
+        foreach ($assignments as $name => $assignment) {
             $options[$name] = $assignment['code'];
         }
         return $options;
@@ -152,7 +137,8 @@ class AssignmentService extends BaseService {
             }
             
             // Fill in missing assignments with 0 count
-            foreach ($this->testAssignments as $name => $assignment) {
+            $assignments = $this->constantsService->getAssignments();
+            foreach ($assignments as $name => $assignment) {
                 if (!isset($counts[$name])) {
                     $counts[$name] = 0;
                 }
@@ -206,7 +192,8 @@ class AssignmentService extends BaseService {
             }
             
             // Fill in missing assignments with 0 count
-            foreach ($this->testAssignments as $name => $assignment) {
+            $assignments = $this->constantsService->getAssignments();
+            foreach ($assignments as $name => $assignment) {
                 if (!isset($counts[$name])) {
                     $counts[$name] = 0;
                 }
@@ -255,7 +242,8 @@ class AssignmentService extends BaseService {
         $testCodesCount = $this->getTestCodesCountByType($subjectId, $classLevel, $termId, $sessionId);
         
         $stats = [];
-        foreach ($this->testAssignments as $name => $assignment) {
+        $assignments = $this->constantsService->getAssignments();
+        foreach ($assignments as $name => $assignment) {
             $stats[$name] = [
                 'assignment' => $assignment,
                 'questions_count' => $questionsCount[$name] ?? 0,
@@ -273,7 +261,8 @@ class AssignmentService extends BaseService {
         $questionsCount = $this->getQuestionsCountByAssignment($subjectId, $classLevel, $termId, $sessionId);
         
         $available = [];
-        foreach ($this->testAssignments as $name => $assignment) {
+        $assignments = $this->constantsService->getAssignments();
+        foreach ($assignments as $name => $assignment) {
             if (($questionsCount[$name] ?? 0) > 0) {
                 $available[$name] = $assignment;
             }

@@ -179,6 +179,17 @@ export default function TestCodeManager() {
     generateTitle()
   }, [generateTitle])
 
+  // Set default test_type when lookup data is loaded
+  useEffect(() => {
+    if (lookupData.assignments && lookupData.assignments.length > 0 && createForm.test_type === 'First CA') {
+      // Only update if still using the hardcoded default
+      const defaultAssignment = lookupData.assignments.find(a => a.order === 1) || lookupData.assignments[0]
+      if (defaultAssignment && defaultAssignment.id !== createForm.test_type) {
+        setCreateForm(prev => ({ ...prev, test_type: defaultAssignment.id }))
+      }
+    }
+  }, [lookupData.assignments, createForm.test_type])
+
   // Group codes by batch for management
   const groupedBatches = useMemo(() => {
     const batches = new Map<string, TestCode[]>()

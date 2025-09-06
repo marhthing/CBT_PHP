@@ -64,7 +64,7 @@ function handleGet($db, $user) {
                 'subject_name' => $assignment['subject_name'],
                 'class_level' => $assignment['class_level'],
                 'created_at' => $assignment['created_at'],
-                'assigned_by_name' => 'Administrator' // Default since we don't have this field
+                'assigned_by_name' => $user['full_name'] ?? 'Administrator' // Use current admin user's name
             ];
         }
         

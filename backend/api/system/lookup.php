@@ -100,6 +100,23 @@ try {
             Response::success("Difficulties retrieved successfully", $formatted_data);
             break;
 
+        case 'grading_scale':
+            require_once __DIR__ . '/../../services/ConstantsService.php';
+            $constants = ConstantsService::getInstance();
+            $formatted_data = [];
+            
+            // Get grading scale from constants and add color mappings
+            $grading_scale = [
+                ['min' => 90, 'grade' => 'A', 'color' => ['bg' => '#dcfce7', 'text' => '#166534']],
+                ['min' => 80, 'grade' => 'B', 'color' => ['bg' => '#dcfce7', 'text' => '#166534']],
+                ['min' => 70, 'grade' => 'C', 'color' => ['bg' => '#fef3c7', 'text' => '#92400e']],
+                ['min' => 60, 'grade' => 'D', 'color' => ['bg' => '#dbeafe', 'text' => '#1e40af']],
+                ['min' => 0,  'grade' => 'F', 'color' => ['bg' => '#fef2f2', 'text' => '#dc2626']]
+            ];
+            
+            Response::success("Grading scale retrieved successfully", $grading_scale);
+            break;
+
         default:
             // Return all lookup data if no type specified
             $lookup_data = [

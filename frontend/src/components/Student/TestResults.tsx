@@ -49,6 +49,15 @@ interface FilterOptions {
   session: string
 }
 
+interface GradingScale {
+  min: number
+  grade: string
+  color: {
+    bg: string
+    text: string
+  }
+}
+
 export default function TestResults() {
   const navigate = useNavigate()
   const [results, setResults] = useState<TestResult[]>([])
@@ -61,10 +70,12 @@ export default function TestResults() {
     session: ''
   })
   const [lookupData, setLookupData] = useState<any>({})
+  const [gradingScale, setGradingScale] = useState<GradingScale[]>([])
 
   useEffect(() => {
     fetchResults()
     fetchLookupData()
+    fetchGradingScale()
   }, [])
 
   useEffect(() => {
@@ -95,6 +106,21 @@ export default function TestResults() {
     }
   }
 
+  const fetchGradingScale = async () => {
+    try {
+      const response = await api.get('/system/lookup?type=grading_scale')
+      setGradingScale(response.data.data || [])
+    } catch (error) {
+      // Failed to fetch grading scale, use fallback
+      setGradingScale([
+        { min: 80, grade: 'A', color: { bg: '#dcfce7', text: '#166534' } },
+        { min: 70, grade: 'B', color: { bg: '#fef3c7', text: '#92400e' } },
+        { min: 50, grade: 'C', color: { bg: '#dbeafe', text: '#1e40af' } },
+        { min: 0, grade: 'F', color: { bg: '#fef2f2', text: '#dc2626' } }
+      ])
+    }
+  }
+
   const applyFilters = () => {
     let filtered = [...results]
 
@@ -110,10 +136,24 @@ export default function TestResults() {
   }
 
   const getGradeColor = (percentage: number) => {
-    if (percentage >= 80) return { bg: '#dcfce7', color: '#166534' }
-    if (percentage >= 70) return { bg: '#fef3c7', color: '#92400e' }
-    if (percentage >= 50) return { bg: '#dbeafe', color: '#1e40af' }
-    return { bg: '#fef2f2', color: '#dc2626' }
+    // Use dynamic grading scale if available, otherwise use fallback
+    const scale = gradingScale.length > 0 ? gradingScale : [
+      { min: 80, grade: 'A', color: { bg: '#dcfce7', text: '#166534' } },
+      { min: 70, grade: 'B', color: { bg: '#fef3c7', text: '#92400e' } },
+      { min: 50, grade: 'C', color: { bg: '#dbeafe', text: '#1e40af' } },
+      { min: 0, grade: 'F', color: { bg: '#fef2f2', text: '#dc2626' } }
+    ]
+    
+    // Find the appropriate grade based on percentage
+    for (const grade of scale) {
+      if (percentage >= grade.min) {
+        return { bg: grade.color.bg, color: grade.color.text }
+      }
+    }
+    
+    // Fallback to lowest grade
+    const lowestGrade = scale[scale.length - 1]
+    return { bg: lowestGrade.color.bg, color: lowestGrade.color.text }
   }
 
   const getTestTypeColor = (testType: string) => {

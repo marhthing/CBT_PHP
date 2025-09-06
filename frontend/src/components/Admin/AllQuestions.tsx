@@ -271,33 +271,43 @@ export default function AllQuestions() {
   }, [])
 
   const downloadTemplate = useCallback(() => {
-    // Create subject reference table
-    const subjectReference = [
+    // Create dynamic subject reference table from actual data
+    const subjectReferenceHeader = [
       '# Subject ID Reference Table',
       '# Copy the ID number for the subject you want to use in your questions',
-      '# ID | Subject Name | Code',
-      '# 1  | Mathematics | MATH',
-      '# 2  | English Language | ENG', 
-      '# 3  | Physics | PHY',
-      '# 4  | Chemistry | CHE',
-      '# 5  | Biology | BIO',
-      '# 6  | Geography | GEO',
-      '# 7  | History | HIS',
-      '# 8  | Economics | ECO',
-      '# 9  | Accounting | ACC',
-      '# 10 | Computer Science | CS',
-      '# 11 | Agricultural Science | AGR',
-      '# 12 | Civic Education | CIV',
-      '# 13 | French | FRE',
-      '# 14 | Literature | LIT',
-      '# 15 | Government | GOV',
-      '#',
+      '# ID | Subject Name'
+    ]
+    
+    // Add dynamic subject list from actual database data
+    const dynamicSubjects = lookupData.subjects?.map(subject => 
+      `# ${subject.id}  | ${subject.name}`
+    ) || []
+    
+    // If no subjects loaded, provide fallback message
+    const subjectList = dynamicSubjects.length > 0 ? dynamicSubjects : [
+      '# No subjects loaded - please refresh the page to load current subjects'
+    ]
+    
+    // Add examples using first two subjects if available
+    const firstSubject = lookupData.subjects?.[0]
+    const secondSubject = lookupData.subjects?.[1]
+    const examples = firstSubject && secondSubject ? [
+      `# Example: For ${firstSubject.name} questions, use subject_id = ${firstSubject.id}`,
+      `# Example: For ${secondSubject.name} questions, use subject_id = ${secondSubject.id}`
+    ] : [
       '# Example: For Mathematics questions, use subject_id = 1',
-      '# Example: For English questions, use subject_id = 2',
+      '# Example: For English questions, use subject_id = 2'
+    ]
+    
+    const subjectReference = [
+      ...subjectReferenceHeader,
+      ...subjectList,
+      '#',
+      ...examples,
       '',
       'question_text,subject_id,class_level,option_a,option_b,option_c,option_d,correct_answer',
-      '"What is the capital of Nigeria?",1,"JSS1","Lagos","Abuja","Kano","Port Harcourt","B"',
-      '"Which of the following is a prime number?",1,"JSS2","4","6","7","8","C"',
+      `"What is the capital of Nigeria?",${firstSubject?.id || 1},"JSS1","Lagos","Abuja","Kano","Port Harcourt","B"`,
+      `"Which of the following is a prime number?",${firstSubject?.id || 1},"JSS2","4","6","7","8","C"`,
       '# Note: Use actual class level values from your system (JSS1, JSS2, JSS3, SS1, SS2, SS3, etc.)'
     ].join('\n')
 
@@ -308,7 +318,7 @@ export default function AllQuestions() {
     a.download = 'questions_template_with_subject_reference.csv'
     a.click()
     window.URL.revokeObjectURL(url)
-  }, [])
+  }, [lookupData.subjects])
 
   // Manual question creation functions
   const handleCreateFiltersSubmit = useCallback(() => {
