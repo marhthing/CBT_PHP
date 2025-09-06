@@ -65,7 +65,7 @@ try {
         'subject_id' => $subject_id,
         'class_level' => $class_level,
         'term_id' => $term_id,
-        'question_assignment' => $normalizedTestType
+        'test_type' => $normalizedTestType
     ];
     
     // Get question count using service

@@ -155,12 +155,19 @@ class QuestionService extends BaseService {
             $whereConditions[] = 'question_assignment = ?';
             $params[] = $filters['question_assignment'];
         } elseif (!empty($filters['test_type'])) {
-            // Map test_type to question_assignment using AssignmentService
-            $assignmentService = AssignmentService::getInstance();
-            $assignment = $assignmentService->mapTestTypeToAssignment($filters['test_type']);
-            if ($assignment) {
-                $whereConditions[] = 'question_assignment = ?';
-                $params[] = $assignment;
+            // Special handling for Examination - it should include both First CA and Second CA questions
+            if (strtolower($filters['test_type']) === 'examination') {
+                $whereConditions[] = "(question_assignment = ? OR question_assignment = ?)";
+                $params[] = 'First CA';
+                $params[] = 'Second CA';
+            } else {
+                // Map test_type to question_assignment using AssignmentService
+                $assignmentService = AssignmentService::getInstance();
+                $assignment = $assignmentService->mapTestTypeToAssignment($filters['test_type']);
+                if ($assignment) {
+                    $whereConditions[] = 'question_assignment = ?';
+                    $params[] = $assignment;
+                }
             }
         }
         
@@ -503,6 +510,22 @@ class QuestionService extends BaseService {
                 $whereConditions[] = 'COALESCE(question_assignment, ?) = ?';
                 $params[] = 'First CA';
                 $params[] = $filters['question_assignment'];
+            } elseif (!empty($filters['test_type'])) {
+                // Special handling for Examination - it should include both First CA and Second CA questions
+                if (strtolower($filters['test_type']) === 'examination') {
+                    $whereConditions[] = "(COALESCE(question_assignment, 'First CA') IN (?, ?))";
+                    $params[] = 'First CA';
+                    $params[] = 'Second CA';
+                } else {
+                    // Map test_type to question_assignment using AssignmentService
+                    $assignmentService = AssignmentService::getInstance();
+                    $assignment = $assignmentService->mapTestTypeToAssignment($filters['test_type']);
+                    if ($assignment) {
+                        $whereConditions[] = 'COALESCE(question_assignment, ?) = ?';
+                        $params[] = 'First CA';
+                        $params[] = $assignment;
+                    }
+                }
             }
             
             $whereClause = implode(' AND ', $whereConditions);
