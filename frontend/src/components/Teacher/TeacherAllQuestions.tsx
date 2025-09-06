@@ -386,7 +386,7 @@ export default function TeacherAllQuestions() {
     if (manualQuestions.length === 0) {
       setManualQuestions([{
         question_text: '',
-        question_type: '', // Will be set from constants
+        question_type: 'multiple_choice',
         option_a: '',
         option_b: '',
         option_c: '',
@@ -399,7 +399,7 @@ export default function TeacherAllQuestions() {
   const addAnotherQuestion = useCallback(() => {
     setManualQuestions(prev => [...prev, {
       question_text: '',
-      question_type: '', // Will be set from constants
+      question_type: 'multiple_choice',
       option_a: '',
       option_b: '',
       option_c: '',
