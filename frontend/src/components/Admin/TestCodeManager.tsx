@@ -188,7 +188,7 @@ export default function TestCodeManager() {
       // Set the first assignment as default
       const defaultAssignment = lookupData.assignments.find((a: any) => a.order === 1) || lookupData.assignments[0]
       if (defaultAssignment) {
-        setCreateForm(prev => ({ ...prev, test_type: defaultAssignment.name }))
+        setCreateForm(prev => ({ ...prev, test_type: defaultAssignment.id }))
       }
     }
   }, [lookupData.assignments, createForm.test_type])
@@ -312,7 +312,7 @@ export default function TestCodeManager() {
         session_id: '',
         expires_at: '',
         count: 1,
-        test_type: lookupData.assignments?.find((a: any) => a.order === 1)?.name || lookupData.assignments?.[0]?.name || ''
+        test_type: lookupData.assignments?.find((a: any) => a.order === 1)?.id || lookupData.assignments?.[0]?.id || ''
       })
       setAvailableQuestions(0)
 
