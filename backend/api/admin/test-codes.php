@@ -332,9 +332,12 @@ try {
                 
                 if (!empty($missing_fields)) {
                     error_log("Missing required fields: " . implode(', ', $missing_fields));
-                    error_log("Input data: " . json_encode($input));
+                    error_log("Input data received: " . json_encode($input, JSON_PRETTY_PRINT));
                     Response::badRequest('Missing required fields: ' . implode(', ', $missing_fields));
                 }
+                
+                // Log successful validation
+                error_log("All required fields present, proceeding with bulk creation");
 
                 $count = (int)($input['count'] ?? 1);
                 if ($count < 1 || $count > 100) {

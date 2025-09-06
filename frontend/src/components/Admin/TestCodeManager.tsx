@@ -243,7 +243,7 @@ export default function TestCodeManager() {
   // Handle batch creation
   const handleCreateCodes = async () => {
     if (!createForm.subject_id || !createForm.class_level || 
-        !createForm.term_id || !createForm.session_id) {
+        !createForm.term_id || !createForm.session_id || !createForm.test_type) {
       setError('Please fill in all required fields')
       return
     }
@@ -258,10 +258,17 @@ export default function TestCodeManager() {
 
     try {
       const payload = {
-        ...createForm,
+        title: createForm.title || 'Untitled Test',
         subject_id: parseInt(createForm.subject_id),
+        class_level: createForm.class_level,
+        duration_minutes: createForm.duration_minutes || 60,
+        total_questions: createForm.total_questions || 10,
+        score_per_question: createForm.score_per_question || 1,
         term_id: parseInt(createForm.term_id),
-        session_id: parseInt(createForm.session_id)
+        session_id: parseInt(createForm.session_id),
+        expires_at: createForm.expires_at || '',
+        count: createForm.count || 1,
+        test_type: createForm.test_type
       }
 
       const response = await api.post('/admin/test-codes/bulk', payload)
@@ -319,6 +326,7 @@ export default function TestCodeManager() {
       // Auto-clear success message
       setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
+      console.error('Test code creation error:', error.response?.data || error)
       setError(error.response?.data?.message || 'Failed to create test codes')
     } finally {
       setCreating(false)
