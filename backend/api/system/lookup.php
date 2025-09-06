@@ -4,7 +4,6 @@ require_once __DIR__ . '/../../cors.php';
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
-require_once __DIR__ . '/../../services/DataManager.php';
 
 // Only allow GET requests
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
@@ -12,84 +11,47 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
-    // Get DataManager instance
-    $data = DataManager::getInstance();
+    // Get direct database connection for performance
+    $database = new Database();
+    $pdo = $database->getConnection();
     
     $lookup_type = $_GET['type'] ?? '';
 
     switch ($lookup_type) {
         case 'terms':
-            $terms = $data->getAllTerms();
-            // Format for frontend compatibility
-            $formatted_data = [];
-            foreach ($terms as $term) {
-                $formatted_data[] = [
-                    'id' => $term['id'],
-                    'name' => $term['name'],
-                    'display_order' => $term['display_order']
-                ];
-            }
+            $stmt = $pdo->prepare("SELECT id, name, display_order FROM terms WHERE is_active = true ORDER BY display_order");
+            $stmt->execute();
+            $formatted_data = $stmt->fetchAll();
             Response::success("Terms retrieved successfully", $formatted_data);
             break;
 
         case 'sessions':
-            $sessions = $data->getAllSessions();
-            // Format for frontend compatibility
-            $formatted_data = [];
-            foreach ($sessions as $session) {
-                $formatted_data[] = [
-                    'id' => $session['id'],
-                    'name' => $session['name'],
-                    'start_date' => $session['start_date'],
-                    'end_date' => $session['end_date'],
-                    'is_current' => $session['is_current']
-                ];
-            }
+            $stmt = $pdo->prepare("SELECT id, name, start_date, end_date, is_current FROM sessions WHERE is_active = true ORDER BY start_date DESC");
+            $stmt->execute();
+            $formatted_data = $stmt->fetchAll();
             Response::success("Sessions retrieved successfully", $formatted_data);
             break;
 
         case 'subjects':
-            $subjects = $data->getAllSubjects();
-            // Format for frontend compatibility
-            $formatted_data = [];
-            foreach ($subjects as $subject) {
-                $formatted_data[] = [
-                    'id' => $subject['id'],
-                    'name' => $subject['name'],
-                    'code' => $subject['code'],
-                    'description' => $subject['description']
-                ];
-            }
+            $stmt = $pdo->prepare("SELECT id, name, code, description FROM subjects WHERE is_active = true ORDER BY name");
+            $stmt->execute();
+            $formatted_data = $stmt->fetchAll();
             Response::success("Subjects retrieved successfully", $formatted_data);
             break;
 
         case 'class_levels':
-            $classes = $data->getAllClasses();
-            // Format for frontend compatibility (using name as id for compatibility)
-            $formatted_data = [];
-            foreach ($classes as $class) {
-                $formatted_data[] = [
-                    'id' => $class['name'],
-                    'name' => $class['display_name'],
-                    'level_type' => $class['level_type'],
-                    'display_order' => $class['display_order']
-                ];
-            }
+            $stmt = $pdo->prepare("SELECT name as id, display_name as name, level_type, display_order FROM class_levels WHERE is_active = true ORDER BY display_order");
+            $stmt->execute();
+            $formatted_data = $stmt->fetchAll();
             Response::success("Class levels retrieved successfully", $formatted_data);
             break;
 
         case 'assignments':
-            $assignments = $data->getAllAssignments();
-            // Format for frontend compatibility  
-            $formatted_data = [];
-            foreach ($assignments as $assignment) {
-                $formatted_data[] = [
-                    'id' => $assignment['name'],
-                    'name' => $assignment['display_name'],
-                    'code' => $assignment['code'],
-                    'order' => $assignment['order']
-                ];
-            }
+            $formatted_data = [
+                ['id' => 'First CA', 'name' => 'First Continuous Assessment', 'code' => 'CA1', 'order' => 1],
+                ['id' => 'Second CA', 'name' => 'Second Continuous Assessment', 'code' => 'CA2', 'order' => 2],
+                ['id' => 'Examination', 'name' => 'Examination', 'code' => 'EXAM', 'order' => 3]
+            ];
             Response::success("Assignments retrieved successfully", $formatted_data);
             break;
 
@@ -118,7 +80,7 @@ try {
             break;
 
         default:
-            // Return all lookup data if no type specified
+            // Return all lookup data if no type specified - using direct queries for performance
             $lookup_data = [
                 'subjects' => [],
                 'terms' => [],
@@ -127,60 +89,32 @@ try {
                 'assignments' => []
             ];
             
-            // Get subjects
-            $subjects = $data->getAllSubjects();
-            foreach ($subjects as $subject) {
-                $lookup_data['subjects'][] = [
-                    'id' => $subject['id'],
-                    'name' => $subject['name'],
-                    'code' => $subject['code'],
-                    'description' => $subject['description']
-                ];
-            }
+            // Get subjects directly
+            $stmt = $pdo->prepare("SELECT id, name, code, description FROM subjects WHERE is_active = true ORDER BY name");
+            $stmt->execute();
+            $lookup_data['subjects'] = $stmt->fetchAll();
             
-            // Get terms
-            $terms = $data->getAllTerms();
-            foreach ($terms as $term) {
-                $lookup_data['terms'][] = [
-                    'id' => $term['id'],
-                    'name' => $term['name'],
-                    'display_order' => $term['display_order']
-                ];
-            }
+            // Get terms directly
+            $stmt = $pdo->prepare("SELECT id, name, display_order FROM terms WHERE is_active = true ORDER BY display_order");
+            $stmt->execute();
+            $lookup_data['terms'] = $stmt->fetchAll();
             
-            // Get sessions
-            $sessions = $data->getAllSessions();
-            foreach ($sessions as $session) {
-                $lookup_data['sessions'][] = [
-                    'id' => $session['id'],
-                    'name' => $session['name'],
-                    'start_date' => $session['start_date'],
-                    'end_date' => $session['end_date'],
-                    'is_current' => $session['is_current']
-                ];
-            }
+            // Get sessions directly
+            $stmt = $pdo->prepare("SELECT id, name, start_date, end_date, is_current FROM sessions WHERE is_active = true ORDER BY start_date DESC");
+            $stmt->execute();
+            $lookup_data['sessions'] = $stmt->fetchAll();
             
-            // Get class levels
-            $classes = $data->getAllClasses();
-            foreach ($classes as $class) {
-                $lookup_data['class_levels'][] = [
-                    'id' => $class['name'],
-                    'name' => $class['display_name'],
-                    'level_type' => $class['level_type'],
-                    'display_order' => $class['display_order']
-                ];
-            }
+            // Get class levels directly
+            $stmt = $pdo->prepare("SELECT name as id, display_name as name, level_type, display_order FROM class_levels WHERE is_active = true ORDER BY display_order");
+            $stmt->execute();
+            $lookup_data['class_levels'] = $stmt->fetchAll();
             
-            // Get assignments
-            $assignments = $data->getAllAssignments();
-            foreach ($assignments as $assignment) {
-                $lookup_data['assignments'][] = [
-                    'id' => $assignment['name'],
-                    'name' => $assignment['display_name'],
-                    'code' => $assignment['code'],
-                    'order' => $assignment['order']
-                ];
-            }
+            // Get assignments - hardcoded for performance since this is static data
+            $lookup_data['assignments'] = [
+                ['id' => 'First CA', 'name' => 'First Continuous Assessment', 'code' => 'CA1', 'order' => 1],
+                ['id' => 'Second CA', 'name' => 'Second Continuous Assessment', 'code' => 'CA2', 'order' => 2],
+                ['id' => 'Examination', 'name' => 'Examination', 'code' => 'EXAM', 'order' => 3]
+            ];
             
             Response::success("All lookup data retrieved successfully", $lookup_data);
             break;
