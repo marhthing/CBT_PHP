@@ -386,41 +386,53 @@ try {
                 
                 $created_codes = [];
                 // Always assign a batch_id for organization, even for single codes
-                $batch_id = 'B' . date('Ymd') . '_' . substr(uniqid(), -6); // B20250906_abc123 format
+                $batch_id = 'B' . date('md') . '_' . substr(uniqid(), -8); // B0906_12345678 format (14 chars max)
                 $db->beginTransaction();
                 
                 try {
                     for ($i = 0; $i < $count; $i++) {
-                        // Generate unique test code (max 20 chars)
+                        // Generate unique test code (GUARANTEED max 8 chars to be ultra-safe)
                         $attempts = 0;
                         $maxAttempts = 10;
                         do {
-                            // Generate 6-character code to be safe
-                            $code = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6));
+                            // Generate 8-character code (well under 20 char limit)
+                            $code = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 8));
                             $check_stmt = $db->prepare("SELECT id FROM test_codes WHERE code = ?");
                             $check_stmt->execute([$code]);
                             $exists = $check_stmt->fetch();
                             $attempts++;
                         } while ($exists && $attempts < $maxAttempts);
                         
-                        // Fallback if still duplicate - use simple incremental approach
+                        // Fallback if still duplicate - use simple incremental approach (max 6 chars)
                         if ($exists) {
                             $counter = 1;
                             do {
-                                $code = 'TC' . str_pad($counter, 4, '0', STR_PAD_LEFT); // TC0001, TC0002, etc.
+                                $code = 'T' . str_pad($counter, 5, '0', STR_PAD_LEFT); // T00001, T00002, etc. (6 chars)
                                 $check_stmt = $db->prepare("SELECT id FROM test_codes WHERE code = ?");
                                 $check_stmt->execute([$code]);
                                 $exists = $check_stmt->fetch();
                                 $counter++;
-                            } while ($exists && $counter < 10000); // Safety limit
+                            } while ($exists && $counter < 100000); // Safety limit
                         }
                         
                         // For single code, keep original title; for multiple codes, add numbering
                         $title = $count > 1 ? $input['title'] . " (" . ($i + 1) . ")" : $input['title'];
                         
+                        // Validate field lengths before database insertion
+                        if (strlen($code) > 20) {
+                            error_log("ERROR: Generated code '$code' is too long (" . strlen($code) . " chars). Truncating to 20 chars.");
+                            $code = substr($code, 0, 20);
+                        }
+                        
+                        if (strlen($batch_id) > 20) {
+                            error_log("ERROR: Batch ID '$batch_id' is too long (" . strlen($batch_id) . " chars). Truncating to 20 chars.");
+                            $batch_id = substr($batch_id, 0, 20);
+                        }
+                        
                         // Debug logging
-                        error_log("Generated code: '$code' (length: " . strlen($code) . ")");
-                        error_log("Batch ID: '$batch_id' (length: " . strlen($batch_id) . ")");
+                        error_log("Final code: '$code' (length: " . strlen($code) . ")");
+                        error_log("Final batch_id: '$batch_id' (length: " . strlen($batch_id) . ")");
+                        error_log("Title: '$title' (length: " . strlen($title) . ")");
                         
                         $stmt = $db->prepare("
                             INSERT INTO test_codes (
