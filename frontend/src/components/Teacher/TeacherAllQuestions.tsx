@@ -1209,15 +1209,15 @@ export default function TeacherAllQuestions() {
                   Subject *
                 </label>
                 <select
-                  value={createFilters.subject_id}
-                  onChange={(e) => setCreateFilters(prev => ({ ...prev, subject_id: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                >
-                  <option value="">Select Subject</option>
-                  {availableSubjects.map(subject => (
-                    <option key={subject.id} value={subject.id}>{subject.name}</option>
-                  ))}
-                </select>
+                    value={createFilters.subject_id}
+                    onChange={(e) => setCreateFilters(prev => ({ ...prev, subject_id: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option key="select-subject" value="">Select Subject</option>
+                    {availableSubjects.map(subject => (
+                      <option key={`create-subject-${subject.id}`} value={subject.id}>{subject.name}</option>
+                    ))}
+                  </select>
               </div>
 
               <div>
@@ -1225,15 +1225,15 @@ export default function TeacherAllQuestions() {
                   Class Level *
                 </label>
                 <select
-                  value={createFilters.class_level}
-                  onChange={(e) => setCreateFilters(prev => ({ ...prev, class_level: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                >
-                  <option value="">Select Class</option>
-                  {availableClasses.map(cls => (
-                    <option key={cls} value={cls}>{cls}</option>
-                  ))}
-                </select>
+                    value={createFilters.class_level}
+                    onChange={(e) => setCreateFilters(prev => ({ ...prev, class_level: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option key="select-class" value="">Select Class</option>
+                    {availableClasses.map(cls => (
+                      <option key={`create-class-${cls}`} value={cls}>{cls}</option>
+                    ))}
+                  </select>
               </div>
 
               <div>
@@ -1241,15 +1241,15 @@ export default function TeacherAllQuestions() {
                   Term *
                 </label>
                 <select
-                  value={createFilters.term_id}
-                  onChange={(e) => setCreateFilters(prev => ({ ...prev, term_id: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                >
-                  <option value="">Select Term</option>
-                  {availableTerms.map(term => (
-                    <option key={term.id} value={term.id}>{term.name}</option>
-                  ))}
-                </select>
+                    value={createFilters.term_id}
+                    onChange={(e) => setCreateFilters(prev => ({ ...prev, term_id: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option key="select-term" value="">Select Term</option>
+                    {availableTerms.map(term => (
+                      <option key={`create-term-${term.id}`} value={term.id}>{term.name}</option>
+                    ))}
+                  </select>
               </div>
 
               <div>
@@ -1257,15 +1257,15 @@ export default function TeacherAllQuestions() {
                   Session *
                 </label>
                 <select
-                  value={createFilters.session_id}
-                  onChange={(e) => setCreateFilters(prev => ({ ...prev, session_id: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                >
-                  <option value="">Select Session</option>
-                  {availableSessions.map(session => (
-                    <option key={session.id} value={session.id}>{session.name}</option>
-                  ))}
-                </select>
+                    value={createFilters.session_id}
+                    onChange={(e) => setCreateFilters(prev => ({ ...prev, session_id: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                  >
+                    <option key="select-session" value="">Select Session</option>
+                    {availableSessions.map(session => (
+                      <option key={`create-session-${session.id}`} value={session.id}>{session.name}</option>
+                    ))}
+                  </select>
               </div>
 
               <div>
