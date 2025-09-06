@@ -1,56 +1,36 @@
 <?php
 
 require_once __DIR__ . '/../../cors.php';
+require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
 require_once __DIR__ . '/../../services/DataManager.php';
+require_once __DIR__ . '/../../services/TeacherAssignmentService.php';
 
 $auth = new Auth();
 $user = $auth->requireRole('admin');
 
 $dataManager = DataManager::getInstance();
-$assignmentService = $dataManager->getAssignmentService();
+$teacherAssignmentService = TeacherAssignmentService::getInstance();
 
 switch ($_SERVER['REQUEST_METHOD']) {
     case 'GET':
-        handleGet($db, $user);
+        handleGet($teacherAssignmentService, $user);
         break;
     case 'POST':
-        handlePost($db, $user);
+        handlePost($teacherAssignmentService, $user);
         break;
     case 'DELETE':
-        handleDelete($db, $user);
+        handleDelete($teacherAssignmentService, $user);
         break;
     default:
         Response::methodNotAllowed();
 }
 
-function handleGet($db, $user) {
+function handleGet($teacherAssignmentService, $user) {
     try {
-        // Get all teacher assignments with teacher information
-        $stmt = $db->prepare("
-            SELECT 
-                ta.id,
-                ta.teacher_id,
-                ta.subject_id,
-                ta.class_level,
-                ta.created_at,
-                u.username,
-                u.email,
-                u.full_name,
-                s.name as subject_name,
-                t.name as term_name,
-                sess.name as session_name
-            FROM teacher_assignments ta
-            JOIN users u ON ta.teacher_id = u.id
-            JOIN subjects s ON ta.subject_id = s.id
-            JOIN terms t ON ta.term_id = t.id
-            JOIN sessions sess ON ta.session_id = sess.id
-            ORDER BY ta.created_at DESC
-        ");
-        
-        $stmt->execute();
-        $assignments = $stmt->fetchAll();
+        // Get all teacher assignments using service
+        $assignments = $teacherAssignmentService->getAllTeacherAssignments();
         
         // Format assignments for frontend
         $formatted_assignments = [];
@@ -58,13 +38,13 @@ function handleGet($db, $user) {
             $formatted_assignments[] = [
                 'id' => $assignment['id'],
                 'teacher_id' => $assignment['teacher_id'],
-                'teacher_name' => $assignment['full_name'],
-                'teacher_email' => $assignment['email'],
+                'teacher_name' => $assignment['teacher_name'],
+                'teacher_email' => $assignment['email'] ?? '', // This might not be available in the service query
                 'subject_id' => $assignment['subject_id'],
                 'subject_name' => $assignment['subject_name'],
                 'class_level' => $assignment['class_level'],
                 'created_at' => $assignment['created_at'],
-                'assigned_by_name' => $user['full_name'] ?? 'Administrator' // Use current admin user's name
+                'assigned_by_name' => $user['full_name'] ?? 'Administrator'
             ];
         }
         
@@ -76,7 +56,7 @@ function handleGet($db, $user) {
     }
 }
 
-function handlePost($db, $user) {
+function handlePost($teacherAssignmentService, $user) {
     try {
         $input = json_decode(file_get_contents('php://input'), true);
         
@@ -86,34 +66,36 @@ function handlePost($db, $user) {
         
         // Check if this is a method override (for InfinityFree compatibility)
         if (isset($input['_method']) && $input['_method'] === 'DELETE') {
-            handleDelete($db, $user, $input);
+            handleDelete($teacherAssignmentService, $user, $input);
             return;
         }
         
         // Validate required fields
         Response::validateRequired($input, ['teacher_id', 'subject_id', 'class_level', 'term_id', 'session_id']);
         
-        // Validate teacher exists and is a teacher
-        $teacher_check = $db->prepare("SELECT id FROM users WHERE id = ? AND role = 'teacher'");
-        $teacher_check->execute([$input['teacher_id']]);
+        // Use DataManager for validation
+        $data = DataManager::getInstance();
         
-        if (!$teacher_check->fetch()) {
+        // Validate teacher exists and is a teacher
+        require_once __DIR__ . '/../../services/UserService.php';
+        $userService = UserService::getInstance();
+        $teacher = $userService->getTeacherById($input['teacher_id']);
+        if (!$teacher) {
             Response::validationError('Invalid teacher selected');
         }
         
-        // Check if assignment already exists
-        $existing_check = $db->prepare("
-            SELECT id FROM teacher_assignments 
-            WHERE teacher_id = ? AND subject_id = ? AND class_level = ? AND term_id = ? AND session_id = ?
-        ");
-        $existing_check->execute([$input['teacher_id'], $input['subject_id'], $input['class_level'], $input['term_id'], $input['session_id']]);
+        // Check if assignment already exists using service
+        $existingAssignment = $teacherAssignmentService->isTeacherAssigned(
+            $input['teacher_id'],
+            $input['subject_id'],
+            $input['class_level'],
+            $input['session_id'],
+            $input['term_id']
+        );
         
-        if ($existing_check->fetch()) {
+        if ($existingAssignment) {
             Response::validationError('Teacher is already assigned to this subject and class');
         }
-        
-        // Use DataManager for validation
-        $data = DataManager::getInstance();
         
         // Validate subject exists
         if (!$data->isValidSubject($input['subject_id'])) {
@@ -135,31 +117,28 @@ function handlePost($db, $user) {
             Response::validationError('Invalid session selected');
         }
         
-        // Create assignment
-        $stmt = $db->prepare("
-            INSERT INTO teacher_assignments (teacher_id, subject_id, class_level, term_id, session_id)
-            VALUES (?, ?, ?, ?, ?)
-        ");
-        
-        $stmt->execute([
-            $input['teacher_id'],
-            $input['subject_id'],
-            $input['class_level'],
-            $input['term_id'],
-            $input['session_id']
+        // Create assignment using service
+        $result = $teacherAssignmentService->createTeacherAssignment([
+            'teacher_id' => $input['teacher_id'],
+            'subject_id' => $input['subject_id'],
+            'class_level' => $input['class_level'],
+            'term_id' => $input['term_id'],
+            'session_id' => $input['session_id']
         ]);
         
-        $assignment_id = $db->lastInsertId();
+        if (!$result['success']) {
+            Response::serverError($result['message']);
+        }
         
         Response::logRequest('admin/assignments', 'POST', $user['id']);
-        Response::created('Teacher assignment created successfully', ['assignment_id' => $assignment_id]);
+        Response::created('Teacher assignment created successfully', ['assignment_id' => $result['id']]);
         
     } catch (Exception $e) {
         Response::serverError('Failed to create teacher assignment');
     }
 }
 
-function handleDelete($db, $user, $input = null) {
+function handleDelete($teacherAssignmentService, $user, $input = null) {
     try {
         // Parse assignment ID from URL path
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -179,18 +158,19 @@ function handleDelete($db, $user, $input = null) {
             Response::validationError('Assignment ID is required');
         }
         
-        // Check if assignment exists
-        $check_stmt = $db->prepare("SELECT id FROM teacher_assignments WHERE id = ?");
-        $check_stmt->execute([$assignment_id]);
-        $assignment = $check_stmt->fetch();
+        // Check if assignment exists using service
+        $assignment = $teacherAssignmentService->getTeacherAssignmentById($assignment_id);
         
         if (!$assignment) {
             Response::notFound('Assignment not found');
         }
         
-        // Delete assignment
-        $stmt = $db->prepare("DELETE FROM teacher_assignments WHERE id = ?");
-        $stmt->execute([$assignment_id]);
+        // Delete assignment using service
+        $result = $teacherAssignmentService->deleteTeacherAssignment($assignment_id);
+        
+        if (!$result['success']) {
+            Response::serverError($result['message']);
+        }
         
         Response::logRequest('admin/assignments', 'DELETE', $user['id']);
         Response::deleted('Teacher assignment removed successfully');
