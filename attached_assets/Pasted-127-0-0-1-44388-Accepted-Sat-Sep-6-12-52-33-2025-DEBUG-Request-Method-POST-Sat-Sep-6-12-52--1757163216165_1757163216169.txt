@@ -1,0 +1,40 @@
+127.0.0.1:44388 Accepted
+[Sat Sep  6 12:52:33 2025] DEBUG: Request Method: POST
+[Sat Sep  6 12:52:33 2025] DEBUG: Path Info: /admin/test-codes/bulk
+[Sat Sep  6 12:52:33 2025] DEBUG: Request URI: /admin/test-codes/bulk
+[Sat Sep  6 12:52:33 2025] DEBUG: Action: bulk
+[Sat Sep  6 12:52:33 2025] DEBUG: Is Bulk: true
+[Sat Sep  6 12:52:33 2025] DEBUG: Is Batch: false
+[Sat Sep  6 12:52:33 2025] DEBUG: Test Code ID: N/A
+[Sat Sep  6 12:52:40 2025] All required fields present, proceeding with bulk creation
+[Sat Sep  6 12:52:40 2025] Calling TestCodeService::bulkCreateTestCodes with data: {"input":{"title":"Biology - SS1 (First Term 2025\/2026)","subject_id":20,"class_level":"SS1","duration_minutes":6,"total_questions":3,"score_per_question":2,"term_id":4,"session_id":6,"expires_at":"","count":3,"test_type":"First CA"},"count":3,"user_id":5}
+[Sat Sep  6 12:52:40 2025] TestCodeService::bulkCreateTestCodes called with count: 3, created_by: 5
+[Sat Sep  6 12:52:40 2025] Input data: {"title":"Biology - SS1 (First Term 2025\/2026)","subject_id":20,"class_level":"SS1","duration_minutes":6,"total_questions":3,"score_per_question":2,"term_id":4,"session_id":6,"expires_at":"","count":3,"test_type":"First CA"}
+[Sat Sep  6 12:52:40 2025] Generated batch_id: batch_68bc2e988ad210.40860914
+[Sat Sep  6 12:52:40 2025] Generated batch_id for actual creation: B0906_e988ad49
+[Sat Sep  6 12:52:42 2025] TestCodeService result: {"success":false,"batch_id":"B0906_e988ad49","created":[],"total_requested":3,"total_created":0,"errors":["Code 1: Not enough questions available. Need 3, found 2","Code 2: Not enough questions available. Need 3, found 2","Code 3: Not enough questions available. Need 3, found 2"]}
+[Sat Sep  6 12:52:42 2025] TestCodeService failed: 
+[Sat Sep  6 12:52:42 2025] 127.0.0.1:44388 Closing
+[Sat Sep  6 12:53:01 2025] 127.0.0.1:54178 Accepted
+[Sat Sep  6 12:53:02 2025] DEBUG: Request Method: POST
+[Sat Sep  6 12:53:02 2025] DEBUG: Path Info: /admin/test-codes/bulk
+[Sat Sep  6 12:53:02 2025] DEBUG: Request URI: /admin/test-codes/bulk
+[Sat Sep  6 12:53:02 2025] DEBUG: Action: bulk
+[Sat Sep  6 12:53:02 2025] DEBUG: Is Bulk: true
+[Sat Sep  6 12:53:02 2025] DEBUG: Is Batch: false
+[Sat Sep  6 12:53:02 2025] DEBUG: Test Code ID: N/A
+[Sat Sep  6 12:53:04 2025] All required fields present, proceeding with bulk creation
+[Sat Sep  6 12:53:04 2025] Calling TestCodeService::bulkCreateTestCodes with data: {"input":{"title":"Biology - SS1 (First Term 2025\/2026)","subject_id":20,"class_level":"SS1","duration_minutes":6,"total_questions":2,"score_per_question":2,"term_id":4,"session_id":6,"expires_at":"","count":3,"test_type":"First CA"},"count":3,"user_id":5}
+[Sat Sep  6 12:53:04 2025] TestCodeService::bulkCreateTestCodes called with count: 3, created_by: 5
+[Sat Sep  6 12:53:04 2025] Input data: {"title":"Biology - SS1 (First Term 2025\/2026)","subject_id":20,"class_level":"SS1","duration_minutes":6,"total_questions":2,"score_per_question":2,"term_id":4,"session_id":6,"expires_at":"","count":3,"test_type":"First CA"}
+[Sat Sep  6 12:53:04 2025] Generated batch_id: batch_68bc2eb0e5c9e2.03880559
+[Sat Sep  6 12:53:04 2025] Generated batch_id for actual creation: B0906_eb0e5cb3
+[Sat Sep  6 12:53:05 2025] Database query error: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "created_by" of relation "test_codes" violates not-null constraint
+DETAIL:  Failing row contains (1, SVO7S3, Biology - SS1 (First Term 2025/2026), null, 20, SS1, 4, 6, 6, 2, 50, f, f, null, 2025-09-06 12:53:05, null, null, B0906_eb0e5cb3, 2025-09-06 12:53:05, First CA, 2, f, null, null, active).
+[Sat Sep  6 12:53:06 2025] Database query error: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "created_by" of relation "test_codes" violates not-null constraint
+DETAIL:  Failing row contains (2, FGTWGG, Biology - SS1 (First Term 2025/2026), null, 20, SS1, 4, 6, 6, 2, 50, f, f, null, 2025-09-06 12:53:06, null, null, B0906_eb0e5cb3, 2025-09-06 12:53:06, First CA, 2, f, null, null, active).
+[Sat Sep  6 12:53:07 2025] Database query error: SQLSTATE[23502]: Not null violation: 7 ERROR:  null value in column "created_by" of relation "test_codes" violates not-null constraint
+DETAIL:  Failing row contains (3, Z4FUT9, Biology - SS1 (First Term 2025/2026), null, 20, SS1, 4, 6, 6, 2, 50, f, f, null, 2025-09-06 12:53:07, null, null, B0906_eb0e5cb3, 2025-09-06 12:53:07, First CA, 2, f, null, null, active).
+[Sat Sep  6 12:53:07 2025] TestCodeService result: {"success":false,"batch_id":"B0906_eb0e5cb3","created":[],"total_requested":3,"total_created":0,"errors":["Code 1: Failed to create test code","Code 2: Failed to create test code","Code 3: Failed to create test code"]}
+[Sat Sep  6 12:53:07 2025] TestCodeService failed: 
+[Sat Sep  6 12:53:07 2025] 127.0.0.1:54178 Closing
