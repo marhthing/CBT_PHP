@@ -690,14 +690,15 @@ class TestCodeService extends BaseService {
                         used_by = ?, 
                         used_at = ?, 
                         updated_at = ? 
-                    WHERE id = ? AND status = 'active'";
+                    WHERE id = ? AND (status = 'active' OR (status = 'using' AND used_by = ?))";
                     
             $params = [
                 'using',
                 $studentId,
                 date('Y-m-d H:i:s'),
                 date('Y-m-d H:i:s'),
-                $testCodeId
+                $testCodeId,
+                $studentId
             ];
 
             $stmt = $this->executeQuery($sql, $params);
@@ -706,7 +707,7 @@ class TestCodeService extends BaseService {
                 $this->clearCache();
                 return ['success' => true, 'message' => 'Test code marked as using'];
             } else {
-                return ['success' => false, 'message' => 'Test code is no longer available or already in use'];
+                return ['success' => false, 'message' => 'Test code is no longer available or already in use by another student'];
             }
 
         } catch (Exception $e) {

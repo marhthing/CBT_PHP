@@ -38,18 +38,28 @@ try {
     
     $test = $test_codes[0];
 
-    // Validate test is in "using" state and belongs to this student
-    if ($test['status'] !== 'using') {
-        Response::notFound('Test code not found, expired, or not in "using" status');
-    }
-
+    // Validate test availability and ownership
     if (!$test['is_active'] || !$test['is_activated']) {
-        Response::notFound('Test code not found, expired, or not in "using" status');
+        Response::notFound('Test code not found, expired, or not available');
     }
 
-    // Verify the student trying to take the test is the same one who validated it
-    if ($test['used_by'] != $user['id']) {
-        Response::unauthorized('This test code was validated by another student');
+    // Check test status and ownership
+    if ($test['status'] === 'used') {
+        Response::notFound('This test code has already been completed');
+    }
+
+    if ($test['status'] === 'using') {
+        // If test is being used, verify it's by the same student
+        if ($test['used_by'] != $user['id']) {
+            Response::unauthorized('This test code is currently being used by another student');
+        }
+        // Same student can continue - no need to change status again
+    } else {
+        // Test is in 'active' status, mark it as 'using' for this student
+        $activation_result = $testCodeService->markTestCodeAsUsing($test['id'], $user['id']);
+        if (!$activation_result['success']) {
+            Response::badRequest($activation_result['message']);
+        }
     }
 
     // Check if student has already taken this test using service
