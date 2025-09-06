@@ -347,19 +347,35 @@ try {
                 // Map test_type to assignment for validation
                 $test_type = $input['test_type'] ?? 'first_ca';
 
-                // Create test codes using service
-                $result = $testCodeService->bulkCreateTestCodes($input, $count, $user['id']);
+                // Log input data before service call
+                error_log("Calling TestCodeService::bulkCreateTestCodes with data: " . json_encode([
+                    'input' => $input,
+                    'count' => $count,
+                    'user_id' => $user['id']
+                ]));
 
-                if ($result['success']) {
-                    Response::created('Test codes created successfully', [
-                        'batch_id' => $result['batch_id'],
-                        'codes' => $result['created'],
-                        'total_created' => $result['total_created'],
-                        'total_requested' => $result['total_requested'],
-                        'errors' => $result['errors']
-                    ]);
-                } else {
-                    Response::badRequest($result['message']);
+                // Create test codes using service
+                try {
+                    $result = $testCodeService->bulkCreateTestCodes($input, $count, $user['id']);
+                    
+                    error_log("TestCodeService result: " . json_encode($result));
+
+                    if ($result['success']) {
+                        Response::created('Test codes created successfully', [
+                            'batch_id' => $result['batch_id'],
+                            'codes' => $result['created'],
+                            'total_created' => $result['total_created'],
+                            'total_requested' => $result['total_requested'],
+                            'errors' => $result['errors']
+                        ]);
+                    } else {
+                        error_log("TestCodeService failed: " . $result['message']);
+                        Response::badRequest($result['message']);
+                    }
+                } catch (Exception $serviceException) {
+                    error_log("TestCodeService threw exception: " . $serviceException->getMessage());
+                    error_log("Exception trace: " . $serviceException->getTraceAsString());
+                    Response::serverError('Failed to create test codes: ' . $serviceException->getMessage());
                 }
             } else {
                 // Single test code creation
