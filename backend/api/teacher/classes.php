@@ -99,13 +99,7 @@ try {
         'message' => 'Teacher classes retrieved',
         'timestamp' => date('c'),
         'data' => [
-            'classes' => array_values($assignments),
-            'filters' => [
-                'subjects' => array_values($subjects),
-                'class_levels' => array_values($classes),
-                'terms' => array_values($terms),
-                'sessions' => array_values($sessions)
-            ]
+            'classes' => array_values($assignments)
         ]
     ];
     
