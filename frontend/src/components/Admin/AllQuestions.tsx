@@ -135,25 +135,27 @@ export default function AllQuestions() {
     }
   }, [])
 
-  // Load initial data
+  // Load initial data only once
   useEffect(() => {
     Promise.all([
       fetchQuestionStats(),
       fetchLookupData()
     ])
-    fetchQuestions()
-  }, [fetchQuestionStats, fetchLookupData, fetchQuestions])
+  }, [fetchQuestionStats, fetchLookupData])
 
-  // Debounced effect for search and filters
+  // Fetch questions when filters change (debounced)
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (searchTerm || subjectFilter || classFilter || typeFilter || assignmentFilter) {
-        fetchQuestions()
-      }
+      fetchQuestions()
     }, 300)
 
     return () => clearTimeout(timeoutId)
-  }, [searchTerm, subjectFilter, classFilter, typeFilter, assignmentFilter, fetchQuestions])
+  }, [fetchQuestions])
+
+  // Initial questions load
+  useEffect(() => {
+    fetchQuestions()
+  }, [fetchQuestions])
 
   const deleteQuestion = useCallback((questionId: number) => {
     setQuestionToDelete(questionId)
