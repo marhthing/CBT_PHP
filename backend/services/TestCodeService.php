@@ -218,15 +218,22 @@ class TestCodeService extends BaseService {
         $testType = $data['test_type'] ?? 'first_ca';
         $assignment = $this->assignmentService->mapTestTypeToAssignment($testType);
 
-        // Check if enough questions exist
+        // Check if enough questions exist using the same logic as frontend
         $availableQuestions = $this->questionService->countQuestions([
             'subject_id' => $data['subject_id'],
             'class_level' => $data['class_level'],
             'term_id' => $data['term_id'],
-            'session_id' => $data['session_id'],
-            'question_assignment' => $assignment
+            'test_type' => $testType  // Use test_type instead of question_assignment
         ]);
 
+        error_log("Question count check: Need {$data['total_questions']}, found {$availableQuestions}");
+        error_log("Filters used: " . json_encode([
+            'subject_id' => $data['subject_id'],
+            'class_level' => $data['class_level'],
+            'term_id' => $data['term_id'],
+            'test_type' => $testType
+        ]));
+        
         if ($availableQuestions < $data['total_questions']) {
             return [
                 'success' => false, 

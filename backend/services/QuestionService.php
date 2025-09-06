@@ -150,9 +150,18 @@ class QuestionService extends BaseService {
             $params[] = $filters['question_type'];
         }
         
+        // Handle both question_assignment and test_type filters
         if (!empty($filters['question_assignment'])) {
             $whereConditions[] = 'question_assignment = ?';
             $params[] = $filters['question_assignment'];
+        } elseif (!empty($filters['test_type'])) {
+            // Map test_type to question_assignment using AssignmentService
+            $assignmentService = AssignmentService::getInstance();
+            $assignment = $assignmentService->mapTestTypeToAssignment($filters['test_type']);
+            if ($assignment) {
+                $whereConditions[] = 'question_assignment = ?';
+                $params[] = $assignment;
+            }
         }
         
         if (!empty($filters['assignment_types']) && is_array($filters['assignment_types'])) {

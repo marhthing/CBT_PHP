@@ -327,7 +327,18 @@ export default function TestCodeManager() {
       setTimeout(() => setSuccessMessage(''), 3000)
     } catch (error: any) {
       console.error('Test code creation error:', error.response?.data || error)
-      setError(error.response?.data?.message || 'Failed to create test codes')
+      
+      // Show specific backend errors
+      let errorMessage = 'Failed to create test codes'
+      
+      if (error.response?.data?.data?.errors && error.response.data.data.errors.length > 0) {
+        // Show the first specific error from the backend
+        errorMessage = error.response.data.data.errors[0]
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      }
+      
+      setError(errorMessage)
     } finally {
       setCreating(false)
     }
