@@ -208,6 +208,13 @@ class AssignmentService extends BaseService {
      * Map test_type field to assignment name
      */
     public function mapTestTypeToAssignment($testType) {
+        // Use ConstantsService to normalize the test type first
+        $normalized = $this->constantsService->normalizeTestType($testType);
+        if ($normalized) {
+            return $normalized;
+        }
+        
+        // Fallback to legacy mapping
         $mapping = [
             'first_ca' => 'First CA',
             'second_ca' => 'Second CA', 
@@ -217,8 +224,8 @@ class AssignmentService extends BaseService {
             'ca2' => 'Second CA'
         ];
         
-        $normalized = strtolower(str_replace(' ', '_', $testType));
-        return $mapping[$normalized] ?? $testType;
+        $normalizedKey = strtolower(str_replace(' ', '_', $testType));
+        return $mapping[$normalizedKey] ?? $testType;
     }
     
     /**
