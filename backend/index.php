@@ -125,6 +125,7 @@ $routes = [
     
     // Debug routes (development only)
     'debug/headers' => 'debug/headers.php',
+    'debug/db-test' => 'debug/db-test.php',
 ];
 
 // Find matching route - handle both exact matches and patterns with IDs
