@@ -1,0 +1,71 @@
+client:745 WebSocket connection to 'wss://7ef30832-f456-4359-9c00-b1780a22af22-00-14g0k84mr194c.janeway.replit.dev/?token=TM6EWlt6eJaS' failed: 
+createConnection @ client:745
+connect @ client:412
+connect @ client:751
+connect @ client:290
+connect @ client:374
+(anonymous) @ client:823
+client:772 [vite] failed to connect to websocket (Error: WebSocket closed without opened.). 
+overrideMethod @ hook.js:608
+connect @ client:772
+await in connect
+connect @ client:290
+connect @ client:374
+(anonymous) @ client:823
+client:424 Uncaught (in promise) Error: WebSocket closed without opened.
+    at WebSocket.<anonymous> (client:424:30)
+(anonymous) @ client:424
+TeacherAllQuestions.tsx:667 Each child in a list should have a unique "key" prop.
+
+Check the render method of `select`. It was passed a child from TeacherAllQuestions. See https://react.dev/link/warning-keys for more information.
+overrideMethod @ hook.js:608
+(anonymous) @ react-dom-client.development.js:24030
+runWithFiberInDEV @ react-dom-client.development.js:1519
+warnForMissingKey @ react-dom-client.development.js:24029
+warnOnInvalidKey @ react-dom-client.development.js:7550
+reconcileChildrenArray @ react-dom-client.development.js:7631
+reconcileChildFibersImpl @ react-dom-client.development.js:7952
+(anonymous) @ react-dom-client.development.js:8057
+reconcileChildren @ react-dom-client.development.js:8621
+beginWork @ react-dom-client.development.js:10870
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<option>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anonymous) @ TeacherAllQuestions.tsx:667
+TeacherAllQuestions @ TeacherAllQuestions.tsx:666
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<TeacherAllQuestions>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+App @ App.tsx:119
+react_stack_bottom_frame @ react-dom-client.development.js:23863
+renderWithHooksAgain @ react-dom-client.development.js:5629
+renderWithHooks @ react-dom-client.development.js:5541
+updateFunctionComponent @ react-dom-client.development.js:8897
+beginWork @ react-dom-client.development.js:10522
+runWithFiberInDEV @ react-dom-client.development.js:1519
+performUnitOfWork @ react-dom-client.development.js:15132
+workLoopSync @ react-dom-client.development.js:14956
+renderRootSync @ react-dom-client.development.js:14936
+performWorkOnRoot @ react-dom-client.development.js:14419
+performWorkOnRootViaSchedulerTask @ react-dom-client.development.js:16216
+performWorkUntilDeadline @ scheduler.development.js:45
+<App>
+exports.jsxDEV @ react-jsx-dev-runtime.development.js:346
+(anonymous) @ main.tsx:23
