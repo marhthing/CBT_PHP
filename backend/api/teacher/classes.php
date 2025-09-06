@@ -19,13 +19,14 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
-    // Simple auth check
-    $headers = getallheaders();
-    $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? '';
+    // Auth check and get user ID from JWT
+    require_once __DIR__ . '/../../includes/auth.php';
+    $auth = new Auth();
+    $user = $auth->getCurrentUser();
     
-    if (empty($authHeader) || !str_starts_with($authHeader, 'Bearer ')) {
-        http_response_code(401);
-        echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+    if (!$user || $user['role'] !== 'teacher') {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Access denied']);
         exit;
     }
 
@@ -34,7 +35,7 @@ try {
     $database = new Database();
     $pdo = $database->getConnection();
     
-    // Get teacher assignments
+    // Get teacher assignments using the actual teacher ID from JWT
     $stmt = $pdo->prepare("
         SELECT ta.subject_id, ta.class_level, ta.term_id, ta.session_id,
                s.name as subject_name, s.code as subject_code,
@@ -46,11 +47,11 @@ try {
         LEFT JOIN terms t ON ta.term_id = t.id
         LEFT JOIN sessions sess ON ta.session_id = sess.id
         LEFT JOIN class_levels cl ON ta.class_level = cl.name
-        WHERE ta.teacher_id = 5
+        WHERE ta.teacher_id = :teacher_id
         ORDER BY s.name ASC
     ");
     
-    $stmt->execute();
+    $stmt->execute(['teacher_id' => $user['id']]);
     $assignments = $stmt->fetchAll();
     
     // Format for frontend filters
@@ -99,7 +100,11 @@ try {
         'message' => 'Teacher classes retrieved',
         'timestamp' => date('c'),
         'data' => [
-            'classes' => array_values($assignments)
+            'assignments' => $assignments,
+            'subjects' => array_values($subjects),
+            'classes' => array_values($classes),
+            'terms' => array_values($terms),
+            'sessions' => array_values($sessions)
         ]
     ];
     
