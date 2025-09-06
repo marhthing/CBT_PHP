@@ -122,7 +122,26 @@ function handleGet($user) {
         }
         
         if (isset($_GET['subject']) && !empty($_GET['subject'])) {
-            $filters['subject_id'] = $_GET['subject'];
+            $subject_param = $_GET['subject'];
+            // Check if it's a subject ID (numeric) or subject name
+            if (is_numeric($subject_param)) {
+                $filters['subject_id'] = $subject_param;
+            } else {
+                // Convert subject name to subject ID
+                try {
+                    $database = new Database();
+                    $conn = $database->getConnection();
+                    $stmt = $conn->prepare("SELECT id FROM subjects WHERE name = ? LIMIT 1");
+                    $stmt->execute([$subject_param]);
+                    $subject = $stmt->fetch();
+                    if ($subject) {
+                        $filters['subject_id'] = $subject['id'];
+                    }
+                } catch (Exception $e) {
+                    // If subject lookup fails, ignore the filter
+                    error_log("Subject lookup error: " . $e->getMessage());
+                }
+            }
         }
         
         if (isset($_GET['class']) && !empty($_GET['class'])) {
