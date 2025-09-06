@@ -1,13 +1,5 @@
 <?php
 
-// Load environment variables first (same as index.php)
-$system_env_vars = ['PGHOST', 'PGDATABASE', 'PGUSER', 'PGPASSWORD', 'PGPORT', 'DATABASE_URL'];
-foreach ($system_env_vars as $var) {
-    if (getenv($var) !== false) {
-        $_ENV[$var] = getenv($var);
-    }
-}
-
 require_once __DIR__ . '/../../cors.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/response.php';
@@ -19,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Rate limiting
 $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-//Response::checkRateLimit('auto_login_' . $ip, 10, 300); // 10 attempts per 5 minutes
+Response::checkRateLimit('auto_login_' . $ip, 10, 300); // 10 attempts per 5 minutes
 
 try {
     // Get JSON input
