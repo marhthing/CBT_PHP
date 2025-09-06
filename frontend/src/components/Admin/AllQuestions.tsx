@@ -98,6 +98,7 @@ export default function AllQuestions() {
   const fetchQuestions = useCallback(async () => {
     try {
       setError('')
+      setLoading(true)
       const params = new URLSearchParams()
       if (searchTerm) params.append('search', searchTerm)
       if (subjectFilter) params.append('subject', subjectFilter)
@@ -143,11 +144,11 @@ export default function AllQuestions() {
     ])
   }, [fetchQuestionStats, fetchLookupData])
 
-  // Fetch questions when filters change (debounced)
+  // Fetch questions when filters change (debounced)  
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       fetchQuestions()
-    }, 300)
+    }, 500) // Increased debounce to 500ms for smoother experience
 
     return () => clearTimeout(timeoutId)
   }, [fetchQuestions])
