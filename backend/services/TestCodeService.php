@@ -291,8 +291,8 @@ class TestCodeService extends BaseService {
             return ['success' => false, 'message' => 'Count must be between 1 and 100'];
         }
         
-        // Generate batch ID
-        $batchId = 'BATCH_' . date('Ymd_His') . '_' . uniqid();
+        // Generate batch ID - keep it short and simple
+        $batchId = 'B' . date('Ymd') . '_' . substr(uniqid(), -6); // B20250906_abc123 format
         
         $created = [];
         $errors = [];

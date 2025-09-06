@@ -386,7 +386,7 @@ try {
                 
                 $created_codes = [];
                 // Always assign a batch_id for organization, even for single codes
-                $batch_id = uniqid('batch_', true);
+                $batch_id = 'B' . date('Ymd') . '_' . substr(uniqid(), -6); // B20250906_abc123 format
                 $db->beginTransaction();
                 
                 try {
@@ -417,6 +417,10 @@ try {
                         
                         // For single code, keep original title; for multiple codes, add numbering
                         $title = $count > 1 ? $input['title'] . " (" . ($i + 1) . ")" : $input['title'];
+                        
+                        // Debug logging
+                        error_log("Generated code: '$code' (length: " . strlen($code) . ")");
+                        error_log("Batch ID: '$batch_id' (length: " . strlen($batch_id) . ")");
                         
                         $stmt = $db->prepare("
                             INSERT INTO test_codes (
