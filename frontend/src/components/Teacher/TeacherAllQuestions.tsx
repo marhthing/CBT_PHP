@@ -299,7 +299,7 @@ export default function TeacherAllQuestions() {
   }, [fetchQuestions, originalQuestion])
 
   const handleBulkUpload = useCallback(async () => {
-    if (!selectedFile || !bulkUploadFilters.subject_id || !bulkUploadFilters.class_level || 
+    if (!selectedFile || !bulkUploadFilters.subject_id || !bulkUploadFilters.class_level ||
         !bulkUploadFilters.term_id || !bulkUploadFilters.session_id) {
       setError('Please select a file and fill in all required fields')
       return
@@ -620,7 +620,7 @@ export default function TeacherAllQuestions() {
                       {card.value}
                     </p>
                   </div>
-                  <div 
+                  <div
                     className="p-3 rounded-lg"
                     style={{ backgroundColor: card.color, opacity: 0.1 }}
                   >
@@ -651,9 +651,9 @@ export default function TeacherAllQuestions() {
               onChange={(e) => setSubjectFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             >
-              <option value="">All Subjects</option>
+              <option key="all-subjects" value="">All Subjects</option>
               {availableSubjects.map(subject => (
-                <option key={subject.id} value={subject.id.toString()}>{subject.name}</option>
+                <option key={`subject-${subject.id}`} value={subject.id.toString()}>{subject.name}</option>
               ))}
             </select>
 
@@ -662,9 +662,9 @@ export default function TeacherAllQuestions() {
               onChange={(e) => setClassFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             >
-              <option value="">All Classes</option>
+              <option key="all-classes" value="">All Classes</option>
               {availableClasses.map(cls => (
-                <option key={cls} value={cls}>{cls}</option>
+                <option key={`class-${cls}`} value={cls}>{cls}</option>
               ))}
             </select>
 
@@ -673,9 +673,9 @@ export default function TeacherAllQuestions() {
               onChange={(e) => setTermFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             >
-              <option value="">All Terms</option>
+              <option key="all-terms" value="">All Terms</option>
               {availableTerms.map(term => (
-                <option key={term.id} value={term.id.toString()}>{term.name}</option>
+                <option key={`term-${term.id}`} value={term.id.toString()}>{term.name}</option>
               ))}
             </select>
 
@@ -684,9 +684,9 @@ export default function TeacherAllQuestions() {
               onChange={(e) => setSessionFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             >
-              <option value="">All Sessions</option>
+              <option key="all-sessions" value="">All Sessions</option>
               {availableSessions.map(session => (
-                <option key={session.id} value={session.id.toString()}>{session.name}</option>
+                <option key={`session-${session.id}`} value={session.id.toString()}>{session.name}</option>
               ))}
             </select>
 
@@ -695,9 +695,9 @@ export default function TeacherAllQuestions() {
               onChange={(e) => setTypeFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             >
-              <option value="">All Types</option>
-              <option value="multiple_choice">Multiple Choice</option>
-              <option value="true_false">True/False</option>
+              <option key="all-types" value="">All Types</option>
+              <option key="multiple-choice" value="multiple_choice">Multiple Choice</option>
+              <option key="true-false" value="true_false">True/False</option>
             </select>
 
             <select
@@ -705,9 +705,9 @@ export default function TeacherAllQuestions() {
               onChange={(e) => setAssignmentFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
             >
-              <option value="">All Assignments</option>
-              <option value="First CA">First CA</option>
-              <option value="Second CA">Second CA</option>
+              <option key="all-assignments" value="">All Assignments</option>
+              <option key="first-ca" value="First CA">First CA</option>
+              <option key="second-ca" value="Second CA">Second CA</option>
             </select>
           </div>
         </div>
@@ -746,15 +746,15 @@ export default function TeacherAllQuestions() {
                             {question.subject_name} • {question.class_level}
                           </span>
                           <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                            question.question_type === 'true_false' 
-                              ? 'bg-purple-100 text-purple-800' 
+                            question.question_type === 'true_false'
+                              ? 'bg-purple-100 text-purple-800'
                               : 'bg-green-100 text-green-800'
                           }`}>
                             {question.question_type === 'true_false' ? 'T/F' : 'MC'}
                           </span>
                           <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                            question.question_assignment === 'First CA' 
-                              ? 'bg-orange-100 text-orange-800' 
+                            question.question_assignment === 'First CA'
+                              ? 'bg-orange-100 text-orange-800'
                               : 'bg-indigo-100 text-indigo-800'
                           }`}>
                             {question.question_assignment || 'First CA'}
@@ -790,8 +790,8 @@ export default function TeacherAllQuestions() {
                     </div>
 
                     <div className={`grid gap-2 mt-4 ${
-                      question.question_type === 'true_false' 
-                        ? 'grid-cols-1 sm:grid-cols-2' 
+                      question.question_type === 'true_false'
+                        ? 'grid-cols-1 sm:grid-cols-2'
                         : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
                     }`}>
                       {(question.question_type === 'true_false' ? ['A', 'B'] : ['A', 'B', 'C', 'D']).map(option => {
@@ -805,8 +805,8 @@ export default function TeacherAllQuestions() {
                           <div
                             key={option}
                             className={`flex items-center gap-2 p-3 rounded-lg border text-sm ${
-                              isCorrect 
-                                ? 'bg-green-50 border-green-200 text-green-800' 
+                              isCorrect
+                                ? 'bg-green-50 border-green-200 text-green-800'
                                 : 'bg-gray-50 border-gray-200 text-gray-700'
                             }`}
                           >
@@ -1178,7 +1178,7 @@ export default function TeacherAllQuestions() {
               <button
                 onClick={handleBulkUpload}
                 disabled={uploading || !selectedFile || !bulkUploadFilters.subject_id || !bulkUploadFilters.class_level || !bulkUploadFilters.term_id || !bulkUploadFilters.session_id}
-                className={`px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors ${uploading || !selectedFile || !bulkUploadFilters.subject_id || !bulkUploadFilters.class_level || !bulkUploadFilters.term_id || !bulkUploadFilters.session_id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors ${uploading || !bulkUploadFilters.subject_id || !bulkUploadFilters.class_level || !bulkUploadFilters.term_id || !bulkUploadFilters.session_id ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {uploading ? 'Uploading...' : 'Upload Questions'}
               </button>
