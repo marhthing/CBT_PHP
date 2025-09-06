@@ -52,7 +52,8 @@ try {
     ]);
     
 } catch (Exception $e) {
-    Response::serverError('Failed to get test results');
+    error_log('Student results error: ' . $e->getMessage());
+    Response::serverError('Failed to get test results: ' . $e->getMessage());
 }
 
 ?>

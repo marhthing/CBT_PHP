@@ -86,12 +86,15 @@ export default function TestResults() {
     try {
       const [resultsResponse, testsResponse] = await Promise.all([
         api.get('/student/results'),
-        api.get('/student/available-tests')
+        api.get('/student/tests')
       ])
       setResults(resultsResponse.data.data?.results || [])
-      setAvailableTests(testsResponse.data.data || [])
+      setAvailableTests(testsResponse.data.data?.tests || [])
     } catch (error) {
-      // Failed to fetch results
+      console.error('Failed to fetch results:', error)
+      // Set empty arrays to prevent undefined errors
+      setResults([])
+      setAvailableTests([])
     } finally {
       setLoading(false)
     }
@@ -299,11 +302,13 @@ export default function TestResults() {
                             {test.title}
                           </span>
                           <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            test.is_activated 
+                            test.is_active && !test.completed
                               ? 'bg-green-100 text-green-800' 
+                              : test.completed
+                              ? 'bg-gray-100 text-gray-800'
                               : 'bg-yellow-100 text-yellow-800'
                           }`}>
-                            {test.is_activated ? 'ACTIVE' : 'INACTIVE'}
+                            {test.completed ? 'COMPLETED' : test.is_active ? 'ACTIVE' : 'INACTIVE'}
                           </span>
                         </div>
                         <div className="text-xs text-gray-500 mb-2">
@@ -311,9 +316,9 @@ export default function TestResults() {
                         </div>
                         <button
                           onClick={() => navigate(`/student/test?code=${test.code}`)}
-                          disabled={!test.is_activated}
+                          disabled={!test.is_active || test.completed}
                           className={`px-3 py-1.5 rounded text-xs font-medium ${
-                            test.is_activated 
+                            test.is_active && !test.completed
                               ? 'bg-blue-600 text-white hover:bg-blue-700' 
                               : 'bg-gray-400 text-white cursor-not-allowed'
                           }`}
@@ -460,12 +465,12 @@ export default function TestResults() {
                             {result.percentage}%
                           </div>
                           <div className="text-sm text-gray-500 mt-1">
-                            Grade: {
+                            Grade: {result.grade || (
                               result.percentage >= 80 ? 'A' :
                               result.percentage >= 70 ? 'B' :
                               result.percentage >= 60 ? 'C' :
                               result.percentage >= 50 ? 'D' : 'F'
-                            }
+                            )}
                           </div>
                         </div>
                       </div>
