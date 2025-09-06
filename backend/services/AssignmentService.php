@@ -207,7 +207,7 @@ class AssignmentService extends BaseService {
     /**
      * Map test_type field to assignment name
      */
-    private function mapTestTypeToAssignment($testType) {
+    public function mapTestTypeToAssignment($testType) {
         $mapping = [
             'first_ca' => 'First CA',
             'second_ca' => 'Second CA', 

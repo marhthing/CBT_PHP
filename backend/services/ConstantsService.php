@@ -157,7 +157,42 @@ class ConstantsService {
      * Validate test type
      */
     public function isValidTestType($testType) {
-        return in_array($testType, self::TEST_TYPES);
+        // Check both the values and keys, plus the display names from assignments
+        return in_array($testType, self::TEST_TYPES) || 
+               array_key_exists($testType, self::TEST_TYPES) ||
+               array_key_exists($testType, self::ASSIGNMENTS) ||
+               $this->normalizeTestType($testType) !== null;
+    }
+    
+    /**
+     * Normalize test type to standard format
+     */
+    public function normalizeTestType($testType) {
+        // Direct match
+        if (array_key_exists($testType, self::ASSIGNMENTS)) {
+            return $testType;
+        }
+        
+        // Check display names
+        foreach (self::ASSIGNMENTS as $key => $assignment) {
+            if ($assignment['display_name'] === $testType || 
+                $assignment['name'] === $testType ||
+                $assignment['code'] === $testType) {
+                return $key;
+            }
+        }
+        
+        // Legacy mappings for common variations
+        $legacyMappings = [
+            'First Continuous Assessment' => 'First CA',
+            'Second Continuous Assessment' => 'Second CA',
+            'Term Examination' => 'Examination',
+            'CA1' => 'First CA',
+            'CA2' => 'Second CA',
+            'EXAM' => 'Examination'
+        ];
+        
+        return $legacyMappings[$testType] ?? null;
     }
     
     /**

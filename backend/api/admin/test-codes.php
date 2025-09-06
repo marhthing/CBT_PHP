@@ -354,7 +354,7 @@ try {
     }
 
 } catch (Exception $e) {
-    Response::serverError('An error occurred: ' . $e->getMessage() . ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+    Response::serverError('An error occurred: ' . $e->getMessage());
 }
 
 ?>

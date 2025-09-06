@@ -247,7 +247,7 @@ class TestCodeService extends BaseService {
             'pass_score' => $data['pass_score'] ?? 50,
             'test_type' => $testType,
             'score_per_question' => $data['score_per_question'] ?? 1,
-            'is_active' => $data['is_active'] ?? false,
+            'is_active' => !empty($data['is_active']) && ($data['is_active'] === true || $data['is_active'] === 'true' || $data['is_active'] === '1'),
             'is_activated' => false,
             'is_used' => false,
             'created_by' => $createdBy,

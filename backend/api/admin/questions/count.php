@@ -25,9 +25,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 $auth = new Auth();
 $user = $auth->requireRole('admin');
 
-$dataManager = DataManager::getInstance();
+// Get services directly instead of through DataManager
 $constantsService = ConstantsService::getInstance();
-$questionService = $dataManager->getQuestionService();
+require_once __DIR__ . '/../../../services/QuestionService.php';
+$questionService = QuestionService::getInstance();
 
 try {
     // Get parameters
@@ -53,8 +54,22 @@ try {
         Response::validationError('Invalid test type provided');
     }
     
+    // Normalize test type and build filters
+    $normalizedTestType = $constantsService->normalizeTestType($test_type);
+    if (!$normalizedTestType) {
+        $normalizedTestType = $test_type; // Use original if normalization fails
+    }
+    
+    // Build filters for question counting
+    $filters = [
+        'subject_id' => $subject_id,
+        'class_level' => $class_level,
+        'term_id' => $term_id,
+        'question_assignment' => $normalizedTestType
+    ];
+    
     // Get question count using service
-    $count = $questionService->getQuestionCount($subject_id, $class_level, $term_id, $test_type);
+    $count = $questionService->countQuestions($filters);
     
     Response::logRequest('admin/questions/count', 'GET', $user['id']);
     Response::success('Question count retrieved', [
