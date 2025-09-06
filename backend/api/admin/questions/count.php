@@ -1,3 +1,4 @@
+
 <?php
 
 // Extra CORS headers for InfinityFree compatibility
@@ -41,44 +42,84 @@ try {
         Response::validationError('subject_id, class_level, term_id, and test_type are required');
     }
 
-    // Build query based on test type
-    $where_conditions = [
-        'q.subject_id = ?',
-        'q.class_level = ?',
-        'q.term_id = ?'
-    ];
-    $params = [$subject_id, $class_level, $term_id];
-
     // Validate test type using constants service
     if (!$constantsService->isValidTestType($test_type)) {
         Response::validationError('Invalid test type provided');
     }
     
-    // Normalize test type and build filters
+    // Normalize test type
     $normalizedTestType = $constantsService->normalizeTestType($test_type);
     if (!$normalizedTestType) {
         $normalizedTestType = $test_type; // Use original if normalization fails
     }
     
-    // Build filters for question counting - admin should see all questions regardless of creator
-    $filters = [
-        'subject_id' => $subject_id,
-        'class_level' => $class_level,
-        'term_id' => $term_id,
-        'test_type' => $normalizedTestType
-    ];
-    
-    // Get question count using service
-    $count = $questionService->countQuestions($filters);
-    
-    Response::logRequest('admin/questions/count', 'GET', $user['id']);
-    Response::success('Question count retrieved', [
-        'count' => $count,
+    $responseData = [
         'subject_id' => (int)$subject_id,
         'class_level' => $class_level,
         'term_id' => (int)$term_id,
         'test_type' => $test_type
-    ]);
+    ];
+    
+    // Handle different test types appropriately
+    if (strtolower($normalizedTestType) === 'examination') {
+        // For examination, get counts from both First CA and Second CA
+        $firstCAFilters = [
+            'subject_id' => $subject_id,
+            'class_level' => $class_level,
+            'term_id' => $term_id,
+            'question_assignment' => 'First CA'
+        ];
+        
+        $secondCAFilters = [
+            'subject_id' => $subject_id,
+            'class_level' => $class_level,
+            'term_id' => $term_id,
+            'question_assignment' => 'Second CA'
+        ];
+        
+        $firstCACount = $questionService->countQuestions($firstCAFilters);
+        $secondCACount = $questionService->countQuestions($secondCAFilters);
+        $totalCount = $firstCACount + $secondCACount;
+        
+        $responseData['count'] = $totalCount;
+        $responseData['breakdown'] = [
+            'first_ca' => $firstCACount,
+            'second_ca' => $secondCACount,
+            'total' => $totalCount,
+            'ratio' => '1:5 (First CA : Second CA)'
+        ];
+        
+    } else {
+        // For other test types, use direct mapping
+        $filters = [
+            'subject_id' => $subject_id,
+            'class_level' => $class_level,
+            'term_id' => $term_id,
+            'test_type' => $normalizedTestType
+        ];
+        
+        $count = $questionService->countQuestions($filters);
+        
+        // Also provide breakdown for clarity
+        if (strtolower($normalizedTestType) === 'first ca' || strtolower($normalizedTestType) === 'first_ca') {
+            $responseData['count'] = $count;
+            $responseData['breakdown'] = [
+                'first_ca' => $count,
+                'assignment_type' => 'First CA'
+            ];
+        } elseif (strtolower($normalizedTestType) === 'second ca' || strtolower($normalizedTestType) === 'second_ca') {
+            $responseData['count'] = $count;
+            $responseData['breakdown'] = [
+                'second_ca' => $count,
+                'assignment_type' => 'Second CA'
+            ];
+        } else {
+            $responseData['count'] = $count;
+        }
+    }
+    
+    Response::logRequest('admin/questions/count', 'GET', $user['id']);
+    Response::success('Question count retrieved', $responseData);
 
 } catch (Exception $e) {
     Response::serverError('Failed to get question count: ' . $e->getMessage());
