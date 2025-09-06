@@ -395,21 +395,24 @@ try {
                         $attempts = 0;
                         $maxAttempts = 10;
                         do {
-                            // Generate 8-character code to ensure it fits in 20-char limit
-                            $code = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 8));
+                            // Generate 6-character code to be safe
+                            $code = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 6));
                             $check_stmt = $db->prepare("SELECT id FROM test_codes WHERE code = ?");
                             $check_stmt->execute([$code]);
+                            $exists = $check_stmt->fetch();
                             $attempts++;
-                        } while ($check_stmt->fetch() && $attempts < $maxAttempts);
+                        } while ($exists && $attempts < $maxAttempts);
                         
-                        // Fallback if still duplicate
-                        if ($check_stmt->fetch()) {
-                            $timestamp = substr(str_replace('.', '', microtime(true)), -8);
-                            $code = 'TC' . $timestamp;
-                            // Ensure max 20 characters
-                            if (strlen($code) > 20) {
-                                $code = substr($code, 0, 20);
-                            }
+                        // Fallback if still duplicate - use simple incremental approach
+                        if ($exists) {
+                            $counter = 1;
+                            do {
+                                $code = 'TC' . str_pad($counter, 4, '0', STR_PAD_LEFT); // TC0001, TC0002, etc.
+                                $check_stmt = $db->prepare("SELECT id FROM test_codes WHERE code = ?");
+                                $check_stmt->execute([$code]);
+                                $exists = $check_stmt->fetch();
+                                $counter++;
+                            } while ($exists && $counter < 10000); // Safety limit
                         }
                         
                         // For single code, keep original title; for multiple codes, add numbering

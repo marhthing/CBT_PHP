@@ -523,9 +523,9 @@ class TestCodeService extends BaseService {
     /**
      * Generate unique test code
      */
-    private function generateUniqueCode($length = 8) {
-        // Ensure length doesn't exceed database limit
-        $length = min($length, 18); // Leave room for prefixes if needed
+    private function generateUniqueCode($length = 6) {
+        // Ensure length doesn't exceed database limit (keep it simple and safe)
+        $length = min($length, 6);
         $maxAttempts = 10;
         $attempts = 0;
         
@@ -544,25 +544,13 @@ class TestCodeService extends BaseService {
         } while ($exists && $attempts < $maxAttempts);
         
         if ($exists) {
-            // Fallback to timestamp-based code, ensuring it fits within 20 characters
-            $timestamp = substr(str_replace('.', '', microtime(true)), -8); // Get last 8 digits
-            $rand = mt_rand(10, 99); // 2 random digits
-            $code = 'TC' . $timestamp . $rand; // TC + 8 digits + 2 random = 12 chars max
-            
-            // Final safety check - ensure we never exceed 20 characters
-            if (strlen($code) > 20) {
-                $code = substr($code, 0, 20);
-            }
-            
-            // Verify this fallback code is unique, if not, use a simple incremental approach
-            $finalAttempts = 0;
-            while ($this->count('test_codes', ['code' => $code]) > 0 && $finalAttempts < 100) {
-                $code = 'TC' . time() . str_pad($finalAttempts, 2, '0', STR_PAD_LEFT);
-                if (strlen($code) > 20) {
-                    $code = substr($code, 0, 20);
-                }
-                $finalAttempts++;
-            }
+            // Simple fallback - use incremental codes
+            $counter = 1;
+            do {
+                $code = 'TC' . str_pad($counter, 4, '0', STR_PAD_LEFT); // TC0001, TC0002, etc.
+                $exists = $this->count('test_codes', ['code' => $code]) > 0;
+                $counter++;
+            } while ($exists && $counter < 10000); // Safety limit
         }
         
         return $code;
