@@ -73,33 +73,30 @@ try {
         $action = isset($path_parts[1]) ? $path_parts[1] : null;
     }
 
-    // Debug: Check if the path parsing is correct for bulk operations
-    // If neither bulk nor batch is detected but the path contains 'bulk', force it
-    if (!$is_bulk && !$is_batch && !$test_code_id && (strpos($path_info, '/bulk') !== false || strpos($_SERVER['REQUEST_URI'], '/bulk') !== false)) {
-        $action = 'bulk';
-        $is_bulk = true;
-    }
-    
-    // Additional check for direct bulk requests - check various possible paths
-    if (!$is_bulk && !$is_batch && !$test_code_id && $request_method === 'POST') {
-        // Check if this is a bulk request by examining the full URI
+    // Enhanced bulk detection logic
+    if (!$is_bulk && !$is_batch && !$test_code_id) {
         $request_uri = $_SERVER['REQUEST_URI'] ?? '';
-        $script_name = $_SERVER['SCRIPT_NAME'] ?? '';
         
-        // Check different possible routing patterns
-        if (strpos($request_uri, 'test-codes/bulk') !== false || 
-            strpos($request_uri, '/bulk') !== false ||
-            strpos($script_name, 'test-codes') !== false) {
+        // Check if the URL contains bulk anywhere
+        if (strpos($request_uri, 'bulk') !== false || strpos($path_info, 'bulk') !== false) {
+            $action = 'bulk';
+            $is_bulk = true;
+        }
+        // Fallback: if this is a POST to test-codes endpoint with no specific ID, treat as bulk
+        elseif ($request_method === 'POST') {
             $action = 'bulk';
             $is_bulk = true;
         }
     }
     
-    // Final fallback - if this is a POST to test-codes with no specific action, treat as bulk
-    if (!$is_bulk && !$is_batch && !$test_code_id && $request_method === 'POST') {
-        $action = 'bulk';
-        $is_bulk = true;
-    }
+    // Debug logging
+    error_log("DEBUG: Request Method: $request_method");
+    error_log("DEBUG: Path Info: $path_info");
+    error_log("DEBUG: Request URI: " . ($_SERVER['REQUEST_URI'] ?? 'N/A'));
+    error_log("DEBUG: Action: $action");
+    error_log("DEBUG: Is Bulk: " . ($is_bulk ? 'true' : 'false'));
+    error_log("DEBUG: Is Batch: " . ($is_batch ? 'true' : 'false'));
+    error_log("DEBUG: Test Code ID: " . ($test_code_id ?? 'N/A'));
 
     // Get service instances
     $testCodeService = TestCodeService::getInstance();
