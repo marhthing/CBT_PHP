@@ -11,7 +11,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Rate limiting
 $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-Response::checkRateLimit('auto_login_' . $ip, 10, 300); // 10 attempts per 5 minutes
+//Response::checkRateLimit('auto_login_' . $ip, 10, 300); // 10 attempts per 5 minutes
 
 try {
     // Get JSON input
