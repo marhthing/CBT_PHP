@@ -94,11 +94,9 @@ try {
             break;
 
         case 'difficulties':
-            $formatted_data = [
-                ['id' => 'easy', 'name' => 'Easy'],
-                ['id' => 'medium', 'name' => 'Medium'],
-                ['id' => 'hard', 'name' => 'Hard']
-            ];
+            require_once __DIR__ . '/../../services/ConstantsService.php';
+            $constants = ConstantsService::getInstance();
+            $formatted_data = $constants->getDifficultyLevels();
             Response::success("Difficulties retrieved successfully", $formatted_data);
             break;
 
