@@ -135,14 +135,8 @@ export default function TestCodeManager() {
           test_type: createForm.test_type
         }
       })
-      const responseData = response.data.data
-      const newCount = responseData?.count || 0
+      const newCount = response.data.data?.count || 0
       if (newCount !== availableQuestions) setAvailableQuestions(newCount)
-      
-      // Store breakdown for display
-      if (responseData?.breakdown) {
-        console.log('Question breakdown:', responseData.breakdown)
-      }
     } catch (error) {
       // Try fallback with regular questions endpoint
       try {
@@ -1420,13 +1414,13 @@ export default function TestCodeManager() {
                 required
               />
               {availableQuestions > 0 && (
-                <div style={{
+                <p style={{
                   fontSize: '12px',
                   color: '#6b7280',
                   marginTop: '4px'
                 }}>
                   {availableQuestions} questions available for this combination
-                </div>
+                </p>
               )}
             </div>
 

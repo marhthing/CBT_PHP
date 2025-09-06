@@ -223,53 +223,27 @@ class TestCodeService extends BaseService {
         $testType = $data['test_type'] ?? 'first_ca';
         $assignment = $this->assignmentService->mapTestTypeToAssignment($testType);
 
-        // Check if enough questions exist - handle different test types properly
-        if (strtolower($testType) === 'examination') {
-            // For examination, we need questions from both First CA and Second CA in 1:5 ratio
-            $totalNeeded = (int)$data['total_questions'];
-            $firstCANeeded = ceil($totalNeeded / 6); // 1 part out of 6
-            $secondCANeeded = $totalNeeded - $firstCANeeded; // 5 parts out of 6
-            
-            $firstCACount = $this->questionService->countQuestions([
-                'subject_id' => $data['subject_id'],
-                'class_level' => $data['class_level'],
-                'term_id' => $data['term_id'],
-                'question_assignment' => 'First CA'
-            ]);
-            
-            $secondCACount = $this->questionService->countQuestions([
-                'subject_id' => $data['subject_id'],
-                'class_level' => $data['class_level'],
-                'term_id' => $data['term_id'],
-                'question_assignment' => 'Second CA'
-            ]);
-            
-            error_log("Examination question count check: Need {$firstCANeeded} First CA + {$secondCANeeded} Second CA = {$totalNeeded} total");
-            error_log("Available: {$firstCACount} First CA, {$secondCACount} Second CA");
-            
-            if ($firstCACount < $firstCANeeded || $secondCACount < $secondCANeeded) {
-                return [
-                    'success' => false, 
-                    'message' => "Not enough questions available for Examination. Need {$firstCANeeded} First CA + {$secondCANeeded} Second CA, found {$firstCACount} First CA + {$secondCACount} Second CA"
-                ];
-            }
-        } else {
-            // For other test types, use the direct mapping
-            $availableQuestions = $this->questionService->countQuestions([
-                'subject_id' => $data['subject_id'],
-                'class_level' => $data['class_level'],
-                'term_id' => $data['term_id'],
-                'test_type' => $testType
-            ]);
+        // Check if enough questions exist using the same logic as frontend
+        $availableQuestions = $this->questionService->countQuestions([
+            'subject_id' => $data['subject_id'],
+            'class_level' => $data['class_level'],
+            'term_id' => $data['term_id'],
+            'test_type' => $testType  // Use test_type instead of question_assignment
+        ]);
 
-            error_log("Question count check for {$testType}: Need {$data['total_questions']}, found {$availableQuestions}");
-            
-            if ($availableQuestions < $data['total_questions']) {
-                return [
-                    'success' => false, 
-                    'message' => "Not enough questions available. Need {$data['total_questions']}, found {$availableQuestions}"
-                ];
-            }
+        error_log("Question count check: Need {$data['total_questions']}, found {$availableQuestions}");
+        error_log("Filters used: " . json_encode([
+            'subject_id' => $data['subject_id'],
+            'class_level' => $data['class_level'],
+            'term_id' => $data['term_id'],
+            'test_type' => $testType
+        ]));
+        
+        if ($availableQuestions < $data['total_questions']) {
+            return [
+                'success' => false, 
+                'message' => "Not enough questions available. Need {$data['total_questions']}, found {$availableQuestions}"
+            ];
         }
 
         // Handle boolean values properly for database compatibility

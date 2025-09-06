@@ -478,7 +478,6 @@ class QuestionService extends BaseService {
     
     /**
      * Get randomized questions for a test with shuffled options
-     * For Examination tests, uses 5:1 ratio (Second CA : First CA)
      */
     public function getRandomizedQuestionsForTest($filters, $questionCount, $testId, $studentId) {
         try {
@@ -531,111 +530,24 @@ class QuestionService extends BaseService {
             
             $whereClause = implode(' AND ', $whereConditions);
             
-            // Handle Examination tests with 5:1 ratio (Second CA : First CA)
-            if (!empty($filters['test_type']) && strtolower($filters['test_type']) === 'examination') {
-                // Calculate questions needed: 5 Second CA : 1 First CA
-                $firstCANeeded = ceil($questionCount / 6); // 1 part out of 6
-                $secondCANeeded = $questionCount - $firstCANeeded; // 5 parts out of 6
-                
-                // Get First CA questions
-                $firstCAFilters = array_merge($filters, ['question_assignment' => 'First CA']);
-                unset($firstCAFilters['test_type']); // Remove test_type to use question_assignment
-                
-                $firstCAWhereConditions = ['1=1'];
-                $firstCAParams = [];
-                
-                if (!empty($firstCAFilters['subject_id'])) {
-                    $firstCAWhereConditions[] = 'subject_id = ?';
-                    $firstCAParams[] = $firstCAFilters['subject_id'];
-                }
-                if (!empty($firstCAFilters['class_level'])) {
-                    $firstCAWhereConditions[] = 'class_level = ?';
-                    $firstCAParams[] = $firstCAFilters['class_level'];
-                }
-                if (!empty($firstCAFilters['term_id'])) {
-                    $firstCAWhereConditions[] = 'term_id = ?';
-                    $firstCAParams[] = $firstCAFilters['term_id'];
-                }
-                $firstCAWhereConditions[] = 'question_assignment = ?';
-                $firstCAParams[] = 'First CA';
-                
-                $firstCASql = "
-                    SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
-                    FROM questions 
-                    WHERE " . implode(' AND ', $firstCAWhereConditions) . "
-                    ORDER BY " . $this->database->getRandomOrder() . "
-                ";
-                $firstCASql = $this->database->limitQuery($firstCASql, $firstCANeeded, 0);
-                $firstCAStmt = $this->executeQuery($firstCASql, $firstCAParams);
-                $firstCAQuestions = $firstCAStmt ? $firstCAStmt->fetchAll() : [];
-                
-                // Get Second CA questions
-                $secondCAFilters = array_merge($filters, ['question_assignment' => 'Second CA']);
-                unset($secondCAFilters['test_type']); // Remove test_type to use question_assignment
-                
-                $secondCAWhereConditions = ['1=1'];
-                $secondCAParams = [];
-                
-                if (!empty($secondCAFilters['subject_id'])) {
-                    $secondCAWhereConditions[] = 'subject_id = ?';
-                    $secondCAParams[] = $secondCAFilters['subject_id'];
-                }
-                if (!empty($secondCAFilters['class_level'])) {
-                    $secondCAWhereConditions[] = 'class_level = ?';
-                    $secondCAParams[] = $secondCAFilters['class_level'];
-                }
-                if (!empty($secondCAFilters['term_id'])) {
-                    $secondCAWhereConditions[] = 'term_id = ?';
-                    $secondCAParams[] = $secondCAFilters['term_id'];
-                }
-                $secondCAWhereConditions[] = 'question_assignment = ?';
-                $secondCAParams[] = 'Second CA';
-                
-                $secondCASql = "
-                    SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
-                    FROM questions 
-                    WHERE " . implode(' AND ', $secondCAWhereConditions) . "
-                    ORDER BY " . $this->database->getRandomOrder() . "
-                ";
-                $secondCASql = $this->database->limitQuery($secondCASql, $secondCANeeded, 0);
-                $secondCAStmt = $this->executeQuery($secondCASql, $secondCAParams);
-                $secondCAQuestions = $secondCAStmt ? $secondCAStmt->fetchAll() : [];
-                
-                // Combine questions
-                $raw_questions = array_merge($firstCAQuestions, $secondCAQuestions);
-                
-                // Shuffle the combined questions
-                shuffle($raw_questions);
-                
-                // Check if we have enough questions
-                if (count($firstCAQuestions) < $firstCANeeded || count($secondCAQuestions) < $secondCANeeded) {
-                    return [
-                        'success' => false,
-                        'message' => "Insufficient questions for Examination. Need {$firstCANeeded} First CA + {$secondCANeeded} Second CA, found " . count($firstCAQuestions) . " First CA + " . count($secondCAQuestions) . " Second CA"
-                    ];
-                }
-                
-            } else {
-                // Regular question selection for non-Examination tests
-                $sql = "
-                    SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
-                    FROM questions 
-                    WHERE {$whereClause}
-                    ORDER BY " . $this->database->getRandomOrder() . "
-                ";
-                
-                // Add database-specific randomization and limit
-                $sql = $this->database->limitQuery($sql, $questionCount, 0);
-                
-                $stmt = $this->executeQuery($sql, $params);
-                $raw_questions = $stmt ? $stmt->fetchAll() : [];
-                
-                if (count($raw_questions) < $questionCount) {
-                    return [
-                        'success' => false,
-                        'message' => "Insufficient questions available for this test. Found " . count($raw_questions) . " questions, but test requires {$questionCount} questions."
-                    ];
-                }
+            // Get questions with database-compatible random ordering
+            $sql = "
+                SELECT id, question_text, option_a, option_b, option_c, option_d, question_type, correct_answer
+                FROM questions 
+                WHERE {$whereClause}
+            ";
+            
+            // Add database-specific randomization and limit
+            $sql = $this->database->limitQuery($sql, $questionCount);
+            
+            $stmt = $this->executeQuery($sql, $params);
+            $raw_questions = $stmt ? $stmt->fetchAll() : [];
+            
+            if (count($raw_questions) < $questionCount) {
+                return [
+                    'success' => false,
+                    'message' => "Insufficient questions available for this test. Found " . count($raw_questions) . " questions, but test requires {$questionCount} questions."
+                ];
             }
             
             // Shuffle options for each question and create answer mapping
