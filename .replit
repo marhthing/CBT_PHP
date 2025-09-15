@@ -6,7 +6,7 @@ channel = "stable-25_05"
 packages = ["php82", "php82Packages.composer", "php82Extensions.pdo", "php82Extensions.pdo_pgsql", "php82Extensions.mbstring", "php82Extensions.curl", "php82Extensions.pgsql"]
 
 [workflows]
-runButton = "Project"
+runButton = "Start CBT Portal"
 
 [[workflows.workflow]]
 name = "Project"
@@ -15,35 +15,32 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "Frontend Server"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Backend API"
+args = "CBT Portal"
 
 [[workflows.workflow]]
-name = "Frontend Server"
+name = "CBT Portal"
 author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd frontend && npm run dev"
+args = "cd backend && php -S localhost:8000 -t . index.php & cd ../frontend && npm run dev"
 waitForPort = 5000
 
 [workflows.workflow.metadata]
 outputType = "webview"
 
 [[workflows.workflow]]
-name = "Backend API"
-author = "agent"
+name = "Start CBT Portal"
+author = 47613093
+mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "cd backend && php -S 0.0.0.0:8000 -t . index.php"
-waitForPort = 8000
+args = "cd backend && php -S 0.0.0.0:8000 -t . index.php &"
 
-[workflows.workflow.metadata]
-outputType = "console"
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && npm run dev"
 
 [[ports]]
 localPort = 5000
@@ -56,6 +53,7 @@ externalPort = 3000
 [[ports]]
 localPort = 8000
 externalPort = 80
+exposeLocalhost = true
 
 [deployment]
 run = ["sh", "-c", "node index.js"]
